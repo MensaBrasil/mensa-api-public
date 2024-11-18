@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 MOCK_API_KEY = "bia"
 
 
-@patch("people_api.endpoints.whatsapp.API_KEY", MOCK_API_KEY)
+@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
 def test_update_phone_with_valid_data_or_invalid_data(
     test_client: TestClient, run_db_query: Any
 ) -> None:
@@ -65,7 +65,7 @@ def test_update_phone_with_valid_data_or_invalid_data(
     assert updated_phone == [("1234567890",)]
 
 
-@patch("people_api.endpoints.whatsapp.API_KEY", MOCK_API_KEY)
+@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
 def test_update_phone_for_representative_with_valid_data_or_invalid_data(
     test_client: TestClient, run_db_query: Any
 ) -> None:
@@ -108,7 +108,7 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
     assert response.json() == {"message": "Representative's phone number updated successfully."}
 
 
-@patch("people_api.endpoints.whatsapp.API_KEY", MOCK_API_KEY)
+@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
 def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: Any):
     """Test updating a member's phone number with an incorrect API key."""
 

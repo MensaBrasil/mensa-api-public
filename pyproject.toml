@@ -51,7 +51,6 @@ addopts = "-vv"
 
 [tool.pylint]
 disable = [
-    "missing-type-doc",
     "no-member",
     "too-few-public-methods",
     "arguments-differ",

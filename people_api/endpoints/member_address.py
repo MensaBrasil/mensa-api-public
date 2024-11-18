@@ -1,17 +1,15 @@
-"""
-Endpoints for managing members addresses.
-"""
+"""Endpoints for managing members addresses."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from people_api.auth import verify_firebase_token
-from people_api.dbs import get_session
-from people_api.models.member_data import (
+from ..auth import verify_firebase_token
+from ..dbs import get_session
+from ..models.member_data import (
     AddressCreate,
     AddressUpdate,
 )
-from people_api.repositories import MemberRepository
+from ..services import AddressService
 
 member_address_router = APIRouter()
 
@@ -24,16 +22,7 @@ async def _add_address(
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
-    MB = MemberRepository.getMBByEmail(token_data["email"], session)
-    if MB != mb:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    # user can just have one address
-    member_data = MemberRepository.getAddressesFromPostgres(mb, session)
-    if len(member_data) > 0:
-        raise HTTPException(status_code=400, detail="User already has an address")
-
-    MemberRepository.addAddressToPostgres(mb, address, session)
-    return {"message": "Address added successfully"}
+    return AddressService.add_address(mb, address, token_data["email"], session)
 
 
 # update address from member
@@ -49,16 +38,9 @@ async def update_address(
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
-    MB = MemberRepository.getMBByEmail(token_data["email"], session)
-    if MB != mb:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    # Call the update method to modify the address
-    success = MemberRepository.updateAddressInPostgres(mb, address_id, updated_address, session)
-    if not success:
-        raise HTTPException(status_code=404, detail="Address not found")
-
-    return {"message": "Address updated successfully"}
+    return AddressService.update_address(
+        mb, address_id, updated_address, token_data["email"], session
+    )
 
 
 # delete address from member
@@ -73,13 +55,4 @@ async def delete_address(
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
-    MB = MemberRepository.getMBByEmail(token_data["email"], session)
-    if MB != mb:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    # Call the delete method to remove the address
-    success = MemberRepository.deleteAddressFromPostgres(mb, address_id, session)
-    if not success:
-        raise HTTPException(status_code=404, detail="Address not found")
-
-    return {"message": "Address deleted successfully"}
+    return AddressService.delete_address(mb, address_id, token_data["email"], session)

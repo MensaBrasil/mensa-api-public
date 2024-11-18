@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError, ProgrammingError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from ...endpoints.errors import (
+from people_api.endpoints.errors import (
     DatabaseConnectionError,
     QueryExecutionError,
     QuerySyntaxError,

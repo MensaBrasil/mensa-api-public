@@ -1,14 +1,12 @@
-"""
-Endpoints for managing missing fields of members.
-"""
+"""Endpoints for managing missing fields of members."""
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from people_api.auth import verify_firebase_token
-from people_api.dbs import get_session
-from people_api.models.member_data import MissingFieldsCreate
-from people_api.repositories import MemberRepository
+from ..auth import verify_firebase_token
+from ..dbs import get_session
+from ..models.member_data import MissingFieldsCreate
+from ..services import MissingFieldsService
 
 missing_fields_router = APIRouter()
 
@@ -22,9 +20,7 @@ missing_fields_router = APIRouter()
 async def _get_missing_fields(
     token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
 ):
-    MB = MemberRepository.getMBByEmail(token_data["email"], session)
-    missing_fields = MemberRepository.getMissingFieldsFromPostgres(MB, session)
-    return missing_fields
+    return MissingFieldsService.get_missing_fields(token_data, session)
 
 
 # set the missing fields of a member
@@ -38,16 +34,4 @@ async def _set_missing_fields(
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
-    MB = MemberRepository.getMBByEmail(token_data["email"], session)
-    # check if user really has those fields missing, if not, deny
-    missing_fields_list = MemberRepository.getMissingFieldsFromPostgres(MB, session)
-    # set only fields that are missing
-    if missing_fields.cpf is not None:
-        if "cpf" in missing_fields_list:
-            print("cpf")
-            MemberRepository.setCPFOnPostgres(MB, missing_fields.cpf, session)
-    if missing_fields.birth_date is not None:
-        if "birth_date" in missing_fields_list:
-            print("birth_date")
-            MemberRepository.setBirthDateOnPostgres(MB, missing_fields.birth_date, session)
-    return {"message": "Missing fields set successfully"}
+    return MissingFieldsService.set_missing_fields(token_data, missing_fields, session)
