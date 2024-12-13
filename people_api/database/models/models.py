@@ -206,7 +206,7 @@ class MemberGroups(BaseSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     phone_number: str = Field(max_length=20, min_length=10)
     group_id: str = Field(max_length=255)
-    entry_date: date = Field(default_factory=date.today)
+    entry_date: date = Field(default=date.today)
     status: str = Field(max_length=50)
     registration_id: int | None = Field(foreign_key="registration.registration_id")
     exit_date: date | None = None
@@ -224,7 +224,7 @@ class MembershipPayments(BaseSQLModel, table=True):
     registration_id: int = Field(foreign_key="registration.registration_id")
     payment_date: date | None = Field(default_factory=date.today)
     expiration_date: date | None = None
-    amount_paid: condecimal(max_digits=10, decimal_places=2) | None = None
+    amount_paid: condecimal(max_digits=10, decimal_places=2) | None = None  # type: ignore
     observation: str | None = None
     payment_method: str | None = None
     transaction_id: str | None = None
@@ -247,7 +247,7 @@ class Phones(BaseSQLModel, table=True):
 class WhatsappComms(BaseSQLModel, table=True):
     """Model representing a communication log with a phone number, date, status, and reason."""
 
-    __tablename__ = "comms"
+    __tablename__ = "whatsapp_comms"
 
     id: int | None = Field(default=None, primary_key=True)
     phone_number: str = Field(max_length=20, min_length=10)
