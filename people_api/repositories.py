@@ -5,7 +5,6 @@ Methods to interact with the database
 # # Package # #
 import json
 from datetime import date, datetime
-from typing import Optional
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -68,7 +67,7 @@ class MemberRepository:
         return result.fetchone()[0]
 
     @staticmethod
-    def getGroupRequestId(phone_number: str, group_id: str, session: Session) -> Optional[int]:
+    def getGroupRequestId(phone_number: str, group_id: str, session: Session) -> int | None:
         query = text("""
                 SELECT id FROM group_requests
                 WHERE phone_number = :phone_number

@@ -7,9 +7,16 @@ __pycache__/
 *.pyc
 client_secret.json
 firebase_secret.json
+pgadmin-servers.json
 sample.env
 .env.bak
 .dmypy.json
 .coverage
 firebase_secret.json
 firebase_secret_bak.json
+.pytest_cache/
+cover/
+__pypackages__/
+.ruff_cache
+.mypy_cache
+

@@ -1,5 +1,6 @@
 import subprocess
 import time
+from pathlib import Path
 from unittest import mock
 
 import psycopg2
@@ -7,9 +8,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from people_api.app import app
-from people_api.auth import verify_firebase_token  # Ensure this import is correct
+from people_api.auth import verify_firebase_token
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/stats"
+TEST_DB_DUMP_PATH = Path(__file__).parent / "test_db_dump.sql"
 
 
 def wait_for_db(timeout=60):
@@ -28,28 +30,62 @@ def wait_for_db(timeout=60):
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
-    """Set up the database before any tests run"""
+    """Set up the database before any tests run."""
     try:
+        # Start the test database container
         subprocess.run(["docker", "compose", "up", "-d", "test-db"], check=True)
         wait_for_db()  # Ensure the DB is ready before proceeding
-    except subprocess.CalledProcessError as e:
-        pytest.exit(f"Failed to set up the database: {e}")
 
+        # Drop and recreate the public schema
+        conn = psycopg2.connect(DATABASE_URL)
+        with conn.cursor() as cur:
+            cur.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+            conn.commit()
+        conn.close()
+
+        # Apply existing migrations
+        subprocess.run(
+            ["alembic", "-c", "people_api/database/alembic.ini", "upgrade", "c4c4ea41ac02"],
+            check=True,
+        )
+
+        # Populate the database with test data
+        conn = psycopg2.connect(DATABASE_URL)
+        with conn.cursor() as cur:
+            with open(TEST_DB_DUMP_PATH) as dump_file:
+                cur.execute(dump_file.read())
+            conn.commit()
+        conn.close()
+    except (subprocess.CalledProcessError, psycopg2.Error) as e:
+        pytest.exit(f"Failed to set up the database: {str(e)}")
     yield
 
-    try:
-        subprocess.run(["docker", "compose", "down"], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to tear down the database: {e}")
+    # Stop the database container
+    subprocess.run(["docker", "compose", "down"], check=True)
 
 
 @pytest.fixture(scope="function", autouse=True)
 def reset_db():
     """Reset the database before each test"""
     try:
+        # Drop all data
         subprocess.run(["docker", "compose", "down", "--volumes", "--remove-orphans"], check=True)
+        # Restart the test database
         subprocess.run(["docker", "compose", "up", "-d", "test-db"], check=True)
-        wait_for_db()  # Wait for the database to be fully up and ready
+        wait_for_db()  # Ensure the DB is fully ready
+
+        # Reapply migrations
+        subprocess.run(
+            ["alembic", "-c", "people_api/database/alembic.ini", "upgrade", "head"], check=True
+        )
+
+        # Reload test data
+        conn = psycopg2.connect(DATABASE_URL)
+        with conn.cursor() as cur:
+            with open("tests/test_db_dump.sql") as dump_file:
+                cur.execute(dump_file.read())
+            conn.commit()
+        conn.close()
     except subprocess.CalledProcessError as e:
         pytest.exit(f"Failed to reset the database: {e}")
     yield
@@ -69,7 +105,7 @@ def mock_valid_token():
 
     def mock_verify_firebase_token():
         return {
-            "name": "Thiago Almeida Santos",
+            "name": "Fernando Diniz Souza Filho",
             "picture": "https://lh3.googleusercontent.com/a/ACg8ocLTbtfPMG0uE7NFMuxQxoNyYlQ0f_3WJDlpeX4wVnL3Gg=s96-c",
             "iss": "https://securetoken.google.com/carteirinhasmensa",
             "aud": "carteirinhasmensa",
@@ -78,12 +114,12 @@ def mock_valid_token():
             "sub": "V3jqdbSNw3hQsbQMD5mcs2q88PJ3",
             "iat": 1722977514,
             "exp": 1722981114,
-            "email": "calvin@mensa.org.br",
+            "email": "fernando.filho@mensa.org.br",
             "email_verified": True,
             "firebase": {
                 "identities": {
                     "google.com": ["101271401621105857573"],
-                    "email": ["calvin@mensa.org.br"],
+                    "email": ["fernando.filho@mensa.org.br"],
                 },
                 "sign_in_provider": "google.com",
             },
@@ -94,14 +130,6 @@ def mock_valid_token():
     yield
     # Clean up after test
     app.dependency_overrides.pop(verify_firebase_token, None)
-
-
-def test_set_pronouns_valid_token(test_client, mock_valid_token):
-    """Test setting pronouns with a valid token"""
-    headers = {"Authorization": "Bearer mock-valid-token"}
-    response = test_client.patch("/pronouns", json={"pronouns": "Ele/dele"}, headers=headers)
-    print(response.json())  # Debug the response content
-    assert response.status_code == 200
 
 
 @pytest.fixture(autouse=True)

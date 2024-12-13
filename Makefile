@@ -36,3 +36,9 @@ help: ## show this help.
 
 pgadmin:
 	docker compose up pgadmin -d
+
+migrate:
+	alembic -c people_api/database/alembic.ini revision --autogenerate -m "$(m)"
+
+migrate-upgrade:
+	alembic -c people_api/database/alembic.ini upgrade head

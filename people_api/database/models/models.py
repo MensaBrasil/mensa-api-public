@@ -1,11 +1,5 @@
-#   - This file contains the SQLModel classes for the database tables.
 """
 SQLmodels
-
-This module defines SQLModel classes for various entities used in the application. Each class corresponds
-to a table in the database and represents a distinct entity with relevant fields and relationships.
-
-These models are built with SQLAlchemy and SQLModel, allowing for clear schema definitions and relational mappings.
 """
 
 from datetime import date, datetime
@@ -22,107 +16,84 @@ from sqlmodel import (
 )
 
 
-class AddressesAudit(SQLModel, table=True):
+class BaseSQLModel(SQLModel):
+    """Base class for SQLModel classes, providing common fields and methods."""
+
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(default_factory=datetime.utcnow)
+
+
+class BaseAuditModel(BaseSQLModel):
+    """Base class for audit log models, providing common fields and methods."""
+
+    audit_id: int | None = Field(default=None, primary_key=True)
+    operation: str = Field(max_length=10)
+    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
+
+
+class AddressesAudit(BaseAuditModel, table=True):
     """Audit log for address changes, recording operations on address records."""
 
-    audit_id: int | None = Field(default=None, primary_key=True)
+    __tablename__ = "addresses_audit"
+
     address_id: int = Field(default=None)
-    operation: str = Field(max_length=10)
-    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
     old_data: dict | None = Field(default=None, sa_column=Column(JSON))
     new_data: dict | None = Field(default=None, sa_column=Column(JSON))
 
 
-class CadastroNaouse(SQLModel, table=True):
-    """Model representing registration details with various personal and contact information."""
-
-    N_DE_CADASTRO: str = Field(primary_key=True)
-    SITUACAO: str | None = None
-    STATUS: str | None = None
-    NOME: str | None = None
-    NOME_SOCIAL: str | None = None
-    PRIMEIRO_NOME: str | None = None
-    ULTIMO_NOME: str | None = None
-    VENCIMENTO: str | None = None
-    ULTIMO_PAGTO: str | None = None
-    PAGAMENTO: str | None = None
-    RESPONSAVEL_LEGAL: str | None = None
-    IDADE: str | None = None
-    EMAIL_PRINCIPAL: str | None = None
-    EMAIL_RESPONSAVEL_JB: str | None = None
-    EMAIL_ALTERNATIVO: str | None = None
-    EMAIL_MENSA: str | None = None
-    MI: str | None = None
-    TIPO: str | None = None
-    UF: str | None = None
-    CIDADE: str | None = None
-    ENDERECO: str | None = None
-    BAIRRO: str | None = None
-    CEP: str | None = None
-    DATA_DE_NASCIMENTO: str | None = None
-    CPF: str | None = None
-    PROFISSAO: str | None = None
-    SEXO: str | None = None
-    TELEFONE_1: str | None = None
-    TELEFONE_2: str | None = None
-    TELEFONE_3: str | None = None
-    TELEFONE_4: str | None = None
-    DATA_INGRESSO: str | None = None
-    FACEBOOK: str | None = None
-    IDADE_AO_ENTRAR: str | None = None
-
-
-class EmailsAudit(SQLModel, table=True):
+class EmailsAudit(BaseAuditModel, table=True):
     """Audit log for email changes, recording operations on email records."""
 
-    audit_id: int | None = Field(default=None, primary_key=True)
+    __tablename__ = "emails_audit"
+
     email_id: int
-    operation: str = Field(max_length=10)
-    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
     old_data: dict | None = Field(default=None, sa_column=Column(JSON))
     new_data: dict | None = Field(default=None, sa_column=Column(JSON))
 
 
-class GroupRequests(SQLModel, table=True):
+class GroupRequests(BaseSQLModel, table=True):
     """Model representing requests to join a group, including metadata such as phone and attempt count."""
+
+    __tablename__ = "group_requests"
 
     id: int | None = Field(default=None, primary_key=True)
     registration_id: int
     group_id: str
-    created_at: datetime
-    no_of_attempts: int = Field(default=0)
-    phone_number: str
+    no_of_attempts: int | None = Field(default=0)
+    phone_number: str | None = Field(max_length=60, min_length=9)
     last_attempt: datetime | None = None
     fulfilled: bool | None = None
 
 
-class MembershipPaymentsAudit(SQLModel, table=True):
+class MembershipPaymentsAudit(BaseAuditModel, table=True):
     """Audit log for membership payment changes, tracking changes to payment records."""
 
-    audit_id: int | None = Field(default=None, primary_key=True)
+    __tablename__ = "membership_payments_audit"
+
     payment_id: int
-    operation: str = Field(max_length=10)
-    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
     old_data: dict | None = Field(default=None, sa_column=Column(JSON))
     new_data: dict | None = Field(default=None, sa_column=Column(JSON))
 
 
-class PhonesAudit(SQLModel, table=True):
+class PhonesAudit(BaseAuditModel, table=True):
     """Audit log for phone record changes, capturing details of modifications."""
 
-    audit_id: int | None = Field(default=None, primary_key=True)
+    __tablename__ = "phones_audit"
+
     phone_id: int
-    operation: str = Field(max_length=10)
-    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
     old_data: dict | None = Field(default=None, sa_column=Column(JSON))
     new_data: dict | None = Field(default=None, sa_column=Column(JSON))
 
 
-class Registration(SQLModel, table=True):
+class Registration(BaseSQLModel, table=True):
     """Model for user registration, including personal, social, and contact information."""
 
+    __tablename__ = "registration"
     __table_args__ = (
-        CheckConstraint("(length((cpf)::text) = 11) OR (cpf IS NULL) OR ((cpf)::text = ''::text)"),
+        CheckConstraint(
+            "(length((cpf)::text) = 11) OR (cpf IS NULL) OR ((cpf)::text = ''::text)",
+            name="check_cpf_length",
+        ),
     )
 
     registration_id: int | None = Field(default=None, primary_key=True)
@@ -134,14 +105,12 @@ class Registration(SQLModel, table=True):
     first_name: str | None = None
     last_name: str | None = None
     birth_date: date | None = None
-    cpf: str | None = Field(max_length=11)
+    cpf: str | None = Field(max_length=11, min_length=11)
     profession: str | None = None
     gender: str | None = None
-    join_date: date = Field(default_factory=date.today)
+    join_date: date | None = Field(default_factory=date.today)
     facebook: str | None = None
     suspended_until: date | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime | None = None
     pronouns: str | None = None
 
     addresses: list["Addresses"] = Relationship(back_populates="registration")
@@ -155,19 +124,20 @@ class Registration(SQLModel, table=True):
     phones: list["Phones"] = Relationship(back_populates="registration")
 
 
-class RegistrationAudit(SQLModel, table=True):
+class RegistrationAudit(BaseAuditModel, table=True):
     """Audit log for registration changes, logging details of updates to user registration records."""
 
-    audit_id: int | None = Field(default=None, primary_key=True)
+    __tablename__ = "registration_audit"
+
     registration_id: int
-    operation: str = Field(max_length=10)
-    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
     old_data: dict | None = Field(default=None, sa_column=Column(JSON))
     new_data: dict | None = Field(default=None, sa_column=Column(JSON))
 
 
-class Addresses(SQLModel, table=True):
+class Addresses(BaseSQLModel, table=True):
     """Model for address information related to user registrations."""
+
+    __tablename__ = "addresses"
 
     address_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
@@ -176,16 +146,16 @@ class Addresses(SQLModel, table=True):
     address: str | None = Field(max_length=255)
     neighborhood: str | None = Field(max_length=100)
     zip: str | None = Field(max_length=40)
-    created_at: datetime | None = Field(default_factory=datetime.utcnow)
-    updated_at: datetime | None = Field(default_factory=datetime.utcnow)
     country: str | None = None
     latlong: str | None = None
 
     registration: "Registration" = Relationship(back_populates="addresses")
 
 
-class CertsAntecCriminais(SQLModel, table=True):
+class CertsAntecCriminais(BaseSQLModel, table=True):
     """Model for storing criminal record certificates associated with user registrations."""
+
+    __tablename__ = "certs_antec_criminais"
 
     id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
@@ -196,44 +166,45 @@ class CertsAntecCriminais(SQLModel, table=True):
     registration: "Registration" = Relationship(back_populates="certs_antec_criminais")
 
 
-class Emails(SQLModel, table=True):
+class Emails(BaseSQLModel, table=True):
     """Model for storing email information linked to user registrations."""
+
+    __tablename__ = "emails"
 
     email_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
     email_type: str | None = Field(max_length=50)
-    email_address: str | None = Field(max_length=255, index=True)
-    created_at: datetime | None = Field(default_factory=datetime.utcnow)
-    updated_at: datetime | None = Field(default_factory=datetime.utcnow)
-
+    email_address: str | None = Field(max_length=255, min_length=5, index=True)
     registration: "Registration" = Relationship(back_populates="emails")
 
 
-class LegalRepresentatives(SQLModel, table=True):
+class LegalRepresentatives(BaseSQLModel, table=True):
     """Model for legal representatives associated with a user registration."""
 
-    __table_args__ = (
-        CheckConstraint("(length((cpf)::text) = 11) OR (cpf IS NULL) OR ((cpf)::text = ''::text)"),
-    )
+    __tablename__ = "legal_representatives"
 
     representative_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
-    cpf: str | None = Field(max_length=11)
+    cpf: str | None = Field(max_length=11, min_length=11)
     full_name: str | None = Field(max_length=255)
-    email: str | None = Field(max_length=255)
-    phone: str | None = Field(max_length=15)
-    alternative_phone: str | None = Field(max_length=15)
+    email: str | None = Field(max_length=255, min_length=5, index=True)
+    phone: str | None = Field(max_length=60, min_length=9)
+    alternative_phone: str | None = Field(default=None, max_length=60, min_length=9)
     observations: str | None = None
 
     registration: "Registration" = Relationship(back_populates="legal_representatives")
 
 
-class MemberGroups(SQLModel, table=True):
+class MemberGroups(BaseSQLModel, table=True):
     """Model representing group memberships for members, including entry and exit data."""
 
-    __table_args__ = (UniqueConstraint("phone_number", "group_id", "entry_date"),)
+    __tablename__ = "member_groups"
+    __table_args__ = (
+        UniqueConstraint("phone_number", "group_id", "entry_date", name="unique_member_group"),
+    )
+
     id: int | None = Field(default=None, primary_key=True)
-    phone_number: str = Field(max_length=20)
+    phone_number: str = Field(max_length=20, min_length=10)
     group_id: str = Field(max_length=255)
     entry_date: date = Field(default_factory=date.today)
     status: str = Field(max_length=50)
@@ -244,8 +215,10 @@ class MemberGroups(SQLModel, table=True):
     registration: "Registration" = Relationship(back_populates="member_groups")
 
 
-class MembershipPayments(SQLModel, table=True):
+class MembershipPayments(BaseSQLModel, table=True):
     """Model for recording payment information related to membership dues."""
+
+    __tablename__ = "membership_payments"
 
     payment_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
@@ -256,19 +229,37 @@ class MembershipPayments(SQLModel, table=True):
     payment_method: str | None = None
     transaction_id: str | None = None
     payment_status: str | None = None
-    created_at: datetime | None = Field(default_factory=datetime.utcnow)
-    updated_at: datetime | None = None
 
     registration: Registration | None = Relationship(back_populates="membership_payments")
 
 
-class Phones(SQLModel, table=True):
+class Phones(BaseSQLModel, table=True):
     """Model for phone numbers associated with user registrations."""
+
+    __tablename__ = "phones"
 
     phone_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
-    phone_number: str | None = Field(max_length=60)
-    created_at: datetime | None = Field(default_factory=datetime.utcnow)
-    updated_at: datetime | None = Field(default_factory=datetime.utcnow)
-
+    phone_number: str = Field(max_length=60, min_length=9)
     registration: Registration | None = Relationship(back_populates="phones")
+
+
+class WhatsappComms(BaseSQLModel, table=True):
+    """Model representing a communication log with a phone number, date, status, and reason."""
+
+    __tablename__ = "comms"
+
+    id: int | None = Field(default=None, primary_key=True)
+    phone_number: str = Field(max_length=20, min_length=10)
+    communication_date: datetime | None = Field(default_factory=datetime.utcnow)
+    status: str = Field(default="pending", max_length=50)
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class GroupList(SQLModel, table=True):
+    """Model for the group_list table."""
+
+    __tablename__ = "group_list"
+
+    group_id: str = Field(max_length=255, primary_key=True)
+    group_name: str = Field(max_length=255)

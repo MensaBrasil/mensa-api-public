@@ -24,8 +24,6 @@ services:
       - "5432:5432"
     tmpfs:
       - /var/lib/postgresql/data
-    volumes:
-      - ./tests/data/db-init:/docker-entrypoint-initdb.d
     networks:
       - my_network
 

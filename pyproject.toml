@@ -51,6 +51,27 @@ addopts = "-vv"
 
 [tool.pylint]
 disable = [
+
+    # Duplicate type checking that mypy handles
+    "no-member",              # Dynamic attributes that are hard to infer
+    "not-callable",           # mypy handles callable checks
+    "redundant-u-string-prefix",  # Redundant checks for Python 3+ strings
+    "assignment-from-none",   # Function return checks
+    "unsubscriptable-object", # Subscription issues on types
+    "unsupported-assignment-operation",
+    "unsupported-delete-operation",
+    "unsupported-membership-test",
+    "unsupported-binary-operation",
+    "import-error",           # mypy handles import checks
+
+    # Other common checks
+    "missing-type-doc",       # Use mypy for type checks
+    "too-few-public-methods", # Common for data containers
+    "too-many-arguments",     # Relax for flexibility, unless problematic
+    "too-many-instance-attributes", # Relax if using complex data models
+    "no-self-use",            # Allow utility methods in classes
+    "protected-access",       # Allow access to internal methods in testing
+
     "no-member",
     "too-few-public-methods",
     "arguments-differ",
@@ -59,8 +80,7 @@ disable = [
     "protected-access",
     "invalid-name",
     "unsubscriptable-object",
-    "useless-suppression"
-]
+    "useless-suppression"]
 
 
 [tool.mypy]

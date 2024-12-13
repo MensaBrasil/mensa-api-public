@@ -17,7 +17,7 @@ def test_add_phone_number_should_return_already_has_phone(test_client, mock_vali
     payload = {"phone_number": "12345678912"}
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
 
-    response = test_client.post("/phone/2622", json=payload, headers=headers)
+    response = test_client.post("/phone/5", json=payload, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "User already has a phone"}
 
@@ -27,9 +27,9 @@ def test_add_phone_number_should_return_success(test_client, mock_valid_token, r
     payload = {"phone_number": "12345678912"}
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
 
-    run_db_query("DELETE FROM phones WHERE registration_id = 2622")
+    run_db_query("DELETE FROM phones WHERE registration_id = 5")
 
-    response = test_client.post("/phone/2622", json=payload, headers=headers)
+    response = test_client.post("/phone/5", json=payload, headers=headers)
     assert response.status_code == 200
     assert response.json() == {"message": "Phone added successfully"}
 
@@ -64,8 +64,8 @@ def test_update_phone_number_should_return_success(test_client, mock_valid_token
     payload = {"phone_number": "12345678912"}
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
 
-    run_db_query("DELETE FROM phones WHERE registration_id = 2622")
+    run_db_query("DELETE FROM phones WHERE registration_id = 5")
 
-    response = test_client.put("/phone/2622/11771", json=payload, headers=headers)
+    response = test_client.put("/phone/5/11771", json=payload, headers=headers)
     assert response.status_code == 200
     assert response.json() == {"message": "Phone updated successfully"}

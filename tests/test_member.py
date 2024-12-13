@@ -14,8 +14,8 @@ def test_set_pronouns_valid_token(test_client: Any, mock_valid_token: Any) -> No
     """Test setting pronouns with a valid token"""
     headers = {"Authorization": "Bearer mock-valid-token"}
     response = test_client.patch("/pronouns", json={"pronouns": "Ela/dela"}, headers=headers)
-    print(response.json())  # Add this line to debug the response content
     assert response.status_code == 200
+    assert response.json() == {"message": "Pronouns set successfully"}
 
 
 def test_set_pronouns_invalid_pronouns(test_client: Any, mock_valid_token: Any) -> None:
@@ -33,9 +33,8 @@ def test_get_member_groups_valid_token(test_client: Any, mock_valid_token: Any) 
     headers = {"Authorization": "Bearer mock-valid-token"}
     response = test_client.get("/get_member_groups", headers=headers)
     assert response.status_code == 200
-    # Since the response is a list, you can check for specific expected group data
     response_data = response.json()
-    assert isinstance(response_data, list)  # Ensure the response is a list
+    assert isinstance(response_data, list)
     # Example check to ensure at least one group is returned
     assert len(response_data) > 0
     # Example check for a specific group structure
@@ -112,13 +111,13 @@ def test_get_missing_fields_missing_cpf(
         UPDATE registration
         SET cpf = NULL
         WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
+            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
     """)
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/missing_fields", headers=headers)
     assert response.status_code == 200
-    assert response.json() == ["cpf"]  # Expecting 'cpf' to be in the list of missing fields
+    assert response.json() == ["cpf"]
 
 
 def test_get_missing_fields_missing_birth_date(
@@ -130,7 +129,7 @@ def test_get_missing_fields_missing_birth_date(
         UPDATE registration
         SET birth_date = NULL
         WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
+            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
     """)
 
@@ -151,7 +150,7 @@ def test_get_missing_fields_missing_both_fields(
         UPDATE registration
         SET cpf = NULL, birth_date = NULL
         WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
+            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
     """)
 
@@ -172,7 +171,6 @@ def test_get_missing_fields_invalid_token(test_client: Any) -> None:
     assert response.json() == {"detail": "Invalid Token"}
 
 
-
 def test_set_missing_fields_valid_data(
     test_client: Any, mock_valid_token: Any, run_db_query: Any
 ) -> None:
@@ -180,12 +178,12 @@ def test_set_missing_fields_valid_data(
 
     # Set up the member with missing fields (CPF and birth_date)
     run_db_query("""
-        UPDATE registration
-        SET cpf = NULL, birth_date = NULL
-        WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
-        )
-    """)
+    UPDATE registration
+    SET cpf = NULL, birth_date = NULL
+    WHERE registration_id IN (
+        SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
+    )
+""")
 
     # Define the payload with valid CPF and birth_date
     payload = {"cpf": "12345678909", "birth_date": "1990-01-01"}
@@ -202,7 +200,7 @@ def test_set_missing_fields_valid_data(
     updated_member = run_db_query("""
         SELECT cpf, birth_date FROM registration
         WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
+            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
     """)
     assert [(cpf, birth_date.strftime("%Y-%m-%d")) for cpf, birth_date in updated_member] == [
@@ -234,7 +232,7 @@ def test_set_missing_fields_no_update_needed(
         UPDATE registration
         SET cpf = '12345678909', birth_date = '1990-01-01'
         WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
+            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
     """)
 
@@ -253,7 +251,7 @@ def test_set_missing_fields_no_update_needed(
     unchanged_member = run_db_query("""
         SELECT cpf, birth_date FROM registration
         WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'calvin@mensa.org.br'
+            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
     """)
     assert [(cpf, birth_date.strftime("%Y-%m-%d")) for cpf, birth_date in unchanged_member] == [
@@ -269,7 +267,7 @@ def test_update_fb_profession_valid_data(
 
     # Make the request with a valid authorization token
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    response = test_client.put("/update_fb_profession/2622", json=payload, headers=headers)
+    response = test_client.put("/update_fb_profession/5", json=payload, headers=headers)
 
     # Check the response status and message
     assert response.status_code == 200
@@ -277,7 +275,7 @@ def test_update_fb_profession_valid_data(
 
     # Verify that the member's data was updated in the database
     updated_member = run_db_query("""
-        SELECT profession, facebook FROM registration WHERE registration_id = 2622
+        SELECT profession, facebook FROM registration WHERE registration_id = 5
     """)
     assert updated_member == [("Engineer", "https://facebook.com/new_profile")]
 
@@ -305,4 +303,3 @@ def test_update_fb_profession_unauthorized_member(test_client: Any, mock_valid_t
     # Expecting an unauthorized error since the token does not match the member ID
     assert response.status_code == 401
     assert response.json() == {"detail": "Unauthorized"}
-
