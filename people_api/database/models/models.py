@@ -2,26 +2,29 @@
 SQLmodels
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from pydantic import condecimal
-from sqlalchemy import DateTime, text
 from sqlmodel import (
     JSON,
+    Boolean,
     CheckConstraint,
     Column,
+    DateTime,
     Field,
+    Integer,
     Relationship,
     SQLModel,
     UniqueConstraint,
+    text,
 )
 
 
 class BaseSQLModel(SQLModel):
     """Base class for SQLModel classes, providing common fields and methods."""
 
-    created_at: datetime | None = Field(default_factory=datetime.utcnow)
-    updated_at: datetime | None = Field(default_factory=datetime.utcnow)
+    created_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class BaseAuditModel(BaseSQLModel):
@@ -29,7 +32,7 @@ class BaseAuditModel(BaseSQLModel):
 
     audit_id: int | None = Field(default=None, primary_key=True)
     operation: str = Field(max_length=10)
-    operation_timestamp: datetime | None = Field(default_factory=datetime.utcnow)
+    operation_timestamp: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AddressesAudit(BaseAuditModel, table=True):
@@ -60,7 +63,7 @@ class GroupRequests(BaseSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     registration_id: int
     group_id: str
-    no_of_attempts: int | None = Field(default=0)
+    no_of_attempts: int | None = Field(sa_column=Column(Integer, server_default=text("0")))
     phone_number: str | None = Field(max_length=60, min_length=9)
     last_attempt: datetime | None = None
     fulfilled: bool | None = None
@@ -98,9 +101,9 @@ class Registration(BaseSQLModel, table=True):
     )
 
     registration_id: int | None = Field(default=None, primary_key=True)
-    expelled: bool = Field(default=False)
-    deceased: bool = Field(default=False)
-    transferred: bool = Field(default=False)
+    expelled: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
+    deceased: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
+    transferred: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
     name: str | None = None
     social_name: str | None = None
     first_name: str | None = None
@@ -207,7 +210,7 @@ class MemberGroups(BaseSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     phone_number: str = Field(max_length=20, min_length=10)
     group_id: str = Field(max_length=255)
-    entry_date: date = Field(default=date.today)
+    entry_date: date = Field(sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")))
     status: str = Field(max_length=50)
     registration_id: int | None = Field(foreign_key="registration.registration_id")
     exit_date: date | None = None
@@ -223,7 +226,9 @@ class MembershipPayments(BaseSQLModel, table=True):
 
     payment_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
-    payment_date: date | None = Field(default_factory=date.today)
+    payment_date: datetime | None = Field(
+        sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+    )
     expiration_date: date | None = None
     amount_paid: condecimal(max_digits=10, decimal_places=2) | None = None  # type: ignore
     observation: str | None = None
@@ -249,10 +254,13 @@ class WhatsappComms(BaseSQLModel, table=True):
     """Model representing a communication log with a phone number, date, status, and reason."""
 
     __tablename__ = "whatsapp_comms"
+    __table_args__ = (UniqueConstraint("phone_number", "reason", name="uq_phone_number_reason"),)
 
     id: int | None = Field(default=None, primary_key=True)
     phone_number: str = Field(max_length=20, min_length=10)
-    communication_date: datetime | None = Field(default_factory=datetime.utcnow)
+    communication_date: datetime | None = Field(
+        sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+    )
     status: str = Field(default="pending", max_length=50)
     reason: str | None = Field(default=None, max_length=255)
     timestamp: datetime | None = Field(
