@@ -5,6 +5,7 @@ SQLmodels
 from datetime import date, datetime
 
 from pydantic import condecimal
+from sqlalchemy import DateTime, text
 from sqlmodel import (
     JSON,
     CheckConstraint,
@@ -254,6 +255,9 @@ class WhatsappComms(BaseSQLModel, table=True):
     communication_date: datetime | None = Field(default_factory=datetime.utcnow)
     status: str = Field(default="pending", max_length=50)
     reason: str | None = Field(default=None, max_length=255)
+    timestamp: datetime | None = Field(
+        sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+    )
 
 
 class GroupList(SQLModel, table=True):
