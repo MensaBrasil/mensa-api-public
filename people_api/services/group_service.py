@@ -22,6 +22,10 @@ class GroupService:
         phones = MemberRepository.getAllMemberAndLegalRepPhonesFromPostgres(
             registration_id, session
         )
+        pending_group_requests = MemberRepository.getUnfullfilledGroupRequests(
+            registration_id, session
+        )
+        failed_group_requests = MemberRepository.getFailedGroupRequests(registration_id, session)
 
         # Raise an HTTPException if no phones are associated with the user
         if not phones:
@@ -29,29 +33,28 @@ class GroupService:
                 status_code=400, detail="Não há número de telefone registrado para o usuário."
             )
 
-        # for each phone, add a request
-        for phone in phones:
-            # check if a request exists for the phone
-            if (
-                MemberRepository.getGroupRequestId(phone["phone"], join_request.group_id, session)
-                is None
-            ):
-                # check if phone is not an empty string and has more than 6 characters
-                if phone["phone"] == "" or len(phone["phone"]) < 6:
-                    print("error: Phone is not valid")
-                else:
-                    created_at = datetime.now()
-                    last_attempt = None
-                    fulfilled = False
+        # check if a request exists for the member for the current group request
+        if join_request.group_id in pending_group_requests:
+            raise HTTPException(
+                status_code=409, detail="Já existe uma solicitação pendente para este grupo."
+            )
 
-                    # Add request to join group in the database
-                    MemberRepository.addGroupRequest(
-                        registration_id,
-                        phone["phone"],
-                        join_request.group_id,
-                        created_at,
-                        last_attempt,
-                        fulfilled,
-                        session,
-                    )
+        if join_request.group_id in failed_group_requests:
+            if MemberRepository.updateFailedGroupRequests(registration_id, session):
+                return {"message": "Request to join group sent successfully"}
+
+        else:
+            created_at = datetime.now()
+            last_attempt = None
+            fulfilled = False
+
+            # Add request to join group in the database
+            MemberRepository.addGroupRequest(
+                registration_id,
+                join_request.group_id,
+                created_at,
+                last_attempt,
+                fulfilled,
+                session,
+            )
         return {"message": "Request to join group sent successfully"}

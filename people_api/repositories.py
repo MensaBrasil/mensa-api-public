@@ -10,8 +10,21 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from .dbs import firebase_collection
-from .exceptions import *
-from .models import *
+from .exceptions import (
+    AddressNotFoundException,
+    EmailNotFoundException,
+    LegalRepresentativeNotFoundException,
+    PersonNotFoundException,
+    PhoneNotFoundException,
+)
+from .models import (
+    Address,
+    Email,
+    FirebaseMemberRead,
+    LegalRepresentative,
+    Phone,
+    PostgresMemberRegistration,
+)
 from .utils import CustomJSONEncoder
 
 __all__ = "MemberRepository"
@@ -67,24 +80,59 @@ class MemberRepository:
         return result.fetchone()[0]
 
     @staticmethod
-    def getGroupRequestId(phone_number: str, group_id: str, session: Session) -> int | None:
+    def getUnfullfilledGroupRequests(mb: int, session: Session) -> list:
+        """Retrieve a list of unfulfilled group requests for a member"""
         query = text("""
-                SELECT id FROM group_requests
-                WHERE phone_number = :phone_number
-                AND group_id = :group_id
-                AND fulfilled = false
+                SELECT group_id
+                FROM group_requests
+                WHERE fulfilled = false
+                AND registration_id = :mb
                 AND no_of_attempts < 3
             """)
-        result = session.execute(query, {"phone_number": phone_number, "group_id": group_id})
-        row = result.fetchone()
-        if row:
-            return row[0]
+        result = session.execute(query, {"mb": mb})
+        data = result.scalars().all()
+        if data:
+            return result
         return None
+
+    @staticmethod
+    def getFailedGroupRequests(mb: int, session: Session) -> list:
+        """Retrieve a list of failed group requests for a member"""
+        query = text("""
+                SELECT group_id
+                FROM group_requests
+                WHERE fulfilled = false
+                AND registration_id = :mb
+                AND no_of_attempts >= 3
+            """)
+        result = session.execute(query, {"mb": mb})
+        data = result.scalars().all()
+        if data:
+            return data
+        return None
+
+    @staticmethod
+    def updateFailedGroupRequests(mb: int, session: Session):
+        query = text("""
+                UPDATE group_requests
+                SET no_of_attempts = 0
+                WHERE registration_id = :mb
+                AND fulfilled = false
+                AND group_id IN (
+                    SELECT group_id
+                    FROM group_requests
+                    WHERE fulfilled = false
+                    AND registration_id = :mb
+                    AND no_of_attempts >= 3
+                )
+            """)
+        session.execute(query, {"mb": mb})
+        session.commit()
+        return True
 
     @staticmethod
     def addGroupRequest(
         registration_id: int,
-        phone_number: str,
         group_id: str,
         created_at: datetime,
         last_attempt: datetime,
@@ -92,14 +140,13 @@ class MemberRepository:
         session: Session,
     ):
         query = text("""
-                INSERT INTO group_requests (registration_id, phone_number, group_id, created_at, last_attempt, fulfilled)
-                VALUES (:registration_id, :phone_number, :group_id, :created_at, :last_attempt, :fulfilled) RETURNING id
+                INSERT INTO group_requests (registration_id, group_id, created_at, last_attempt, fulfilled)
+                VALUES (:registration_id, :group_id, :created_at, :last_attempt, :fulfilled) RETURNING id
             """)
         result = session.execute(
             query,
             {
                 "registration_id": registration_id,
-                "phone_number": phone_number,
                 "group_id": group_id,
                 "created_at": created_at,
                 "last_attempt": last_attempt,

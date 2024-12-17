@@ -64,7 +64,6 @@ class GroupRequests(BaseSQLModel, table=True):
     registration_id: int
     group_id: str
     no_of_attempts: int | None = Field(sa_column=Column(Integer, server_default=text("0")))
-    phone_number: str | None = Field(max_length=60, min_length=9)
     last_attempt: datetime | None = None
     fulfilled: bool | None = None
 
