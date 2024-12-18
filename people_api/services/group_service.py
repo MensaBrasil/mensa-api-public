@@ -11,10 +11,21 @@ from ..repositories import MemberRepository
 
 class GroupService:
     @staticmethod
-    def get_member_groups(token_data, session: Session):
+    def get_member_groups_info(token_data, session: Session):
         MB = MemberRepository.getMBByEmail(token_data["email"], session)
-        member_groups = MemberRepository.getMemberGroupsFromPostgres(MB, session)
-        return member_groups
+        can_participate = MemberRepository.getCanParticipate(MB, session)
+        participate_in = MemberRepository.getParticipateIn(MB, session)
+        pending_requests = MemberRepository.getPendingRequests(MB, session)
+        failed_requests = MemberRepository.getFailedRequests(MB, session)
+
+        response_data = {
+            "can_participate": can_participate,
+            "participate_in": participate_in,
+            "pending_requests": pending_requests,
+            "failed_requests": failed_requests,
+        }
+
+        return response_data
 
     @staticmethod
     def request_join_group(join_request: GroupJoinRequest, token_data, session: Session):
@@ -30,7 +41,8 @@ class GroupService:
         # Raise an HTTPException if no phones are associated with the user
         if not phones:
             raise HTTPException(
-                status_code=400, detail="Não há número de telefone registrado para o usuário."
+                status_code=400,
+                detail="Não há número de telefone registrado para o usuário.",
             )
 
         # check if a request exists for the member for the current group request

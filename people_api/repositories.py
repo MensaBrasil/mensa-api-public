@@ -27,7 +27,7 @@ from .models import (
 )
 from .utils import CustomJSONEncoder
 
-__all__ = "MemberRepository"
+__all__ = ["MemberRepository"]
 
 
 class MemberRepository:
@@ -39,34 +39,143 @@ class MemberRepository:
         return True
 
     @staticmethod
-    def getMemberGroupsFromPostgres(mb: int, session: Session) -> list:
-        query = text("""SELECT gl.group_id, gl.group_name, mg.entry_date, mg.exit_date
-                        FROM group_list gl
-                        LEFT JOIN (
-                            SELECT
-                                group_id, registration_id, entry_date, exit_date,
-                                ROW_NUMBER() OVER (PARTITION BY group_id ORDER BY exit_date DESC NULLS FIRST) as rn
-                            FROM member_groups
-                            WHERE registration_id = :mb
-                        ) mg ON gl.group_id = mg.group_id AND mg.rn = 1
-                        INNER JOIN registration r ON r.registration_id = :mb
-                        WHERE
-                            (r.birth_date <= CURRENT_DATE - INTERVAL '18 year' AND gl.group_name NOT LIKE '%%JB%%' AND gl.group_name NOT LIKE '%%OrgMB%%')
-                            OR (r.birth_date > CURRENT_DATE - INTERVAL '18 year' AND gl.group_name LIKE '%%JB%%' AND gl.group_name NOT LIKE '%%OrgMB%%' AND gl.group_name NOT LIKE 'Avisos Mensa JB%%')
-                        ORDER BY
-                            CASE
-                                WHEN mg.entry_date IS NOT NULL AND mg.exit_date IS NULL THEN 1
-                                WHEN mg.entry_date IS NOT NULL AND mg.exit_date IS NOT NULL THEN 2
-                                ELSE 3
-                            END,
-                            mg.exit_date DESC,
-                            gl.group_name
-                    """)
+    def getCanParticipate(mb: int, session: Session):
+        query = text(
+            """
+            select
+                gl.group_id,
+                gl.group_name
+            from
+                group_list gl
+            left join (
+                select
+                    group_id,
+                    registration_id,
+                    entry_date,
+                    exit_date,
+                    row_number() over (partition by group_id
+                order by
+                    exit_date desc nulls first) as rn
+                from
+                    member_groups
+                where
+                    registration_id = :mb
+                                    ) mg on
+                gl.group_id = mg.group_id
+                and mg.rn = 1
+            inner join registration r on
+                r.registration_id = :mb
+            where
+                (r.birth_date <= CURRENT_DATE - interval '18 year'
+                    and gl.group_name not like '%%JB%%'
+                    and gl.group_name not like '%%OrgMB%%')
+                or (r.birth_date > CURRENT_DATE - interval '18 year'
+                    and gl.group_name like '%%JB%%'
+                    and gl.group_name not like '%%OrgMB%%'
+                    and gl.group_name not like 'Avisos Mensa JB%%')
+            order by
+                case
+                    when mg.entry_date is not null
+                    and mg.exit_date is null then 1
+                    when mg.entry_date is not null
+                    and mg.exit_date is not null then 2
+                    else 3
+                end,
+                mg.exit_date desc,
+                gl.group_name
+            """
+        )
         result = session.execute(query, {"mb": mb})
         data = result.fetchall()
         if data:
             column_names = [column for column in result.keys()]
-            return [dict(zip(column_names, row)) for row in data]
+            return [{k: v for k, v in zip(column_names, row)} for row in data]
+        return []
+
+    @staticmethod
+    def getParticipateIn(mb: int, session: Session):
+        query = text(
+            """
+            select
+                gl.group_name,
+                mg.entry_date
+            from
+                member_groups mg
+            inner join
+                group_list gl on
+                mg.group_id = gl.group_id
+            where
+                mg.registration_id = :mb
+                and mg.status = 'Active'
+            """
+        )
+        result = session.execute(query, {"mb": mb})
+        data = result.fetchall()
+        if data:
+            column_names = [column for column in result.keys()]
+            return [{k: v for k, v in zip(column_names, row)} for row in data]
+        return []
+
+    @staticmethod
+    def getPendingRequests(mb: int, session: Session):
+        query = text(
+            """
+            select
+                gl.group_name,
+                max(gr.last_attempt) as last_attempt,
+                max(gr.no_of_attempts) as no_of_attempts
+            from
+                group_requests gr
+            inner join
+                group_list gl
+            on
+                gr.group_id = gl.group_id
+            where
+                gr.registration_id = :mb
+                and gr.fulfilled = false
+                and gr.no_of_attempts < 3
+            group by
+                gr.group_id,
+                gl.group_name
+            order by last_attempt desc nulls last
+            """
+        )
+        result = session.execute(query, {"mb": mb})
+        data = result.fetchall()
+        if data:
+            column_names = [column for column in result.keys()]
+            return [{k: v for k, v in zip(column_names, row)} for row in data]
+        return []
+
+    @staticmethod
+    def getFailedRequests(mb: int, session: Session):
+        query = text(
+            """
+            select
+                gl.group_name,
+                max(gr.last_attempt) as last_attempt
+            from
+                group_requests gr
+            inner join
+                group_list gl
+            on
+                gr.group_id = gl.group_id
+            where
+                gr.registration_id = :mb
+                and gr.fulfilled = false
+                and gr.no_of_attempts >= 3
+            group by
+                gr.group_id,
+                gl.group_name
+            order by
+                last_attempt desc nulls last
+            """
+        )
+        result = session.execute(query, {"mb": mb})
+        data = result.fetchall()
+        if data:
+            column_names = [column for column in result.keys()]
+            return [{k: v for k, v in zip(column_names, row)} for row in data]
         return []
 
     @staticmethod

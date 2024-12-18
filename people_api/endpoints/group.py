@@ -15,7 +15,7 @@ group_router = APIRouter()
 async def _get_member_groups(
     token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
 ):
-    return GroupService.get_member_groups(token_data, session)
+    return GroupService.get_member_groups_info(token_data, session)
 
 
 @group_router.post("/request_join_group", tags=["member"], description="Request to join a group")

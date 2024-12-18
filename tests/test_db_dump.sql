@@ -16,7 +16,7 @@ VALUES
 -- Member groups table
 INSERT INTO member_groups (registration_id, phone_number, group_id, entry_date, status)
 VALUES
-    (5, '+552197654322', '120363045725875023@g.us', '2023-10-19', 'ACTIVE');
+    (5, '+552197654322', '120363045725875023@g.us', '2023-10-19', 'Active');
 
 -- Group requests table
 INSERT INTO group_requests (registration_id, group_id, no_of_attempts, last_attempt, fulfilled)
@@ -25,7 +25,7 @@ VALUES
     (5, '120363115167512889@g.us', '2', '2023-09-25', false),
     (5, '556184020538-1393452040@g.us', '1', '2023-09-20', false),
     (5, '120363044979103954@g.us', '0', NULL, false),
-    (5, '120363045725875023@g.us', '1', '2023-09-10', false),
+    (5, '120363045725875023@g.us', '1', '2023-09-10', true),
     (5, '120363025301625133@g.us', '3', '2023-09-05', false);
 
 -- Group list table

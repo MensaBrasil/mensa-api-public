@@ -28,29 +28,60 @@ def test_set_pronouns_invalid_pronouns(test_client: Any, mock_valid_token: Any) 
     }
 
 
-def test_get_member_groups_valid_token(test_client: Any, mock_valid_token: Any) -> None:
-    """Test retrieving member groups with a valid token"""
-    headers = {"Authorization": "Bearer mock-valid-token"}
+def test_get_member_group_info_valid_token(test_client: Any, mock_valid_token: Any) -> None:
+    """Test retrieving member group info with a valid token"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/get_member_groups", headers=headers)
     assert response.status_code == 200
     response_data = response.json()
-    assert isinstance(response_data, list)
-    # Example check to ensure at least one group is returned
+    assert isinstance(response_data, dict)
     assert len(response_data) > 0
-    # Example check for a specific group structure
-    assert "group_name" in response_data[0]  # Checking the first group for a key
+    assert len(response_data["can_participate"]) > 0
+    assert len(response_data["participate_in"]) > 0
+    assert len(response_data["pending_requests"]) > 0
+    assert len(response_data["failed_requests"]) > 0
 
 
-def test_get_member_groups_no_groups(test_client: Any, mock_valid_token: Any, mocker: Any) -> None:
-    """Test retrieving member groups when the member has no groups"""
-    # Use mocker to mock the method with the correct path
-    mocker.patch(
-        "people_api.repositories.MemberRepository.getMemberGroupsFromPostgres", return_value=[]
-    )
-    headers = {"Authorization": "Bearer mock-valid-token"}
+def test_get_member_groups_info_no_participate_in(
+    test_client: Any, mock_valid_token: Any, run_db_query: Any
+) -> None:
+    """Test retrieving member groups when the member is not participating in any group"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    run_db_query("""
+        DELETE FROM member_groups
+        WHERE registration_id = 5
+    """)
     response = test_client.get("/get_member_groups", headers=headers)
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["participate_in"] == []
+
+
+def test_get_member_groups_info_no_pending_requests(
+    test_client: Any, mock_valid_token: Any, run_db_query: Any
+) -> None:
+    """Test retrieving member groups when the member has no groups"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    run_db_query("""
+        DELETE FROM group_requests
+        WHERE registration_id = 5
+    """)
+    response = test_client.get("/get_member_groups", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["pending_requests"] == []
+
+
+def test_get_member_groups_info_no_failed_requests(
+    test_client: Any, mock_valid_token: Any, run_db_query: Any
+) -> None:
+    """Test retrieving member groups when the member has no failed requests"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    run_db_query("""
+        DELETE FROM group_requests
+        WHERE registration_id = 5
+    """)
+    response = test_client.get("/get_member_groups", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["failed_requests"] == []
 
 
 def test_get_member_groups_invalid_token(test_client: Any) -> None:
