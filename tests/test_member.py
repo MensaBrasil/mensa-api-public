@@ -92,7 +92,8 @@ def test_get_member_groups_invalid_token(test_client: Any) -> None:
     assert response.json() == {"detail": "Invalid Token"}
 
 
-def test_request_join_group_valid_data(test_client: Any, mock_valid_token: Any) -> None:
+def test_request_join_group_valid_data(
+    test_client: Any, mock_valid_token: Any) -> None:
     """Test a valid request to join a group"""
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post("/request_join_group", json={"group_id": "abc"}, headers=headers)

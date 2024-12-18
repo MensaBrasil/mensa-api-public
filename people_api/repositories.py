@@ -35,7 +35,6 @@ class MemberRepository:
     def setPronounsOnPostgres(mb: int, pronouns: str, session: Session) -> bool:
         query = text("""UPDATE registration SET pronouns = :pronouns WHERE registration_id = :mb""")
         session.execute(query, {"pronouns": pronouns, "mb": mb})
-        session.commit()
         return True
 
     @staticmethod
@@ -236,7 +235,6 @@ class MemberRepository:
                 )
             """)
         session.execute(query, {"mb": mb})
-        session.commit()
         return True
 
     @staticmethod
@@ -262,7 +260,6 @@ class MemberRepository:
                 "fulfilled": fulfilled,
             },
         )
-        session.commit()
         request_id = result.fetchone()[0]
         return request_id
 
@@ -320,14 +317,12 @@ class MemberRepository:
             """UPDATE registration SET birth_date = :birthdate WHERE registration_id = :mb"""
         )
         session.execute(query, {"birthdate": birthdate, "mb": mb})
-        session.commit()
         return True
 
     @staticmethod
     def setCPFOnPostgres(mb: int, cpf: str, session: Session):
         query = text("""UPDATE registration SET cpf = :cpf WHERE registration_id = :mb""")
         session.execute(query, {"cpf": cpf, "mb": mb})
-        session.commit()
         return True
 
     @staticmethod
@@ -343,7 +338,6 @@ class MemberRepository:
             "zip": address.zip,
         }
         session.execute(query, data)
-        session.commit()
         return True
 
     @staticmethod
@@ -359,7 +353,6 @@ class MemberRepository:
                 "email_address": email.email_address,
             },
         )
-        session.commit()
         return True
 
     @staticmethod
@@ -368,7 +361,6 @@ class MemberRepository:
             """INSERT INTO phones (registration_id, phone_number) VALUES (:registration_id, :phone_number)"""
         )
         session.execute(query, {"registration_id": mb, "phone_number": phone.phone_number})
-        session.commit()
         return True
 
     @staticmethod
@@ -389,7 +381,6 @@ class MemberRepository:
                 "observations": legal_representative.observations,
             },
         )
-        session.commit()
         return True
 
     @staticmethod
@@ -398,7 +389,6 @@ class MemberRepository:
             "DELETE FROM addresses WHERE registration_id = :mb AND address_id = :address_id RETURNING address_id"
         )
         result = session.execute(query, {"mb": mb, "address_id": address_id})
-        session.commit()
         deleted_row = result.fetchone()
         if deleted_row:
             return True
@@ -411,7 +401,6 @@ class MemberRepository:
             "DELETE FROM emails WHERE registration_id = :mb AND email_id = :email_id RETURNING email_id"
         )
         result = session.execute(query, {"mb": mb, "email_id": email_id})
-        session.commit()
         deleted_row = result.fetchone()
         if deleted_row:
             return True
@@ -424,7 +413,6 @@ class MemberRepository:
             "DELETE FROM phones WHERE registration_id = :mb AND phone_id = :phone_id RETURNING phone_id"
         )
         result = session.execute(query, {"mb": mb, "phone_id": phone_id})
-        session.commit()
         deleted_row = result.fetchone()
         if deleted_row:
             return True
@@ -437,7 +425,6 @@ class MemberRepository:
             "DELETE FROM legal_representatives WHERE registration_id = :mb AND representative_id = :legal_rep_id RETURNING representative_id"
         )
         result = session.execute(query, {"mb": mb, "legal_rep_id": legal_rep_id})
-        session.commit()
         deleted_row = result.fetchone()
         if deleted_row:
             return True
@@ -462,7 +449,6 @@ class MemberRepository:
         }
 
         session.execute(query, data)
-        session.commit()
 
         return True
 
@@ -481,7 +467,6 @@ class MemberRepository:
         }
 
         session.execute(query, data)
-        session.commit()
 
         return True
 
@@ -495,7 +480,6 @@ class MemberRepository:
         data = {"phone_number": new_phone.phone_number, "mb": mb, "phone_id": phone_id}
 
         session.execute(query, data)
-        session.commit()
 
         return True
 
@@ -520,7 +504,6 @@ class MemberRepository:
         }
 
         session.execute(query, data)
-        session.commit()
 
         return True
 
@@ -608,7 +591,6 @@ class MemberRepository:
             query,
             {"profession": profession, "facebook": facebook, "member_id": member_id},
         )
-        session.commit()
 
         return True
 
