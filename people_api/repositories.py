@@ -54,34 +54,29 @@ class MemberRepository:
                     exit_date,
                     row_number() over (partition by group_id
                 order by
+                    entry_date desc,
                     exit_date desc nulls first) as rn
                 from
                     member_groups
                 where
                     registration_id = :mb
-                                    ) mg on
+            ) mg on
                 gl.group_id = mg.group_id
                 and mg.rn = 1
             inner join registration r on
                 r.registration_id = :mb
             where
-                (r.birth_date <= CURRENT_DATE - interval '18 year'
+                ((r.birth_date <= CURRENT_DATE - interval '18 year'
                     and gl.group_name not like '%%JB%%'
                     and gl.group_name not like '%%OrgMB%%')
                 or (r.birth_date > CURRENT_DATE - interval '18 year'
                     and gl.group_name like '%%JB%%'
                     and gl.group_name not like '%%OrgMB%%'
-                    and gl.group_name not like 'Avisos Mensa JB%%')
+                    and gl.group_name not like 'Avisos Mensa JB%%'))
+                and (mg.entry_date is null
+                    or mg.exit_date is not null)
             order by
-                case
-                    when mg.entry_date is not null
-                    and mg.exit_date is null then 1
-                    when mg.entry_date is not null
-                    and mg.exit_date is not null then 2
-                    else 3
-                end,
-                mg.exit_date desc,
-                gl.group_name
+                gl.group_name;
             """
         )
         result = session.execute(query, {"mb": mb})
@@ -95,17 +90,34 @@ class MemberRepository:
     def getParticipateIn(mb: int, session: Session):
         query = text(
             """
-            select
-                gl.group_name,
+            WITH latest_entries AS (
+                SELECT 
+                    mg.group_id,
+                    MAX(mg.entry_date) AS latest_entry_date
+                FROM 
+                    member_groups mg
+                WHERE 
+                    mg.registration_id = :mb
+                GROUP BY 
+                    mg.group_id
+            )
+            SELECT 
+                gl.group_name, 
                 mg.entry_date
-            from
-                member_groups mg
-            inner join
-                group_list gl on
+            FROM 
+                latest_entries le
+            INNER JOIN 
+                member_groups mg 
+            ON 
+                le.group_id = mg.group_id 
+                AND le.latest_entry_date = mg.entry_date
+            INNER JOIN 
+                group_list gl 
+            ON 
                 mg.group_id = gl.group_id
-            where
-                mg.registration_id = :mb
-                and mg.status = 'Active'
+            WHERE 
+                mg.registration_id = :mb 
+                AND (mg.exit_date IS NULL OR mg.entry_date > mg.exit_date);
             """
         )
         result = session.execute(query, {"mb": mb})
@@ -201,7 +213,7 @@ class MemberRepository:
         data = result.scalars().all()
         if data:
             return result
-        return None
+        return []
 
     @staticmethod
     def getFailedGroupRequests(mb: int, session: Session) -> list:
@@ -217,7 +229,7 @@ class MemberRepository:
         data = result.scalars().all()
         if data:
             return data
-        return None
+        return []
 
     @staticmethod
     def updateFailedGroupRequests(mb: int, session: Session):
