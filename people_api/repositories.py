@@ -139,16 +139,18 @@ class MemberRepository:
                 group_requests gr
             inner join
                 group_list gl
-            on
-                gr.group_id = gl.group_id
+                    on
+                        gr.group_id = gl.group_id
             where
                 gr.registration_id = :mb
                 and gr.fulfilled = false
-                and gr.no_of_attempts < 3
+                and (gr.no_of_attempts < 3
+                    or gr.no_of_attempts is null)
             group by
                 gr.group_id,
                 gl.group_name
-            order by last_attempt desc nulls last
+            order by
+                last_attempt desc nulls last
             """
         )
         result = session.execute(query, {"mb": mb})
