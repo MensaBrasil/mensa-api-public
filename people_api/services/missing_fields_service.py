@@ -1,5 +1,9 @@
 """Service for managing missing fields of members."""
 
+from datetime import datetime
+
+from fastapi import HTTPException
+from pycpfcnpj.cpf import validate as validate_cpf
 from sqlalchemy.orm import Session
 
 from ..models.member_data import MissingFieldsCreate
@@ -21,10 +25,17 @@ class MissingFieldsService:
         # set only fields that are missing
         if missing_fields.cpf is not None:
             if "cpf" in missing_fields_list:
-                print("cpf")
+                # Validate received CPF
+                if not validate_cpf(missing_fields.cpf):
+                    raise HTTPException(status_code=422, detail="Invalid CPF")
+
                 MemberRepository.setCPFOnPostgres(MB, missing_fields.cpf, session)
         if missing_fields.birth_date is not None:
             if "birth_date" in missing_fields_list:
-                print("birth_date")
-                MemberRepository.setBirthDateOnPostgres(MB, missing_fields.birth_date, session)
+                try:
+                    birth_date = datetime.strptime(missing_fields.birth_date, "%Y-%m-%d")
+                    MemberRepository.setBirthDateOnPostgres(MB, birth_date, session)
+                except Exception as e:
+                    raise HTTPException(status_code=422, detail="Invalid birth_date format") from e
+
         return {"message": "Missing fields set successfully"}

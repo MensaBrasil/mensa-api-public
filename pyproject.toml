@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["mbbandrade <jessica.santanna@mensa.org.br>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -30,6 +31,7 @@ alembic = "^1.13.3"
 sqlmodel = "^0.0.22"
 openai = "^1.58.1"
 twilio = "^9.4.1"
+pycpfcnpj = "^1.8"
 
 
 
@@ -67,7 +69,6 @@ disable = [
     "import-error",           # mypy handles import checks
 
     # Other common checks
-    "missing-type-doc",       # Use mypy for type checks
     "too-few-public-methods", # Common for data containers
     "too-many-arguments",     # Relax for flexibility, unless problematic
     "too-many-instance-attributes", # Relax if using complex data models
@@ -82,7 +83,8 @@ disable = [
     "protected-access",
     "invalid-name",
     "unsubscriptable-object",
-    "useless-suppression"]
+    "useless-suppression",
+    "line-too-long",]
 
 
 [tool.mypy]

@@ -91,32 +91,32 @@ class MemberRepository:
         query = text(
             """
             WITH latest_entries AS (
-                SELECT 
+                SELECT
                     mg.group_id,
                     MAX(mg.entry_date) AS latest_entry_date
-                FROM 
+                FROM
                     member_groups mg
-                WHERE 
+                WHERE
                     mg.registration_id = :mb
-                GROUP BY 
+                GROUP BY
                     mg.group_id
             )
-            SELECT 
-                gl.group_name, 
+            SELECT
+                gl.group_name,
                 mg.entry_date
-            FROM 
+            FROM
                 latest_entries le
-            INNER JOIN 
-                member_groups mg 
-            ON 
-                le.group_id = mg.group_id 
+            INNER JOIN
+                member_groups mg
+            ON
+                le.group_id = mg.group_id
                 AND le.latest_entry_date = mg.entry_date
-            INNER JOIN 
-                group_list gl 
-            ON 
+            INNER JOIN
+                group_list gl
+            ON
                 mg.group_id = gl.group_id
-            WHERE 
-                mg.registration_id = :mb 
+            WHERE
+                mg.registration_id = :mb
                 AND (mg.exit_date IS NULL OR mg.entry_date > mg.exit_date);
             """
         )
@@ -214,7 +214,7 @@ class MemberRepository:
         result = session.execute(query, {"mb": mb})
         data = result.scalars().all()
         if data:
-            return result
+            return data
         return []
 
     @staticmethod

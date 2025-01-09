@@ -11,11 +11,44 @@ from ..services import GroupService
 group_router = APIRouter()
 
 
-@group_router.get("/get_member_groups", description="Get member groups", tags=["member"])
-async def _get_member_groups(
+@group_router.get(
+    "/get_can_participate",
+    description="Get groups that the member can participate in",
+    tags=["member"],
+)
+async def _get_can_participate(
     token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
 ):
-    return GroupService.get_member_groups_info(token_data, session)
+    return GroupService.get_can_participate(token_data, session)
+
+
+@group_router.get(
+    "/get_participate_in",
+    description="Get groups that the member is participating in",
+    tags=["member"],
+)
+async def _get_participate_in(
+    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+):
+    return GroupService.get_participate_in(token_data, session)
+
+
+@group_router.get(
+    "/get_pending_requests", description="Get pending group join requests", tags=["member"]
+)
+async def _get_pending_requests(
+    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+):
+    return GroupService.get_pending_requests(token_data, session)
+
+
+@group_router.get(
+    "/get_failed_requests", description="Get failed group join requests", tags=["member"]
+)
+async def _get_failed_requests(
+    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+):
+    return GroupService.get_failed_requests(token_data, session)
 
 
 @group_router.post("/request_join_group", tags=["member"], description="Request to join a group")

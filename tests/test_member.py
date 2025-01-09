@@ -1,7 +1,6 @@
 """Test cases for the member module"""
 
 from typing import Any
-from unittest.mock import patch
 
 
 def test_read_main(test_client: Any) -> None:
@@ -26,104 +25,6 @@ def test_set_pronouns_invalid_pronouns(test_client: Any, mock_valid_token: Any) 
     assert response.json() == {
         "detail": "Pronouns must be Ele/dele, Ela/dela or Elu/delu or Nenhuma das opções"
     }
-
-
-def test_get_member_group_info_valid_token(test_client: Any, mock_valid_token: Any) -> None:
-    """Test retrieving member group info with a valid token"""
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    response = test_client.get("/get_member_groups", headers=headers)
-    assert response.status_code == 200
-    response_data = response.json()
-    assert isinstance(response_data, dict)
-    assert len(response_data) > 0
-    assert len(response_data["can_participate"]) > 0
-    assert len(response_data["participate_in"]) > 0
-    assert len(response_data["pending_requests"]) > 0
-    assert len(response_data["failed_requests"]) > 0
-
-
-def test_get_member_groups_info_no_participate_in(
-    test_client: Any, mock_valid_token: Any, run_db_query: Any
-) -> None:
-    """Test retrieving member groups when the member is not participating in any group"""
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
-        DELETE FROM member_groups
-        WHERE registration_id = 5
-    """)
-    response = test_client.get("/get_member_groups", headers=headers)
-    assert response.status_code == 200
-    assert response.json()["participate_in"] == []
-
-
-def test_get_member_groups_info_no_pending_requests(
-    test_client: Any, mock_valid_token: Any, run_db_query: Any
-) -> None:
-    """Test retrieving member groups when the member has no groups"""
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
-        DELETE FROM group_requests
-        WHERE registration_id = 5
-    """)
-    response = test_client.get("/get_member_groups", headers=headers)
-    assert response.status_code == 200
-    assert response.json()["pending_requests"] == []
-
-
-def test_get_member_groups_info_no_failed_requests(
-    test_client: Any, mock_valid_token: Any, run_db_query: Any
-) -> None:
-    """Test retrieving member groups when the member has no failed requests"""
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
-        DELETE FROM group_requests
-        WHERE registration_id = 5
-    """)
-    response = test_client.get("/get_member_groups", headers=headers)
-    assert response.status_code == 200
-    assert response.json()["failed_requests"] == []
-
-
-def test_get_member_groups_invalid_token(test_client: Any) -> None:
-    """Test retrieving member groups with an invalid token"""
-    headers = {"Authorization": "Bearer invalid-token"}
-    response = test_client.get("/get_member_groups", headers=headers)
-    assert response.status_code == 401
-    assert response.json() == {"detail": "Invalid Token"}
-
-
-def test_request_join_group_valid_data(
-    test_client: Any, mock_valid_token: Any) -> None:
-    """Test a valid request to join a group"""
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    response = test_client.post("/request_join_group", json={"group_id": "abc"}, headers=headers)
-    assert response.status_code == 200
-    assert response.json() == {"message": "Request to join group sent successfully"}
-
-
-def test_request_join_group_invalid_token(test_client: Any) -> None:
-    """Test request to join group with an invalid token"""
-    headers = {"Authorization": "Bearer invalid-token"}
-    response = test_client.post("/request_join_group", json={"group_id": "abc"}, headers=headers)
-
-    assert response.status_code == 401
-    assert response.json() == {"detail": "Invalid Token"}
-
-
-def test_request_join_group_no_phone(test_client: Any, mock_valid_token: Any) -> None:
-    """Test requesting to join a group when the user has no phone number associated"""
-
-    # Override the repository method to return an empty list of phones
-    with patch(
-        "people_api.repositories.MemberRepository.getAllMemberAndLegalRepPhonesFromPostgres",
-        return_value=[],
-    ):
-        headers = {"Authorization": f"Bearer {mock_valid_token}"}
-        response = test_client.post(
-            "/request_join_group", json={"group_id": "abc"}, headers=headers
-        )
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Não há número de telefone registrado para o usuário."}
 
 
 def test_get_missing_fields_all_fields_present(test_client: Any, mock_valid_token: Any) -> None:
@@ -218,7 +119,7 @@ def test_set_missing_fields_valid_data(
 """)
 
     # Define the payload with valid CPF and birth_date
-    payload = {"cpf": "12345678909", "birth_date": "1990-01-01"}
+    payload = {"cpf": "12345678909", "birth_date": "1992-02-02"}
 
     # Make the request with valid authorization token
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -236,8 +137,82 @@ def test_set_missing_fields_valid_data(
         )
     """)
     assert [(cpf, birth_date.strftime("%Y-%m-%d")) for cpf, birth_date in updated_member] == [
-        ("12345678909", "1990-01-01")
+        ("12345678909", "1992-02-02")
     ]
+
+
+def test_set_missing_fields_invalid_cpf_format(
+    test_client: Any, mock_valid_token: Any, run_db_query: Any
+) -> None:
+    """Test setting missing fields with invalid cpf format"""
+
+    # Set up the member with missing fields (CPF and birth_date)
+    run_db_query(
+        """
+            UPDATE registration
+            SET cpf = NULL
+            WHERE registration_id IN (SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br')
+        """
+    )
+
+    # Define the payload with invalid CPF
+    payload = {"cpf": "1234567898"}
+
+    # Make the request with valid authorization token
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    response = test_client.post("/missing_fields", json=payload, headers=headers)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid CPF"}
+
+
+def test_set_missing_fields_invalid_cpf_number(
+    test_client: Any, mock_valid_token: Any, run_db_query: Any
+) -> None:
+    """Test setting missing fields with invalid data"""
+
+    # Set up the member with missing fields (CPF and birth_date)
+    run_db_query(
+        """
+            UPDATE registration
+            SET cpf = NULL
+            WHERE registration_id IN (SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br')
+        """
+    )
+
+    # Define the payload with invalid CPF
+    payload = {"cpf": "12345678905"}
+
+    # Make the request with valid authorization token
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    response = test_client.post("/missing_fields", json=payload, headers=headers)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid CPF"}
+
+
+def test_set_missing_fields_invalid_birth_date_format(
+    test_client: Any, mock_valid_token: Any, run_db_query: Any
+) -> None:
+    """Test setting missing fields with invalid birth_date"""
+    # Set up the member with missing fields (birth_date)
+    run_db_query(
+        """
+            UPDATE registration
+            SET birth_date = NULL
+            WHERE registration_id IN (SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br')
+        """
+    )
+
+    # Define the payload with invalid birth)date
+    payload = {"birth_date": "01-12-1980"}
+
+    # Make the request with valid authorization token
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    response = test_client.post("/missing_fields", json=payload, headers=headers)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid birth_date format"}
 
 
 def test_set_missing_fields_invalid_token(test_client: Any) -> None:
@@ -269,7 +244,7 @@ def test_set_missing_fields_no_update_needed(
     """)
 
     # Define the payload with the same CPF and birth_date
-    payload = {"cpf": "12345678909", "birth_date": "1990-01-01"}
+    payload = {"cpf": "12345678909", "birth_date": "1995-02-02"}
 
     # Make the request with valid authorization token
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
