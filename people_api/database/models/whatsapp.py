@@ -1,10 +1,9 @@
 """WhatsApp model."""
+
 from typing import Any
 
-from pydantic import BaseModel, ValidationInfo, model_validator
-
-
 from pydantic import BaseModel, model_validator
+
 
 class UpdateInput(BaseModel):
     phone: str
@@ -46,3 +45,24 @@ class UpdateInput(BaseModel):
             # Remove the 'whatsapp:' prefix
             values["phone"] = phone.replace("whatsapp:", "", 1)
         return values
+
+
+class ReceivedWhatsappMessage(BaseModel):
+    """Model for messages received from twilio"""
+
+    SmsMessageSid: str
+    NumMedia: str
+    ProfileName: str
+    MessageType: str
+    SmsSid: str
+    WaId: str
+    SmsStatus: str
+    Body: str
+    To: str
+    MessagingServiceSid: str
+    NumSegments: str
+    ReferralNumMedia: str
+    MessageSid: str
+    AccountSid: str
+    From: str
+    ApiVersion: str

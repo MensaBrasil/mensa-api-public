@@ -6,9 +6,8 @@ import os
 
 import firebase_admin
 from firebase_admin import credentials, firestore
-from sqlalchemy import create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
+from sqlmodel import Session, create_engine, text
 
 from .settings import postgres_settings
 
@@ -28,10 +27,11 @@ engine = create_engine(DATABASE_URL, echo=True, pool_size=10, max_overflow=20, p
 Base = declarative_base()
 
 # Create the sessionmaker, scoped for thread safety
-SessionLocal = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+SessionLocal = scoped_session(
+    sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=Session)
+)
 
 
-# Function to get a standard session
 def get_session() -> Session:
     """Provides a synchronous database session for read-write operations."""
     db = SessionLocal()
@@ -42,7 +42,6 @@ def get_session() -> Session:
         db.close()
 
 
-# Function to get a read-only session
 def get_read_only_session() -> Session:
     """Provides a synchronous read-only database session."""
     db = SessionLocal()

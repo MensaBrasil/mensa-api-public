@@ -14,8 +14,12 @@ from sqlmodel import (
     Field,
     Integer,
     Relationship,
+    Session,
     SQLModel,
+    String,
     UniqueConstraint,
+    func,
+    select,
     text,
 )
 
@@ -115,6 +119,7 @@ class Registration(BaseSQLModel, table=True):
     facebook: str | None = None
     suspended_until: date | None = None
     pronouns: str | None = None
+    beta_tester: bool = Field(sa_column=Column(Boolean, server_default=text("false"), nullable=True))
 
     addresses: list["Addresses"] = Relationship(back_populates="registration")
     certs_antec_criminais: list["CertsAntecCriminais"] = Relationship(back_populates="registration")
@@ -125,6 +130,25 @@ class Registration(BaseSQLModel, table=True):
     member_groups: list["MemberGroups"] = Relationship(back_populates="registration")
     membership_payments: list["MembershipPayments"] = Relationship(back_populates="registration")
     phones: list["Phones"] = Relationship(back_populates="registration")
+
+    @classmethod
+    def select(cls, registration_id: int, session: Session) -> "Registration":
+        """Return a registration record by ID."""
+        statement = select(cls).where(cls.registration_id == registration_id)
+        results = session.exec(statement)
+        return results.first()
+
+    @classmethod
+    def get_first_name(cls, registration_id: int, session: Session) -> str:
+        """
+        Return the first name of a user registration.
+        If social_name is not empty, use it as the first name.
+        If not, split the name and return the first part.
+        """
+        registration = cls.select(registration_id, session)
+        if registration.social_name:
+            return registration.social_name
+        return registration.name.split(" ")[0]
 
 
 class RegistrationAudit(BaseAuditModel, table=True):
@@ -234,8 +258,20 @@ class MembershipPayments(BaseSQLModel, table=True):
     payment_method: str | None = None
     transaction_id: str | None = None
     payment_status: str | None = None
-
     registration: Registration | None = Relationship(back_populates="membership_payments")
+
+    @classmethod
+    def get_last_payment(
+        cls, registration_id: int, session: Session
+    ) -> "MembershipPayments | None":
+        """Return the last payment record for a given registration ID."""
+        statement = (
+            select(cls)
+            .where(cls.registration_id == registration_id)
+            .order_by(cls.payment_date.desc())
+        )
+        results = session.exec(statement)
+        return results.first()
 
 
 class Phones(BaseSQLModel, table=True):
@@ -247,6 +283,25 @@ class Phones(BaseSQLModel, table=True):
     registration_id: int = Field(foreign_key="registration.registration_id")
     phone_number: str = Field(max_length=60, min_length=9)
     registration: Registration | None = Relationship(back_populates="phones")
+
+    @classmethod
+    def select(cls, phone: int, session: Session) -> list["Phones"]:
+        """Return a list of phone records matching the numeric phone pattern."""
+        statement = select(cls).where(
+            func.lower(
+                func.cast(func.regexp_replace(cls.phone_number, r"\D", "", "g"), String)
+            ).like(f"%{phone}%")
+        )
+        results = session.exec(statement)
+        return list(results.all())
+
+    @classmethod
+    def get_member_by_phone(cls, phone_number: int, session: Session) -> "Phones | None":
+        """Return a member by phone number."""
+        phones = cls.select(phone=phone_number, session=session)
+        if len(phones) > 1:
+            raise ValueError("More than one phone number found")
+        return phones[0] if phones else None
 
 
 class WhatsappComms(BaseSQLModel, table=True):

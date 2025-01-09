@@ -28,5 +28,17 @@ class DataRouteSettings:
     whatsapp_api_key: str = config("WHATSAPP_ROUTE_API_KEY", None)
 
 
+class OpenAISettings:
+    """Settings for the OpenAI API"""
+
+    openai_api_key: str = config("OPENAI_API_KEY", "sk-")
+
+
+class TwilioSettings:
+    account_sid: str = config("TWILIO_ACCOUNT_SID", None)
+    auth_token: str = config("TWILIO_AUTH_TOKEN", None)
+    from_whatsapp_number: str = config("TWILIO_WHATSAPP_FROM", None)
+
+
 api_settings = APISettings()
 postgres_settings = PostgresSettings()

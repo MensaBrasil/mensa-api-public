@@ -28,6 +28,8 @@ coverage = "^7.6.1"
 pytest-mock = "^3.14.0"
 alembic = "^1.13.3"
 sqlmodel = "^0.0.22"
+openai = "^1.58.1"
+twilio = "^9.4.1"
 
 
 

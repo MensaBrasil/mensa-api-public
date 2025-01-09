@@ -60,3 +60,10 @@ poetry install
 make run OR python .
 
 ```
+
+## Dumping a new version of the db
+
+```bash
+pg_dump --verbose --host=IP --port=5432 --username=mensa_root --format=plain --compress=0 --file dump.sql --no-owner --no-acl -n "public" mensa
+```
+Then erase the line that creates the schema public. Do not let pre-commit run on it

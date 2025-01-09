@@ -7,7 +7,7 @@ from .legal_representative_service import LegalRepresentativeService
 from .misc_service import MiscService
 from .missing_fields_service import MissingFieldsService
 from .phone_service import PhoneService
-from .whatsapp_service import WhatsAppService
+from .whatsapp_service import WhatsappChatBot, WhatsAppService
 from .workspace_service import WorkspaceService
 
 __all__ = [
@@ -22,4 +22,5 @@ __all__ = [
     "PhoneService",
     "WhatsAppService",
     "WorkspaceService",
+    "WhatsappChatBot",
 ]
