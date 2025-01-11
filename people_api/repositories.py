@@ -75,6 +75,15 @@ class MemberRepository:
                     and gl.group_name not like 'Avisos Mensa JB%%'))
                 and (mg.entry_date is null
                     or mg.exit_date is not null)
+                and not exists (
+                select
+                    1
+                from
+                    group_requests gr
+                where
+                    gr.registration_id = :mb
+                    and gr.group_id = gl.group_id
+                )
             order by
                 gl.group_name;
             """
