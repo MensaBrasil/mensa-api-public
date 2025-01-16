@@ -131,9 +131,16 @@ class MemberRepository:
         )
         result = session.execute(query, {"mb": mb})
         data = result.fetchall()
+
         if data:
-            column_names = [column for column in result.keys()]
-            return [{k: v for k, v in zip(column_names, row)} for row in data]
+            column_names = result.keys()
+            return [
+                {
+                    k: (v.strftime("%d/%m/%Y") if k == "entry_date" and v else v)
+                    for k, v in zip(column_names, row)
+                }
+                for row in data
+            ]
         return []
 
     @staticmethod
@@ -164,9 +171,16 @@ class MemberRepository:
         )
         result = session.execute(query, {"mb": mb})
         data = result.fetchall()
+
         if data:
             column_names = [column for column in result.keys()]
-            return [{k: v for k, v in zip(column_names, row)} for row in data]
+            return [
+                {
+                    k: (v.strftime("%d/%m/%Y") if k == "last_attempt" and v else v)
+                    for k, v in zip(column_names, row)
+                }
+                for row in data
+            ]
         return []
 
     @staticmethod
@@ -196,8 +210,14 @@ class MemberRepository:
         result = session.execute(query, {"mb": mb})
         data = result.fetchall()
         if data:
-            column_names = [column for column in result.keys()]
-            return [{k: v for k, v in zip(column_names, row)} for row in data]
+            column_names = result.keys()
+            return [
+                {
+                    k: (v.strftime("%d/%m/%Y") if k == "last_attempt" and v else v)
+                    for k, v in zip(column_names, row)
+                }
+                for row in data
+            ]
         return []
 
     @staticmethod

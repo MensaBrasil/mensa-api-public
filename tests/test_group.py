@@ -88,6 +88,17 @@ def test_get_participate_in_empty_participate_in(
     assert response.json() == []
 
 
+def test_get_participate_in_date_format(test_client: Any, mock_valid_token: Any) -> None:
+    """Test retrieving member groups when the member is not participating in any group"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+
+    response = test_client.get("/get_participate_in", headers=headers)
+    assert response.status_code == 200
+    assert response.json() == [
+        {"group_name": "Mensa Rio de Janeiro Regional", "entry_date": "19/10/2023"}
+    ]
+
+
 def test_get_pending_requests_empty_pending_requests(
     test_client: Any, mock_valid_token: Any, run_db_query: Any
 ) -> None:
@@ -102,6 +113,22 @@ def test_get_pending_requests_empty_pending_requests(
     assert response.json() == []
 
 
+def test_get_pending_requests_date_format(test_client: Any, mock_valid_token: Any) -> None:
+    """Test retrieving member groups when the member has no pending requests"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    response = test_client.get("/get_pending_requests", headers=headers)
+    assert response.status_code == 200
+    assert response.json() == [
+        {"group_name": "Mensa Bahia Regional", "last_attempt": "25/09/2023", "no_of_attempts": 2},
+        {"group_name": "Mensa DF Regional", "last_attempt": "20/09/2023", "no_of_attempts": 1},
+        {
+            "group_name": "Mensa Rio Grande do Sul Regional",
+            "last_attempt": None,
+            "no_of_attempts": 0,
+        },
+    ]
+
+
 def test_get_failed_requests_empty_failed_requests(
     test_client: Any, mock_valid_token: Any, run_db_query: Any
 ) -> None:
@@ -114,6 +141,18 @@ def test_get_failed_requests_empty_failed_requests(
     response = test_client.get("/get_failed_requests", headers=headers)
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_get_failed_requests_date_format(test_client: Any, mock_valid_token: Any) -> None:
+    """Test retrieving member groups when the member has no failed requests"""
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+
+    response = test_client.get("/get_failed_requests", headers=headers)
+    assert response.status_code == 200
+    assert response.json() == [
+        {"group_name": "Grupos Regionais Mensa Brasil", "last_attempt": "01/10/2023"},
+        {"group_name": "Mensampa Regional", "last_attempt": "05/09/2023"},
+    ]
 
 
 def test_request_join_group_valid_data(test_client: Any, mock_valid_token: Any) -> None:
