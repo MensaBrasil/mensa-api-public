@@ -83,6 +83,7 @@ class MemberRepository:
                 where
                     gr.registration_id = :mb
                     and gr.group_id = gl.group_id
+                    and gr.no_of_attempts < 3
                 )
             order by
                 gl.group_name;
