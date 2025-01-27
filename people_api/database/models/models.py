@@ -119,7 +119,6 @@ class Registration(BaseSQLModel, table=True):
     facebook: str | None = None
     suspended_until: date | None = None
     pronouns: str | None = None
-    beta_tester: bool = Field(sa_column=Column(Boolean, server_default=text("false"), nullable=True))
 
     addresses: list["Addresses"] = Relationship(back_populates="registration")
     certs_antec_criminais: list["CertsAntecCriminais"] = Relationship(back_populates="registration")
@@ -347,3 +346,73 @@ class WhatsappMessages(SQLModel, table=True):
 
     registration: "Registration" = Relationship(back_populates="whatsapp_messages")
     group_list: "GroupList" = Relationship(back_populates="whatsapp_messages")
+
+
+class IAMRoles(SQLModel, table=True):
+    """Model for the iam_roles table."""
+
+    __tablename__ = "iam_roles"
+
+    id: int = Field(primary_key=True)
+    role_name: str = Field(max_length=128)
+    role_description: str = Field(max_length=512)
+
+
+class IAMGroups(SQLModel, table=True):
+    """Model for the iam_groups table."""
+
+    __tablename__ = "iam_groups"
+
+    id: int = Field(primary_key=True)
+    group_name: str = Field(max_length=128)
+    group_description: str = Field(max_length=512)
+
+
+class IAMPermissions(SQLModel, table=True):
+    """Model for the iam_role_permissions table."""
+
+    __tablename__ = "iam_permissions"
+
+    id: int = Field(primary_key=True)
+    permission_name: str = Field(max_length=128)
+    permission_description: str = Field(max_length=512)
+
+
+class IAMRolePermissionsMap(SQLModel, table=True):
+    """Model for the iam_role_permissions_map table."""
+
+    __tablename__ = "iam_role_permissions_map"
+
+    id: int = Field(primary_key=True)
+    role_id: int = Field(foreign_key="iam_roles.id")
+    permission_id: int = Field(foreign_key="iam_permissions.id")
+
+
+class IAMGroupPermissionsMap(SQLModel, table=True):
+    """Model for the iam_group_permissions_map table."""
+
+    __tablename__ = "iam_group_permissions_map"
+
+    id: int = Field(primary_key=True)
+    group_id: int = Field(foreign_key="iam_groups.id")
+    permission_id: int = Field(foreign_key="iam_permissions.id")
+
+
+class IAMUserRolesMap(SQLModel, table=True):
+    """Model for the iam_user_roles_map table."""
+
+    __tablename__ = "iam_user_roles_map"
+
+    id: int = Field(primary_key=True)
+    registration_id: int = Field(foreign_key="registration.registration_id")
+    role_id: int = Field(foreign_key="iam_roles.id")
+
+
+class IAMUserGroupsMap(SQLModel, table=True):
+    """Model for the iam_user_groups_map table."""
+
+    __tablename__ = "iam_user_groups_map"
+
+    id: int = Field(primary_key=True)
+    registration_id: int = Field(foreign_key="registration.registration_id")
+    group_id: int = Field(foreign_key="iam_groups.id")
