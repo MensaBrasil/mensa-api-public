@@ -337,15 +337,12 @@ class WhatsappMessages(SQLModel, table=True):
 
     id: int = Field(primary_key=True)
     message_id: str = Field(max_length=128)
-    group_id: str = Field(max_length=128, foreign_key="group_list.group_id", index=True)
-    registration_id: int = Field(foreign_key="registration.registration_id", index=True)
+    group_id: str = Field(max_length=128, index=True)
+    registration_id: int = Field(index=True)
     timestamp: datetime = Field(index=True)
     phone: str = Field(max_length=20, min_length=10)
     message_type: str = Field(max_length=50)
     device_type: str = Field(max_length=50)
-
-    registration: "Registration" = Relationship(back_populates="whatsapp_messages")
-    group_list: "GroupList" = Relationship(back_populates="whatsapp_messages")
 
 
 class IAMRoles(SQLModel, table=True):
