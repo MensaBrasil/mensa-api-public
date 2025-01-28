@@ -2,16 +2,18 @@
 
 from twilio.rest import Client
 
-from ..settings import TwilioSettings
+from ..settings import Settings
+
+SETTINGS = Settings()
 
 
 class TwilioService:
     """Service for sending WhatsApp messages using Twilio's API."""
 
     def __init__(self):
-        self.account_sid = TwilioSettings.account_sid
-        self.auth_token = TwilioSettings.auth_token
-        self.from_whatsapp_number = TwilioSettings.from_whatsapp_number
+        self.account_sid = SETTINGS.TWILIO_ACCOUNT_SID
+        self.auth_token = SETTINGS.TWILIO_AUTH_TOKEN
+        self.from_whatsapp_number = SETTINGS.TWILIO_FROM_WHATSAPP_NUMBER
 
         self.client = Client(self.account_sid, self.auth_token)
 

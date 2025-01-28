@@ -1,17 +1,16 @@
 """UTILS
 Misc helpers/utils functions
 """
-
 # # Native # #
-from time import time
-from uuid import uuid4
-from typing import Union
-import json
-
-from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
-from babel.dates import format_date, Locale
 import io
+import json
+from datetime import datetime, date
+from time import time
+from typing import Union
+from uuid import uuid4
+
+from babel.dates import Locale, format_date
+from PIL import Image, ImageDraw, ImageFont
 
 __all__ = ("get_time", "get_uuid")
 
@@ -24,13 +23,6 @@ def get_time(seconds_precision=True) -> Union[int, float]:
 def get_uuid() -> str:
     """Returns an unique UUID (UUID4)"""
     return str(uuid4())
-
-from fastapi import FastAPI, File
-from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
-from babel.dates import format_date, Locale
-import io
-
 
 def create_certificate(nome: str, MB: int, expiration: datetime):
     data = datetime.now()
@@ -61,10 +53,6 @@ def create_certificate(nome: str, MB: int, expiration: datetime):
     img.save(buf, format='PNG')
     buf.seek(0)
     return buf
-
-
-
-from datetime import datetime, date
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):

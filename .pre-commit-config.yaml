@@ -11,12 +11,17 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
 
--   repo: https://github.com/hadialqattan/pycln
-    rev: v2.4.0
-    hooks:
-      - id: pycln
-        args: ["-a"]
-        language_version: "3.12"
+- repo: https://github.com/hadialqattan/pycln
+  rev: v2.4.0
+  hooks:
+    - id: pycln
+      args: ["-a"]
+      language_version: "3.12"
+
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.5.22
+  hooks:
+    - id: uv-lock
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.5.1
@@ -34,11 +39,6 @@ repos:
     language: system
     entry: cargo fmt --
     types: [rust]
-
-- repo: https://github.com/python-poetry/poetry
-  rev: 1.8.3
-  hooks:
-  -   id: poetry-check
 
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.19.0

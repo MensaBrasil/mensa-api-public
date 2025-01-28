@@ -1,57 +1,46 @@
-[tool.poetry]
-name = "poetry"
+[project]
+name = "mensa-api"
 version = "0.1.0"
 description = ""
-authors = ["mbbandrade <jessica.santanna@mensa.org.br>"]
+authors = []
+requires-python = "~=3.12"
 readme = "README.md"
-package-mode = false
+dependencies = [
+    "babel>=2.15.0,<3",
+    "fastapi>=0.112.0,<0.113",
+    "firebase-admin>=6.5.0,<7",
+    "freezegun>=1.5.1,<2",
+    "google-api-python-client>=2.140.0,<3",
+    "pillow>=10.4.0,<11",
+    "psycopg2-binary>=2.9.9,<3",
+    "pydantic>=2.8.2,<3",
+    "pymongo>=4.8.0,<5",
+    "uvicorn>=0.30.5,<0.31",
+    "python-multipart>=0.0.9,<0.0.10",
+    "pytest>=8.3.2,<9",
+    "sqlalchemy>=2.0.32,<3",
+    "asyncpg>=0.29.0,<0.30",
+    "pre-commit>=3.8.0,<4",
+    "pytest-asyncio>=0.23.8,<0.24",
+    "coverage>=7.6.1,<8",
+    "pytest-mock>=3.14.0,<4",
+    "alembic>=1.13.3,<2",
+    "sqlmodel>=0.0.22,<0.0.23",
+    "openai>=1.58.1,<2",
+    "twilio>=9.4.1,<10",
+    "pycpfcnpj~=1.8",
+    "pydantic-settings>=2.7.0,<3",
+    "detect-secrets>=1.5.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-babel = "^2.15.0"
-fastapi = "^0.112.0"
-firebase-admin = "^6.5.0"
-freezegun = "^1.5.1"
-google-api-python-client = "^2.140.0"
-pillow = "^10.4.0"
-psycopg2-binary = "^2.9.9"
-pydantic = "^2.8.2"
-pymongo = "^4.8.0"
-python-decouple = "^3.8"
-uvicorn = "^0.30.5"
-python-multipart = "^0.0.9"
-pytest = "^8.3.2"
-sqlalchemy = "^2.0.32"
-asyncpg = "^0.29.0"
-pre-commit = "^3.8.0"
-pytest-asyncio = "^0.23.8"
-coverage = "^7.6.1"
-pytest-mock = "^3.14.0"
-alembic = "^1.13.3"
-sqlmodel = "^0.0.22"
-openai = "^1.58.1"
-twilio = "^9.4.1"
-pycpfcnpj = "^1.8"
-
-
-
-[tool.poetry.group.dev.dependencies]
-freezegun = "1.5.1"
-httpx = "0.27.0"
-pydantic = "2.8.2"
-python-dateutil = "2.8.2"
-wait4it = "0.2.1"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-
-
-[tool.pytest.ini_options]
-addopts = "-vv"
-
+[dependency-groups]
+dev = [
+    "freezegun==1.5.1",
+    "httpx==0.27.0",
+    "pydantic==2.8.2",
+    "python-dateutil==2.8.2",
+    "wait4it==0.2.1",
+]
 
 [tool.pylint]
 disable = [
@@ -86,7 +75,6 @@ disable = [
     "useless-suppression",
     "line-too-long",]
 
-
 [tool.mypy]
 # Specify the directories or files to check. Adjust these paths to fit your project structure.
 files = ["src", "tests"]
@@ -94,10 +82,8 @@ files = ["src", "tests"]
 # Enable strict optional checking, which requires you to explicitly handle None values.
 strict_optional = true
 
-
 # Allow calling functions that do not have return type annotations
 disallow_untyped_calls = false
-
 
 # Disallow function definitions without return type annotations
 disallow_incomplete_defs = false

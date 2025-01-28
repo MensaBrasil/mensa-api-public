@@ -9,7 +9,7 @@ from firebase_admin import credentials, firestore
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 from sqlmodel import Session, create_engine, text
 
-from .settings import postgres_settings
+from .settings import Settings
 
 __all__ = (
     "get_session",
@@ -17,8 +17,10 @@ __all__ = (
     "firebase_collection",
 )
 
+SETTINGS = Settings()
+
 # PostgreSQL
-DATABASE_URL = f"postgresql://{postgres_settings.user}:{postgres_settings.password}@{postgres_settings.host}/{postgres_settings.database}"
+DATABASE_URL = f"postgresql://{SETTINGS.POSTGRES_USER}:{SETTINGS.POSTGRES_PASSWORD}@{SETTINGS.POSTGRES_HOST}/{SETTINGS.POSTGRES_DATABASE}"
 
 # Create SQLAlchemy engine with connection pooling
 engine = create_engine(DATABASE_URL, echo=True, pool_size=10, max_overflow=20, pool_pre_ping=True)

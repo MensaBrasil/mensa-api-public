@@ -13,11 +13,13 @@ from people_api.endpoints.errors import (
 )
 
 from ..database.models import QueryRequest, QueryResponse
-from ..settings import DataRouteSettings
+from ..settings import Settings
+
+SETTINGS=Settings()
 
 API_KEY_NAME = "data_endpoint_token"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
-API_KEY = DataRouteSettings.data_api_key
+API_KEY = SETTINGS.DATA_ROUTE_API_KEY
 
 
 def get_api_key(api_key: str = Security(api_key_header)):

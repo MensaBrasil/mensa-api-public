@@ -3,17 +3,18 @@
 import secrets
 import string
 
-from decouple import config
 from fastapi import Depends, Form, Header, HTTPException
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from starlette.status import HTTP_403_FORBIDDEN
 
-SECRET_KEY = config("GOOGLE_API_KEY", "notoken")
+from ..settings import Settings
+
+SETTINGS = Settings()
 
 
 def verify_secret_key(x_api_key: str = Header(...)):
-    if x_api_key != SECRET_KEY:
+    if x_api_key != SETTINGS.GOOGLE_API_KEY:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Invalid API Key")
     return x_api_key
 

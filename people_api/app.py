@@ -7,45 +7,18 @@ FastAPI app definition, initialization and definition of routes
 """
 
 # # Installed # #
-
 from fastapi import FastAPI
-
 from fastapi.middleware.cors import CORSMiddleware
 
-from .endpoints import (
-    data_router,
-    whatsapp_router,
-    group_router,
-    certificate_router,
-    member_misc_router,
-    member_address_router,
-    member_email_router,
-    member_legal_representative_router,
-    member_phone_router,
-    google_workspace_router,
-    missing_fields_router,
-)
-
-APP_ROUTERS = [
-    data_router,
-    whatsapp_router,
-    group_router,
-    certificate_router,
-    member_misc_router,
-    member_address_router,
-    member_email_router,
-    member_legal_representative_router,
-    member_phone_router,
-    google_workspace_router,
-    missing_fields_router,
-]
-
+from .routers import all_routers
 from .middlewares import request_handler
 
 # # Package # #
-from .settings import api_settings as settings
+from .settings import Settings
 
-app = FastAPI(title=settings.title, docs_url="/documentation$@vtW6qodxYLQ", redoc_url=None)
+SETTINGS = Settings()
+
+app = FastAPI(title=SETTINGS.API_TITLE, docs_url="/documentation$@vtW6qodxYLQ", redoc_url=None)
 app.middleware("http")(request_handler)
 
 # Add CORS middleware
@@ -60,5 +33,4 @@ app.add_middleware(
     allow_headers=["*"],  # List of allowed HTTP headers
 )
 
-for router in APP_ROUTERS:
-    app.include_router(router)
+app.include_router(all_routers)

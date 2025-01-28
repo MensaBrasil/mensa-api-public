@@ -34,30 +34,31 @@ Below is a brief overview of the available API endpoints:
 - PATCH `/people/{person_id}`: Update a person.
 - DELETE `/people/{person_id}`: Delete a person.
 
+### App Group Endpoints
+- GET `/get_can_participate`: Get groups that the member can participate in
+- GET `/get_participate_in`: Get groups that the member is participating in
+- GET `/get_pending_requests`: Get pending group join requests
+- GET `/get_failed_requests`: Get failed group join requests
+
 ### Other Endpoints
 - POST `/create_user/`: Create a new user in Google Workspace.
 - GET `/download_certificate.png`: Generate and download a certificate.
 
 
-
 ## Requirements
 
 - Python >= 3.7
-- Requirements listed on [requirements.txt](requirements.txt)
-- Running MongoDB server
+- Requirements listed on [pyproject.toml](pyproject.toml)
 
 ## How to run
 
 ```bash
 
-# Activate venv
-poetry shell
-
-# Install requirements
-poetry install
+# Install dependencies
+uv sync
 
 # Run the app (available at http://localhost:5000/...)
-make run OR python .
+make run OR uv run main.py
 
 ```
 

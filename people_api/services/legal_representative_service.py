@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 
 from ..models.member_data import LegalRepresentativeCreate, LegalRepresentativeUpdate
 from ..repositories import MemberRepository
-from ..settings import DataRouteSettings
+from ..settings import Settings
 
-
+SETTINGS=Settings()
 # Model for request to add legal representative using API key
 class LegalRepresentativeRequest(BaseModel):
     token: str
@@ -24,7 +24,7 @@ class LegalRepresentativeRequest(BaseModel):
 class LegalRepresentativeService:
     @staticmethod
     def add_legal_representative_api_key(request: LegalRepresentativeRequest, session: Session):
-        if request.token != DataRouteSettings.whatsapp_api_key:
+        if request.token != SETTINGS.WHATSAPP_ROUTE_API_KEY:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
         request.mb = int(request.mb)

@@ -1,19 +1,21 @@
-FROM python:3.12
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
+ENV UV_COMPILE_BYTECODE=1
+
+ENV UV_LINK_MODE=copy
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
+
 COPY . /app
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    export PATH="/root/.local/bin:$PATH"
-ENV PATH="/root/.local/bin:$PATH"
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
+ENV PATH="/app/.venv/bin:$PATH"
 
-RUN poetry install --no-root
-
-
-# Add Poetry to PATH for subsequent commands
-
-
-CMD ["poetry", "run", "uvicorn", "people_api:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uv", "run", "uvicorn", "people_api:app", "--host", "0.0.0.0", "--port", "5000"]

@@ -1,44 +1,32 @@
-"""SETTINGS
-Settings loaders using Pydantic BaseSettings classes (load from environment variables / dotenv file)
-"""
+"""Settings for the API using pydantic-settings module"""
 
-__all__ = ("api_settings", "postgres_settings")
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from decouple import config
+__all__ = ("Settings",)
 
 
-class APISettings:
-    title: str = config("API_TITLE", default="Mensa API")
-    port: int = config("API_PORT", default=5000, cast=int)
-    host: str = config("API_HOST", default="0.0.0.0")
-    log_level: str = config("API_LOG_LEVEL", default="DEBUG")
+class Settings(BaseSettings):
+    """Settings for the API"""
 
+    API_TITLE: str
+    API_PORT: str
+    API_HOST: str
+    API_LOG_LEVEL: str
 
-class PostgresSettings:
-    host: str = config("POSTGRE_HOST", default="127.0.0.1")
-    user: str = config("POSTGRE_USER", default="postgres")
-    password: str = config("POSTGRE_PASSWORD", default="postgres")
-    database: str = config("POSTGRES_DATABASE", default="stats")
+    POSTGRES_HOST: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DATABASE: str
 
+    DATA_ROUTE_API_KEY: str
+    WHATSAPP_ROUTE_API_KEY: str
 
-class DataRouteSettings:
-    """Settings for the data endpoint"""
+    GOOGLE_API_KEY: str
 
-    data_api_key: str = config("DATA_ROUTE_API_KEY", None)
-    whatsapp_api_key: str = config("WHATSAPP_ROUTE_API_KEY", None)
+    OPENAI_API_KEY: str
 
+    TWILIO_ACCOUNT_SID: str
+    TWILIO_AUTH_TOKEN: str
+    TWILIO_FROM_WHATSAPP_NUMBER: str
 
-class OpenAISettings:
-    """Settings for the OpenAI API"""
-
-    openai_api_key: str = config("OPENAI_API_KEY", "sk-")
-
-
-class TwilioSettings:
-    account_sid: str = config("TWILIO_ACCOUNT_SID", None)
-    auth_token: str = config("TWILIO_AUTH_TOKEN", None)
-    from_whatsapp_number: str = config("TWILIO_WHATSAPP_FROM", None)
-
-
-api_settings = APISettings()
-postgres_settings = PostgresSettings()
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")

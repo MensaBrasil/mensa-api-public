@@ -11,115 +11,69 @@ concurrency:
 
 jobs:
   test:
+    name: test
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - uses: astral-sh/setup-uv@v1
+        with:
+          version: "latest"
 
+      - name: Install dependencies
+        run: uv sync -p 3.12
 
-    - name: Set up services using Docker Compose v2
-      run: |
-        docker compose up -d --build
+      - name: Run tests with coverage
+        env:
+          API_HOST: ${{ secrets.API_HOST }}
+          API_LOG_LEVEL: ${{ secrets.API_LOG_LEVEL }}
+          API_PORT: ${{ secrets.API_PORT }}
+          API_TITLE: ${{ secrets.API_TITLE }}
+          DATA_ROUTE_API_KEY: ${{ secrets.DATA_ROUTE_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POSTGRES_DATABASE: ${{ secrets.POSTGRES_DATABASE }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_WHATSAPP_NUMBER: ${{ secrets.TWILIO_FROM_WHATSAPP_NUMBER }}
+          WHATSAPP_ROUTE_API_KEY: ${{ secrets.WHATSAPP_ROUTE_API_KEY }}
+        run: |
+          uv run coverage run -m pytest -sv .
+          uv run coverage report
 
-    - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
-
-    - name: Install dependencies
-      run: |
-        poetry install
-
-    # - name: Run Ruff formatting check
-    #   run: |
-    #     poetry add ruff
-    #     poetry run ruff check . --select E,I
-
-    - name: Check for secrets
-      run: |
-        poetry add detect-secrets
-        poetry run detect-secrets scan --baseline .secrets.baseline
-
-    - name: Run tests with coverage
-      run: |
-        poetry run coverage run -m pytest -sv .
-        poetry run coverage report
-        poetry run coverage xml
-
-    - name: Check coverage
-      run: |
-        COVERAGE=$(poetry run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
-        echo "Coverage is $COVERAGE%"
-        if (( $(echo "$COVERAGE < 1" | bc -l) )); then
-          echo "Code coverage is below 90%"
-          exit 1
-        fi
-
-    - name: Tear down Docker Compose
-      run: docker compose down
-
-        # static_analysis:
-  #   runs-on: ubuntu-latest
-  #   needs: setup
-
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-
-  #   - name: Set up Python
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: '3.12'
-
-  #   - name: Install pylint using pip
-  #     run: pip install pylint
-
-  #   - name: Static code analysis with pylint
-  #     run: pylint --disable=F0010 people_api
-
-  # type_checking:
-  #   runs-on: ubuntu-latest
-  #   needs: setup
-
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-
-  #   - name: Set up Python
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: '3.12'
-
-  #   - name: Install mypy using pip
-  #     run: pip install mypy
-
-  #   - name: Type checking with mypy
-  #     run: |
-  #       mypy people_api --python-version 3.12 --ignore-missing-imports --exclude '[a-zA-Z]*/(migrations)/(.)*' --install-types --non-interactive
-
+      - name: Check coverage
+        run: |
+          COVERAGE=$(uv run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
+            echo "Coverage is $COVERAGE%"
+            if (( $(echo "$COVERAGE < 1" | bc -l) )); then
+              echo "Code coverage is below 90%"
+              exit 1
+            fi
 
   security_scan:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-    - name: Set up Trivy
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: fs
-        ignore-unfixed: true
-        exit-code: 1
-        severity: MEDIUM
+      - name: Set up Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          exit-code: 1
+          severity: MEDIUM
