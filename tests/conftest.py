@@ -33,59 +33,53 @@ def setup_db():
     """Set up the database before any tests run."""
     try:
         # Start the test database container
-        subprocess.run(["docker", "compose", "up", "-d", "test-db"], check=True)
-        wait_for_db()  # Ensure the DB is ready before proceeding
+        subprocess.run(["uv", "run", "docker", "compose", "up", "-d", "test-db"], check=True)
 
-        # Drop and recreate the public schema
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn.cursor() as cur:
-            cur.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
-            conn.commit()
-        conn.close()
-
-        # Apply existing migrations
+        # Apply migrations
         subprocess.run(
-            ["alembic", "-c", "people_api/database/alembic.ini", "upgrade", "c4c4ea41ac02"],
+            ["uv", "run", "alembic", "-c", "people_api/database/alembic.ini", "upgrade", "head"],
             check=True,
         )
 
-        # Populate the database with test data
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn.cursor() as cur:
-            with open(TEST_DB_DUMP_PATH) as dump_file:
-                cur.execute(dump_file.read())
-            conn.commit()
-        conn.close()
-    except (subprocess.CalledProcessError, psycopg2.Error) as e:
-        pytest.exit(f"Failed to set up the database: {str(e)}")
-    yield
+    except subprocess.CalledProcessError as e:
+        pytest.exit(f"Failed to set up the database: {e}")
 
-    # Stop the database container
-    subprocess.run(["docker", "compose", "down"], check=True)
+    # Make sure composer is down after all tests
+    yield
+    try:
+        subprocess.run(["uv", "run", "docker", "compose", "down"], check=True)
+    except subprocess.CalledProcessError as e:
+        pytest.exit(f"Failed to tear down Docker containers: {e}")
 
 
 @pytest.fixture(scope="function", autouse=True)
 def reset_db():
     """Reset the database before each test"""
     try:
-        # Drop all data
-        subprocess.run(["docker", "compose", "down", "--volumes", "--remove-orphans"], check=True)
-        # Restart the test database
-        subprocess.run(["docker", "compose", "up", "-d", "test-db"], check=True)
-        wait_for_db()  # Ensure the DB is fully ready
-
-        # Reapply migrations
-        subprocess.run(
-            ["alembic", "-c", "people_api/database/alembic.ini", "upgrade", "head"], check=True
-        )
-
-        # Reload test data
+        # Truncate all tables in the database
         conn = psycopg2.connect(DATABASE_URL)
         with conn.cursor() as cur:
-            with open("tests/test_db_dump.sql") as dump_file:
-                cur.execute(dump_file.read())
+            cur.execute(
+                """
+                DO $$ DECLARE
+                r RECORD;
+                BEGIN
+                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP
+                        EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
+                    END LOOP;
+                END $$;
+                """
+            )
             conn.commit()
-        conn.close()
+            wait_for_db()
+        # Populate the database with the initial data
+
+        with open(TEST_DB_DUMP_PATH, encoding="utf-8") as f:
+            sql = f.read()
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            conn.commit()
+
     except subprocess.CalledProcessError as e:
         pytest.exit(f"Failed to reset the database: {e}")
     yield

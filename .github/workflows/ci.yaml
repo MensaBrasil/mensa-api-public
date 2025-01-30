@@ -58,6 +58,11 @@ jobs:
               exit 1
             fi
 
+      - name: Check for secrets
+        run: |
+          uv add detect-secrets
+          uv run detect-secrets scan --baseline .secrets.baseline
+
   security_scan:
     runs-on: ubuntu-latest
 

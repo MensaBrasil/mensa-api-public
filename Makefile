@@ -28,10 +28,10 @@ pgadmin: ## start pgadmin in docker
 	docker compose up pgadmin -d
 
 migrate-autogenerate: ## generate migration using alembic autogenerate
-	alembic -c people_api/database/alembic.ini revision --autogenerate -m "$(m)"
+	uv run alembic -c people_api/database/alembic.ini revision --autogenerate -m "$(m)"
 
 migrate-upgrade: ## upgrade database using alembic (apply last generated migration)
-	alembic -c people_api/database/alembic.ini upgrade head
+	uv run alembic -c people_api/database/alembic.ini upgrade head
 
 help: ## show this help
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
