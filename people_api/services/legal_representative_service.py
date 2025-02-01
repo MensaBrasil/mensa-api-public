@@ -11,7 +11,9 @@ from ..models.member_data import LegalRepresentativeCreate, LegalRepresentativeU
 from ..repositories import MemberRepository
 from ..settings import Settings
 
-SETTINGS=Settings()
+SETTINGS = Settings()
+
+
 # Model for request to add legal representative using API key
 class LegalRepresentativeRequest(BaseModel):
     token: str
@@ -24,7 +26,7 @@ class LegalRepresentativeRequest(BaseModel):
 class LegalRepresentativeService:
     @staticmethod
     def add_legal_representative_api_key(request: LegalRepresentativeRequest, session: Session):
-        if request.token != SETTINGS.WHATSAPP_ROUTE_API_KEY:
+        if request.token != SETTINGS.whatsapp_route_api_key:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
         request.mb = int(request.mb)

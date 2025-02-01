@@ -14,7 +14,7 @@ SETTINGS = Settings()
 
 
 def verify_secret_key(x_api_key: str = Header(...)):
-    if x_api_key != SETTINGS.GOOGLE_API_KEY:
+    if x_api_key != SETTINGS.google_api_key:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Invalid API Key")
     return x_api_key
 

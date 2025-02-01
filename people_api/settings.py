@@ -8,25 +8,25 @@ __all__ = ("Settings",)
 class Settings(BaseSettings):
     """Settings for the API"""
 
-    API_TITLE: str
-    API_PORT: str
-    API_HOST: str
-    API_LOG_LEVEL: str
+    api_title: str
+    api_port: str
+    api_host: str
+    api_log_level: str
 
-    POSTGRES_HOST: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DATABASE: str
+    postgres_host: str
+    postgres_user: str
+    postgres_password: str
+    postgres_database: str
 
-    DATA_ROUTE_API_KEY: str
-    WHATSAPP_ROUTE_API_KEY: str
+    data_route_api_key: str
+    whatsapp_route_api_key: str
 
-    GOOGLE_API_KEY: str
+    google_api_key: str
 
-    OPENAI_API_KEY: str
+    openai_api_key: str
 
-    TWILIO_ACCOUNT_SID: str
-    TWILIO_AUTH_TOKEN: str
-    TWILIO_FROM_WHATSAPP_NUMBER: str
+    twilio_account_sid: str
+    twilio_auth_token: str
+    twilio_from_whatsapp_number: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")

@@ -11,9 +11,9 @@ class TwilioService:
     """Service for sending WhatsApp messages using Twilio's API."""
 
     def __init__(self):
-        self.account_sid = SETTINGS.TWILIO_ACCOUNT_SID
-        self.auth_token = SETTINGS.TWILIO_AUTH_TOKEN
-        self.from_whatsapp_number = SETTINGS.TWILIO_FROM_WHATSAPP_NUMBER
+        self.account_sid = SETTINGS.twilio_account_sid
+        self.auth_token = SETTINGS.twilio_auth_token
+        self.from_whatsapp_number = SETTINGS.twilio_from_whatsapp_number
 
         self.client = Client(self.account_sid, self.auth_token)
 

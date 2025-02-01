@@ -6,4 +6,4 @@ from ..settings import Settings
 
 SETTINGS = Settings()
 
-openai_client = OpenAI(api_key=SETTINGS.OPENAI_API_KEY)
+openai_client = OpenAI(api_key=SETTINGS.openai_api_key)

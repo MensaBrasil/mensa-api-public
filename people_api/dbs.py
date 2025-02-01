@@ -20,7 +20,7 @@ __all__ = (
 SETTINGS = Settings()
 
 # PostgreSQL
-DATABASE_URL = f"postgresql://{SETTINGS.POSTGRES_USER}:{SETTINGS.POSTGRES_PASSWORD}@{SETTINGS.POSTGRES_HOST}/{SETTINGS.POSTGRES_DATABASE}"
+DATABASE_URL = f"postgresql://{SETTINGS.postgres_user}:{SETTINGS.postgres_password}@{SETTINGS.postgres_host}/{SETTINGS.postgres_database}"
 
 # Create SQLAlchemy engine with connection pooling
 engine = create_engine(DATABASE_URL, echo=True, pool_size=10, max_overflow=20, pool_pre_ping=True)

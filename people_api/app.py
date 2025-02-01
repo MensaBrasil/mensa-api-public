@@ -18,7 +18,7 @@ from .settings import Settings
 
 SETTINGS = Settings()
 
-app = FastAPI(title=SETTINGS.API_TITLE, docs_url="/documentation$@vtW6qodxYLQ", redoc_url=None)
+app = FastAPI(title=SETTINGS.api_title, docs_url="/documentation$@vtW6qodxYLQ", redoc_url=None)
 app.middleware("http")(request_handler)
 
 # Add CORS middleware
