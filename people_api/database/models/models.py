@@ -370,7 +370,7 @@ class WhatsappMessages(SQLModel, table=True):
     phone: str = Field(max_length=20, min_length=10)
     message_type: str = Field(max_length=50)
     device_type: str = Field(max_length=50)
-    content: str = Field(sa_column=Column(Text, nullable=False))
+    content: str | None = Field(sa_column=Column(Text, nullable=False))
 
 
 class IAMRoles(SQLModel, table=True):

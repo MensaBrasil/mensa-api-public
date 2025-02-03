@@ -1,8 +1,8 @@
 """add whatsapp-message-column
 
-Revision ID: e745774137c2
+Revision ID: 87342b0f0e7f
 Revises: da883f951481
-Create Date: 2025-02-03 20:31:36.916413
+Create Date: 2025-02-03 20:37:56.292564
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "e745774137c2"
+revision: str = "87342b0f0e7f"
 down_revision: str | None = "da883f951481"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
