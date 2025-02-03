@@ -1,26 +1,22 @@
 """DATABASE
-MongoDB, Firebase, and PostgreSQL database initialization.
+MongoDB, Firebase, PostgreSQL, and Redis initialization.
 """
 
 import os
+from collections.abc import AsyncGenerator
 
 import firebase_admin
+import redis.asyncio as redis
 from firebase_admin import credentials, firestore
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 from sqlmodel import Session, create_engine, text
 
-from .settings import Settings
+from .settings import get_settings
 
-__all__ = (
-    "get_session",
-    "get_read_only_session",
-    "firebase_collection",
-)
-
-SETTINGS = Settings()
+settings = get_settings()
 
 # PostgreSQL
-DATABASE_URL = f"postgresql://{SETTINGS.postgres_user}:{SETTINGS.postgres_password}@{SETTINGS.postgres_host}/{SETTINGS.postgres_database}"
+DATABASE_URL = f"postgresql://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}/{settings.postgres_database}"
 
 # Create SQLAlchemy engine with connection pooling
 engine = create_engine(DATABASE_URL, echo=True, pool_size=10, max_overflow=20, pool_pre_ping=True)
@@ -52,6 +48,15 @@ def get_read_only_session() -> Session:
         yield db
     finally:
         db.close()
+
+
+async def get_redis_client() -> AsyncGenerator[redis.Redis, None]:
+    """Provides an async Redis client."""
+    client = redis.Redis(host=settings.redis_host, port=settings.redis_port, decode_responses=True)
+    try:
+        yield client
+    finally:
+        await client.close()
 
 
 # Firebase

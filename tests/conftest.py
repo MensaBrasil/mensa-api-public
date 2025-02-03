@@ -33,7 +33,9 @@ def setup_db():
     """Set up the database before any tests run."""
     try:
         # Start the test database container
-        subprocess.run(["uv", "run", "docker", "compose", "up", "-d", "test-db"], check=True)
+        subprocess.run(
+            ["uv", "run", "docker", "compose", "up", "-d", "test-db", "redis"], check=True
+        )
 
         # Apply migrations
         subprocess.run(

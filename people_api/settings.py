@@ -1,8 +1,8 @@
 """Settings for the API using pydantic-settings module"""
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
 
-__all__ = ("Settings",)
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -29,4 +29,17 @@ class Settings(BaseSettings):
     twilio_auth_token: str
     twilio_from_whatsapp_number: str
 
+    redis_host: str = "redis"
+    redis_port: int = 6379
+
+    discord_client_id: str
+    discord_client_secret: str
+    discord_redirect_uri: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Returns a cached instance of Settings."""
+    return Settings()

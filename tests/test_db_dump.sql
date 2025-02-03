@@ -37,3 +37,33 @@ VALUES
     ('Mensa Rio Grande do Sul Regional', '120363044979103954@g.us'),
     ('Mensa Rio de Janeiro Regional', '120363045725875023@g.us'),
     ('Mensampa Regional', '120363025301625133@g.us');
+
+
+-- Registration table
+INSERT INTO registration (registration_id, name, expelled, deceased, transferred, cpf, birth_date, profession, gender, join_date, facebook, created_at, updated_at)
+VALUES
+    (6, 'Inimigos da HP', false, false, false, '12345678901', '1985-07-15', 'Musician', 'Homem', '2005-09-12', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+
+-- Emails table
+INSERT INTO emails (registration_id, email_address, created_at, updated_at)
+VALUES
+    (6, 'calvin@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
+
+-- Phones table
+INSERT INTO phones (registration_id, phone_number, created_at, updated_at)
+VALUES
+    (6, '+552198765432', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
+
+-- Member groups table
+INSERT INTO member_groups (registration_id, phone_number, group_id, entry_date, status)
+VALUES
+    (6, '+552198765432', '120363025301625133@g.us', '2023-10-19', 'Active');
+
+-- Group requests table
+INSERT INTO group_requests (registration_id, group_id, no_of_attempts, last_attempt, fulfilled)
+VALUES
+    (6, '120363150360123420@g.us', '2', '2023-10-01', false),
+    (6, '120363115167512889@g.us', '1', '2023-09-25', false),
+    (6, '556184020538-1393452040@g.us', '1', '2023-09-20', false),
+    (6, '120363044979103954@g.us', '0', NULL, false),
+    (6, '120363025301625133@g.us', '1', '2023-09-10', true);

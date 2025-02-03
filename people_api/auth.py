@@ -1,5 +1,7 @@
 """This module contains the authentication logic for the API"""
 
+import logging
+
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
@@ -15,4 +17,5 @@ def verify_firebase_token(authorization: HTTPAuthorizationCredentials = Security
         return decoded_token
     except Exception as e:
         # Catching all exceptions for debugging
+        logging.debug(e)
         raise HTTPException(status_code=401, detail="Invalid Token") from e

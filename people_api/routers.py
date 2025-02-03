@@ -1,17 +1,18 @@
 from fastapi import APIRouter
 
 from .endpoints import (
-    data_router,
-    whatsapp_router,
-    group_router,
     certificate_router,
-    member_misc_router,
+    data_router,
+    google_workspace_router,
+    group_router,
     member_address_router,
     member_email_router,
     member_legal_representative_router,
+    member_misc_router,
     member_phone_router,
-    google_workspace_router,
     missing_fields_router,
+    oauth_router,
+    whatsapp_router,
 )
 
 APP_ROUTERS = [
@@ -26,6 +27,7 @@ APP_ROUTERS = [
     member_phone_router,
     google_workspace_router,
     missing_fields_router,
+    oauth_router,
 ]
 
 all_routers = APIRouter()

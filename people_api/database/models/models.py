@@ -20,7 +20,7 @@ from sqlmodel import (
     UniqueConstraint,
     func,
     select,
-    text
+    text,
 )
 
 
@@ -117,6 +117,7 @@ class Registration(BaseSQLModel, table=True):
     gender: str | None = None
     join_date: date | None = Field(default_factory=date.today)
     facebook: str | None = None
+    discord_id: str | None = None
     suspended_until: date | None = None
     pronouns: str | None = None
 
@@ -131,10 +132,12 @@ class Registration(BaseSQLModel, table=True):
     phones: list["Phones"] = Relationship(back_populates="registration")
 
     @classmethod
-    def select(cls, registration_id: int, session: Session) -> "Registration":
+    def select_stmt(cls, registration_id: int, session: Session) -> "Registration":
         """Return a registration record by ID."""
         statement = select(cls).where(cls.registration_id == registration_id)
         results = session.exec(statement)
+        if not results:
+            raise ValueError(f"Registration ID {registration_id} not found")
         return results.first()
 
     @classmethod
@@ -144,10 +147,33 @@ class Registration(BaseSQLModel, table=True):
         If social_name is not empty, use it as the first name.
         If not, split the name and return the first part.
         """
-        registration = cls.select(registration_id, session)
+        registration = cls.select_stmt(registration_id, session)
         if registration.social_name:
             return registration.social_name
         return registration.name.split(" ")[0]
+
+    @classmethod
+    def get_by_email(cls, email: str, session: Session) -> "Registration | None":
+        """
+        Return the registration record associated with the given email.
+        This uses a join with the Emails table.
+        """
+
+        statement = select(cls).join(Emails).where(Emails.email_address == email)
+        result = session.exec(statement)
+        return result.first()
+
+    @classmethod
+    def upsert_discord_id(cls, registration_id: int, discord_id: str, session: Session) -> None:
+        """
+        Upsert (update) the discord_id for the given registration.
+        """
+        registration = cls.select_stmt(registration_id, session)
+        if registration:
+            registration.discord_id = discord_id
+            session.add(registration)
+            session.commit()
+            session.refresh(registration)
 
 
 class RegistrationAudit(BaseAuditModel, table=True):

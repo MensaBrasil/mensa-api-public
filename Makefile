@@ -9,8 +9,14 @@ test: ## run tests
 run: ## python run app
 	uv run main.py
 
-run-docker: ## start running through docker-compose
-	docker-compose up
+down:
+	docker compose down
+
+demo:
+	docker compose build; docker compose up -d; make migrate-upgrade;
+
+restart: ## restart app
+	docker compose restart people_api
 
 run-docker-background: ## start running through docker-compose, detached
 	docker-compose up -d

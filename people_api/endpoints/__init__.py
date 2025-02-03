@@ -8,6 +8,7 @@ from .member_legal_representative import member_legal_representative_router
 from .member_misc import member_misc_router
 from .member_phone import member_phone_router
 from .missing_fields import missing_fields_router
+from .oauth import oauth_router
 from .whatsapp import whatsapp_router
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "member_phone_router",
     "missing_fields_router",
     "whatsapp_router",
+    "oauth_router",
 ]

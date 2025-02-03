@@ -45,6 +45,10 @@ jobs:
           twilio_auth_token: ${{ secrets.twilio_auth_token }}
           twilio_from_whatsapp_number: ${{ secrets.twilio_from_whatsapp_number }}
           whatsapp_route_api_key: ${{ secrets.whatsapp_route_api_key }}
+          redis_host: localhost
+          discord_client_id: state
+          discord_client_secret: state
+          discord_redirect_uri: state
         run: |
           uv run coverage run -m pytest -sv .
           uv run coverage report
