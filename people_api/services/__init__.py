@@ -9,6 +9,7 @@ from .missing_fields_service import MissingFieldsService
 from .phone_service import PhoneService
 from .whatsapp_service import WhatsappChatBot, WhatsAppService
 from .workspace_service import WorkspaceService
+from .iam_service import IamService
 
 __all__ = [
     "AddressService",
@@ -23,4 +24,5 @@ __all__ = [
     "WhatsAppService",
     "WorkspaceService",
     "WhatsappChatBot",
+    "IamService",
 ]
