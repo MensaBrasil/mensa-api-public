@@ -5,7 +5,7 @@ services:
     ports:
       - 5000:5000
     depends_on:
-      - serviceName: redis
+      - redis
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
