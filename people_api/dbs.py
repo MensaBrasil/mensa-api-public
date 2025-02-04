@@ -30,7 +30,7 @@ SessionLocal = scoped_session(
 )
 
 
-def get_session() -> Session:
+def get_session() -> Session:  # type: ignore
     """Provides a synchronous database session for read-write operations."""
     db = SessionLocal()
     try:
@@ -40,7 +40,7 @@ def get_session() -> Session:
         db.close()
 
 
-def get_read_only_session() -> Session:
+def get_read_only_session() -> Session:  # type: ignore
     """Provides a synchronous read-only database session."""
     db = SessionLocal()
     try:

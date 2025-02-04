@@ -1,26 +1,29 @@
+# mypy: ignore-errors
+
 """MODELS - PERSON - READ
 Person Read model. Inherits from PersonCreate and adds the person_id field, which is the _id field on Mongo documents
 """
 
 # # Native # #
 from datetime import datetime
-from typing import Optional, List
 
 # # Installed # #
 import pydantic
 from dateutil.relativedelta import relativedelta
 
+from .fields import PersonFields
+
 # # Package # #
 from .person_create import PersonCreate
-from .fields import PersonFields
 
 __all__ = ("PersonRead", "PeopleRead")
 
 
 class PersonRead(PersonCreate):
     """Body of Person GET and POST responses"""
+
     person_id: str = PersonFields.person_id
-    age: Optional[int] = PersonFields.age
+    age: int | None = PersonFields.age
     created: int = PersonFields.created
     updated: int = PersonFields.updated
 
@@ -48,4 +51,4 @@ class PersonRead(PersonCreate):
         extra = pydantic.Extra.ignore  # if a read document has extra fields, ignore them
 
 
-PeopleRead = List[PersonRead]
+PeopleRead = list[PersonRead]

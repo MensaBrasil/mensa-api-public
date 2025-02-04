@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """Service for generating certificates."""
 
 from fastapi.responses import StreamingResponse

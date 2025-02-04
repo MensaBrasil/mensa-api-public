@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """Service for handling requests from group endpoints."""
 
 from datetime import datetime

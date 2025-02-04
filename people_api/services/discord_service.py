@@ -4,8 +4,8 @@ import httpx
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from ..database.models.models import Registration
 from ..settings import get_settings
+from .registration_service import RegistrationService
 
 settings = get_settings()
 
@@ -23,7 +23,7 @@ async def process_discord_callback(
         raise HTTPException(status_code=400, detail="Invalid or expired state")
     await redis_client.delete(key)
 
-    registration = Registration.get_by_email(stored_email, session)
+    registration = RegistrationService.get_by_email(stored_email, session)
     if not registration or not registration.registration_id:
         raise HTTPException(
             status_code=404, detail="Registration not found or invalid for the provided email"
@@ -65,7 +65,7 @@ async def process_discord_callback(
     if not discord_user_id:
         raise HTTPException(status_code=400, detail="Discord user id not found")
 
-    Registration.upsert_discord_id(registration.registration_id, discord_user_id, session)
+    RegistrationService.update_discord_id(registration.registration_id, discord_user_id, session)
 
     html_content = """
     <html>

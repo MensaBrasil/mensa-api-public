@@ -69,7 +69,7 @@ def download_cert(MB, key) -> str:
                         font-size: 14px;
                         padding: 8px 16px;
                     }}
-                    
+
                     .troubleshooting {{
                         font-size: 12px;
                     }}

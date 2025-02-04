@@ -5,18 +5,17 @@ Revises: f664e9ce0180
 Create Date: 2024-12-19 15:38:48.865416
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
-import sqlmodel
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '7f4a0eca6562'
-down_revision: Union[str, None] = 'f664e9ce0180'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "7f4a0eca6562"
+down_revision: str | None = "f664e9ce0180"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -27,7 +26,7 @@ def upgrade() -> None:
         table_name="group_requests",
         column_name="no_of_attempts",
         schema="public",
-        server_default=sa.text("0")
+        server_default=sa.text("0"),
     )
 
 
@@ -39,5 +38,5 @@ def downgrade() -> None:
         table_name="group_requests",
         column_name="no_of_attempts",
         schema="public",
-        server_default=None
+        server_default=None,
     )

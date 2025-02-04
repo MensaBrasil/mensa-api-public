@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """MODELS - PERSON ADDRESS
 The address of a person is part of the Person model
 """

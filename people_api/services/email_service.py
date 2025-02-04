@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """Service for managing members email addresses."""
 
 import json

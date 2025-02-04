@@ -6,6 +6,8 @@ from pydantic import BaseModel, model_validator
 
 
 class UpdateInput(BaseModel):
+    """Model for updating input data."""
+
     phone: str
     birth_date: str | None = None
     cpf: str
@@ -16,6 +18,7 @@ class UpdateInput(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_birth_date_if_representative(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Check birth date if the user is not a representative."""
         is_representative = values.get("is_representative")
         birth_date = values.get("birth_date")
 
@@ -26,6 +29,7 @@ class UpdateInput(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def convert_registration_id_to_int(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Convert registration ID to an integer if it is a string."""
         registration_id = values.get("registration_id")
 
         if isinstance(registration_id, str):
@@ -40,6 +44,7 @@ class UpdateInput(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_and_strip_whatsapp_prefix(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Validate and strip the 'whatsapp:' prefix from the phone number."""
         phone = values.get("phone")
         if phone and isinstance(phone, str):
             # Remove the 'whatsapp:' prefix
@@ -48,7 +53,7 @@ class UpdateInput(BaseModel):
 
 
 class ReceivedWhatsappMessage(BaseModel):
-    """Model for messages received from twilio"""
+    """Model for messages received from Twilio."""
 
     SmsMessageSid: str
     NumMedia: str

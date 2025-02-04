@@ -4,9 +4,8 @@ Person Update model. All attributes are set as Optional, as we use the PATCH met
 """
 
 # # Native # #
-from datetime import date
-from typing import Optional
 from contextlib import suppress
+from datetime import date
 
 # # Package # #
 from .common import BaseModel
@@ -18,9 +17,10 @@ __all__ = ("PersonUpdate",)
 
 class PersonUpdate(BaseModel):
     """Body of Person PATCH requests"""
-    name: Optional[str] = PersonFields.name
-    address: Optional[Address] = PersonFields.address_update
-    birth: Optional[date] = PersonFields.birth
+
+    name: str | None = PersonFields.name
+    address: Address | None = PersonFields.address_update
+    birth: date | None = PersonFields.birth
 
     def dict(self, **kwargs):
         # The "birth" field must be converted to string (isoformat) when exporting to dict (for Mongo)

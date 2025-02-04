@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """MODELS - COMMON
 Common variables and base classes for the models
 """

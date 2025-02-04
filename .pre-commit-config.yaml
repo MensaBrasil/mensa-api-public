@@ -2,14 +2,14 @@ repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-    -   id: check-added-large-files
-    -   id: check-ast
-    -   id: check-json
-    -   id: check-merge-conflict
-    -   id: debug-statements
-    -   id: detect-private-key
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-json
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 
 - repo: https://github.com/hadialqattan/pycln
   rev: v2.4.0
@@ -18,10 +18,11 @@ repos:
       args: ["-a"]
       language_version: "3.12"
 
-- repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.5.22
+- repo: https://github.com/asottile/pyupgrade
+  rev: v3.19.0
   hooks:
-    - id: uv-lock
+    - id: pyupgrade
+      args: ["--py312-plus"]
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.5.1
@@ -32,16 +33,24 @@ repos:
     - id: ruff-format
       args: ["--line-length", "100"]
 
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.5.22
+  hooks:
+    - id: uv-lock
+
 - repo: local
   hooks:
-  - id: cargo-fmt
-    name: format rust files
-    language: system
-    entry: cargo fmt --
-    types: [rust]
+    - id: cargo-fmt
+      name: format rust files
+      language: system
+      entry: cargo fmt --
+      types: [rust]
 
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.0
-    hooks:
-    -   id: pyupgrade
-        args: ["--py312-plus"]
+- repo: local
+  hooks:
+    - id: mypy
+      name: mypy (venv)
+      entry: uv run mypy --config-file pyproject.toml
+      language: system
+      types: [python]
+      files: \.py$

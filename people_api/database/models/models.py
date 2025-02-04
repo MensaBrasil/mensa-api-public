@@ -14,7 +14,6 @@ from sqlmodel import (
     Field,
     Integer,
     Relationship,
-    Session,
     SQLModel,
     String,
     Text,
@@ -22,6 +21,7 @@ from sqlmodel import (
     func,
     select,
     text,
+    update,
 )
 
 
@@ -133,48 +133,26 @@ class Registration(BaseSQLModel, table=True):
     phones: list["Phones"] = Relationship(back_populates="registration")
 
     @classmethod
-    def select_stmt(cls, registration_id: int, session: Session) -> "Registration":
-        """Return a registration record by ID."""
-        statement = select(cls).where(cls.registration_id == registration_id)
-        results = session.exec(statement)
-        if not results:
-            raise ValueError(f"Registration ID {registration_id} not found")
-        return results.first()
+    def select_stmt_by_id(cls, registration_id: int):
+        """Return a select statement for a registration record by ID."""
+        return select(cls).where(cls.registration_id == registration_id)
 
     @classmethod
-    def get_first_name(cls, registration_id: int, session: Session) -> str:
+    def select_stmt_by_email(cls, email: str):
         """
-        Return the first name of a user registration.
-        If social_name is not empty, use it as the first name.
-        If not, split the name and return the first part.
-        """
-        registration = cls.select_stmt(registration_id, session)
-        if registration.social_name:
-            return registration.social_name
-        return registration.name.split(" ")[0]
-
-    @classmethod
-    def get_by_email(cls, email: str, session: Session) -> "Registration | None":
-        """
-        Return the registration record associated with the given email.
+        Return a select statement for the registration record associated with the given email.
         This uses a join with the Emails table.
         """
-
-        statement = select(cls).join(Emails).where(Emails.email_address == email)
-        result = session.exec(statement)
-        return result.first()
+        return select(cls).join(Emails).where(Emails.email_address == email)
 
     @classmethod
-    def upsert_discord_id(cls, registration_id: int, discord_id: str, session: Session) -> None:
+    def update_stmt_discord_id(cls, registration_id: int, discord_id: str):
         """
-        Upsert (update) the discord_id for the given registration.
+        Return an update statement for the discord_id for the given registration.
         """
-        registration = cls.select_stmt(registration_id, session)
-        if registration:
-            registration.discord_id = discord_id
-            session.add(registration)
-            session.commit()
-            session.refresh(registration)
+        return (
+            update(cls).where(cls.registration_id == registration_id).values(discord_id=discord_id)  # type: ignore[arg-type]
+        )
 
 
 class RegistrationAudit(BaseAuditModel, table=True):
@@ -287,17 +265,13 @@ class MembershipPayments(BaseSQLModel, table=True):
     registration: Registration | None = Relationship(back_populates="membership_payments")
 
     @classmethod
-    def get_last_payment(
-        cls, registration_id: int, session: Session
-    ) -> "MembershipPayments | None":
-        """Return the last payment record for a given registration ID."""
-        statement = (
+    def select_stmt_last_payment(cls, registration_id: int):
+        """Return a select statement for the last payment record for a given registration ID."""
+        return (
             select(cls)
             .where(cls.registration_id == registration_id)
-            .order_by(cls.payment_date.desc())
+            .order_by(Column("payment_date").desc())
         )
-        results = session.exec(statement)
-        return results.first()
 
 
 class Phones(BaseSQLModel, table=True):
@@ -311,23 +285,23 @@ class Phones(BaseSQLModel, table=True):
     registration: Registration | None = Relationship(back_populates="phones")
 
     @classmethod
-    def select(cls, phone: int, session: Session) -> list["Phones"]:
-        """Return a list of phone records matching the numeric phone pattern."""
-        statement = select(cls).where(
+    def select_stmt_by_phone_pattern(cls, phone: int):
+        """Return a select statement for phone records matching the numeric phone pattern."""
+        return select(cls).where(
             func.lower(
                 func.cast(func.regexp_replace(cls.phone_number, r"\D", "", "g"), String)
             ).like(f"%{phone}%")
         )
-        results = session.exec(statement)
-        return list(results.all())
 
     @classmethod
-    def get_member_by_phone(cls, phone_number: int, session: Session) -> "Phones | None":
-        """Return a member by phone number."""
-        phones = cls.select(phone=phone_number, session=session)
-        if len(phones) > 1:
-            raise ValueError("More than one phone number found")
-        return phones[0] if phones else None
+    def get_member_by_trailing_8_digit_phone(cls, phone_number: int):
+        """Return a select statement for a member by the last 8 digits of the phone number."""
+        phone_pattern = f"%{str(phone_number)[-8:]}"
+        return select(cls).where(
+            func.lower(
+                func.cast(func.regexp_replace(cls.phone_number, r"\D", "", "g"), String)
+            ).like(phone_pattern)
+        )
 
 
 class WhatsappComms(BaseSQLModel, table=True):

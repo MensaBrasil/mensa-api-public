@@ -18,9 +18,11 @@ class BaseIdentifiedError(BaseError):
 
 class NotFoundError(BaseIdentifiedError):
     """The entity does not exist"""
+
     pass
 
 
 class AlreadyExistsError(BaseIdentifiedError):
     """An entity being created already exists"""
+
     pass

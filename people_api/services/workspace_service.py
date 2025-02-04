@@ -8,9 +8,9 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from starlette.status import HTTP_403_FORBIDDEN
 
-from ..settings import Settings
+from ..settings import get_settings
 
-SETTINGS = Settings()
+SETTINGS = get_settings()
 
 
 def verify_secret_key(x_api_key: str = Header(...)):

@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """Service for legal representative operations."""
 
 from datetime import datetime

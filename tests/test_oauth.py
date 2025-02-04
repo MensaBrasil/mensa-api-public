@@ -73,7 +73,7 @@ async def test_discord_callback_success(test_client, mock_valid_token):
 
     # Verify that the Registration was updated with the fake discord id.
     # Use next() to extract the session from the generator fixture.
-    session = next(get_session())
+    session = next(get_session())  # type: ignore
     try:
         statement = select(Registration).where(Registration.discord_id == "fake_discord_id")
         result = session.exec(statement).first()

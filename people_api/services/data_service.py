@@ -13,9 +13,9 @@ from people_api.endpoints.errors import (
 )
 
 from ..database.models import QueryRequest, QueryResponse
-from ..settings import Settings
+from ..settings import get_settings
 
-SETTINGS = Settings()
+SETTINGS = get_settings()
 
 API_KEY_NAME = "data_endpoint_token"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)

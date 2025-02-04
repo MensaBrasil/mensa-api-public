@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-    - '**'
+      - '**'
 
 concurrency:
   group: ${{ github.ref }}
@@ -27,6 +27,9 @@ jobs:
 
       - name: Install dependencies
         run: uv sync -p 3.12
+
+      - name: Run mypy type check
+        run: uv run mypy .
 
       - name: Run tests with coverage
         env:

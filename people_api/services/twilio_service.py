@@ -2,9 +2,9 @@
 
 from twilio.rest import Client
 
-from ..settings import Settings
+from ..settings import get_settings
 
-SETTINGS = Settings()
+SETTINGS = get_settings()
 
 
 class TwilioService:

@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """Service for miscellaneous member operations."""
 
 import json

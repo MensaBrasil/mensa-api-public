@@ -18,7 +18,7 @@ class PhoneService:
         member_data = MemberRepository.getPhonesFromPostgres(mb, session)
         if len(member_data) > 0:
             raise HTTPException(status_code=400, detail="User already has a phone")
-        MemberRepository.addPhoneToPostgres(mb, phone, session)
+        MemberRepository.addPhoneToPostgres(mb, phone, session)  # type: ignore
         return {"message": "Phone added successfully"}
 
     @staticmethod
@@ -34,7 +34,7 @@ class PhoneService:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
         # Call the update method to modify the phone
-        success = MemberRepository.updatePhoneInPostgres(mb, phone_id, updated_phone, session)
+        success = MemberRepository.updatePhoneInPostgres(mb, phone_id, updated_phone, session)  # type: ignore
         if not success:
             raise HTTPException(status_code=404, detail="Phone not found")
 

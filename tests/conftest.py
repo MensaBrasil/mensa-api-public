@@ -7,7 +7,7 @@ import psycopg2
 import pytest
 from fastapi.testclient import TestClient
 
-from people_api.app import app
+from people_api.app import app  # type: ignore
 from people_api.auth import verify_firebase_token
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/stats"

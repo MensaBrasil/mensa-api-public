@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """REPOSITORIES
 Methods to interact with the database
 """
