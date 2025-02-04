@@ -12,7 +12,6 @@ from sqlmodel import (
     Column,
     DateTime,
     Field,
-    ForeignKey,
     Integer,
     Relationship,
     Session,
@@ -364,7 +363,7 @@ class WhatsappMessages(SQLModel, table=True):
     __tablename__ = "whatsapp_messages"
 
     id: int = Field(primary_key=True)
-    message_id: str = Field(max_length=128, unique=True)
+    message_id: str = Field(max_length=128)
     group_id: str = Field(max_length=128, index=True)
     registration_id: int = Field(index=True)
     timestamp: datetime = Field(index=True)
@@ -410,10 +409,8 @@ class IAMRolePermissionsMap(SQLModel, table=True):
     __tablename__ = "iam_role_permissions_map"
 
     id: int = Field(primary_key=True)
-    role_id: int = Field(sa_column=Column(Integer, ForeignKey("iam_roles.id", ondelete="CASCADE")))
-    permission_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("iam_permissions.id", ondelete="CASCADE"))
-    )
+    role_id: int = Field(foreign_key="iam_roles.id")
+    permission_id: int = Field(foreign_key="iam_permissions.id")
 
 
 class IAMGroupPermissionsMap(SQLModel, table=True):
@@ -422,12 +419,8 @@ class IAMGroupPermissionsMap(SQLModel, table=True):
     __tablename__ = "iam_group_permissions_map"
 
     id: int = Field(primary_key=True)
-    group_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("iam_groups.id", ondelete="CASCADE"))
-    )
-    permission_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("iam_permissions.id", ondelete="CASCADE"))
-    )
+    group_id: int = Field(foreign_key="iam_groups.id")
+    permission_id: int = Field(foreign_key="iam_permissions.id")
 
 
 class IAMUserRolesMap(SQLModel, table=True):
@@ -436,10 +429,8 @@ class IAMUserRolesMap(SQLModel, table=True):
     __tablename__ = "iam_user_roles_map"
 
     id: int = Field(primary_key=True)
-    registration_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("registration.registration_id", ondelete="CASCADE"))
-    )
-    role_id: int = Field(sa_column=Column(Integer, ForeignKey("iam_roles.id", ondelete="CASCADE")))
+    registration_id: int = Field(foreign_key="registration.registration_id")
+    role_id: int = Field(foreign_key="iam_roles.id")
 
 
 class IAMUserGroupsMap(SQLModel, table=True):
@@ -448,9 +439,5 @@ class IAMUserGroupsMap(SQLModel, table=True):
     __tablename__ = "iam_user_groups_map"
 
     id: int = Field(primary_key=True)
-    registration_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("registration.registration_id", ondelete="CASCADE"))
-    )
-    group_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("iam_groups.id", ondelete="CASCADE"))
-    )
+    registration_id: int = Field(foreign_key="registration.registration_id")
+    group_id: int = Field(foreign_key="iam_groups.id")

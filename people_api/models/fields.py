@@ -11,19 +11,12 @@ from pydantic import Field
 # # Package # #
 from ..utils import get_time, get_uuid
 
-__all__ = (
-    "PersonFields",
-    "AddressFields",
-    "PhoneFields",
-    "EmailFields",
-    "LegalRepresentativeFields",
-)
+__all__ = ("PersonFields", "AddressFields", "MeberFields", "PhoneFields", "EmailFields", "LegalRepresentativeFields")
 
 _string = dict(min_length=1)
 """Common attributes for all String fields"""
 _unix_ts = dict(example=get_time())
 """Common attributes for all Unix timestamp fields"""
-
 
 class FirebaseMemberFields:
     AWalletAuthenticationToken = Field(
@@ -61,6 +54,7 @@ class FirebaseMemberFields:
     )
 
 
+
 class PostgresMemberFields:
     registration_id = Field(..., description="Unique identifier for the registration")
     name = Field(None, description="Full name of the member", max_length=255)
@@ -83,40 +77,50 @@ class PostgresMemberFields:
 
 
 class PersonFields:
-    name = Field(description="Full name of this person", example="John Smith", **_string)
-    address = Field(description="Address object where this person live")
+    name = Field(
+        description="Full name of this person",
+        example="John Smith",
+        **_string
+    )
+    address = Field(
+        description="Address object where this person live"
+    )
     address_update = Field(
         description=f"{address.description}. When updating, the whole Address object is required, as it gets replaced"
     )
     birth = Field(
-        description="Date of birth, in format YYYY-MM-DD, or Unix timestamp", example="1999-12-31"
+        description="Date of birth, in format YYYY-MM-DD, or Unix timestamp",
+        example="1999-12-31"
     )
-    age = Field(description="Age of this person, if date of birth is specified", example=20)
+    age = Field(
+        description="Age of this person, if date of birth is specified",
+        example=20
+    )
     person_id = Field(
         description="Unique identifier of this person in the database",
         example=get_uuid(),
         min_length=36,
-        max_length=36,
+        max_length=36
     )
     """The person_id is the _id field of Mongo documents, and is set on PeopleRepository.create"""
 
     created = Field(
-        alias="created", description="When the person was registered (Unix timestamp)", **_unix_ts
+        alias="created",
+        description="When the person was registered (Unix timestamp)",
+        **_unix_ts
     )
     """Created is set on PeopleRepository.create"""
     updated = Field(
         alias="updated",
         description="When the person was updated for the last time (Unix timestamp)",
-        **_unix_ts,
+        **_unix_ts
     )
     """Created is set on PeopleRepository.update (and initially on create)"""
 
 
 class AddressFields:
     address_id = Field(description="Unique identifier for the address")
-    registration_id = Field(
-        description="Foreign key referencing registration_id in registration table"
-    )
+    registration_id = Field(description="Foreign key referencing registration_id in registration table")
     state = Field(description="State", max_length=255)
     country = Field(description="Country", max_length=255)
     city = Field(description="City", max_length=100)
@@ -127,11 +131,10 @@ class AddressFields:
     created_at = Field(description="Timestamp when the address was created")
     updated_at = Field(description="Timestamp when the address was last updated")
 
-
 class PhoneFields:
-    phone_id = Field(description="Unique identifier for the phone")
-    registration_id = Field(description="Foreign key to the registration table")
-    phone_number = Field(description="Phone number of the member", max_length=60)
+    phone_id= Field(description="Unique identifier for the phone")
+    registration_id= Field(description="Foreign key to the registration table")
+    phone_number = Field( description="Phone number of the member", max_length=60)
     created_at = Field(description="Timestamp when the phone was added")
     updated_at = Field(description="Timestamp when the phone was last updated")
 
@@ -143,8 +146,7 @@ class EmailFields:
     email_address = Field(None, description="Email address", max_length=255)
     created_at = Field(description="Timestamp when the email was added")
     updated_at = Field(description="Timestamp when the email was last updated")
-
-
+    
 class LegalRepresentativeFields:
     representative_id = Field(description="Unique identifier for the legal representative")
     registration_id = Field(description="Reference to the associated registration")
@@ -152,7 +154,5 @@ class LegalRepresentativeFields:
     full_name = Field(None, description="Full name of the legal representative", max_length=255)
     email = Field(None, description="Email address of the legal representative", max_length=255)
     phone = Field(None, description="Phone number of the legal representative", max_length=15)
-    alternative_phone = Field(
-        None, description="Alternative phone number of the legal representative", max_length=15
-    )
+    alternative_phone = Field(None, description="Alternative phone number of the legal representative", max_length=15)
     observations = Field(None, description="Additional observations")

@@ -44,39 +44,6 @@ Below is a brief overview of the available API endpoints:
 - POST `/create_user/`: Create a new user in Google Workspace.
 - GET `/download_certificate.png`: Generate and download a certificate.
 
-## IAM Endpoints
-
-#### **POST**
-- `/create_role/` - Create a new role
-- `/create_group/` - Create a new group
-- `/create_permission/` - Create a new permission
-- `/add_role_to_member/` - Add role to member
-- `/add_group_to_member/` - Add group to member
-- `/add_permission_to_role/` - Add permission to role
-- `/add_permission_to_group/` - Add permission to group
-
-#### **GET**
-- `/roles/` - Get roles for member
-- `/groups/` - Get groups for member
-- `/members/role/` - Get members with specific role
-- `/members/group/` - Get members in specific group
-- `/role_permissions/` - Get permissions for role
-- `/group_permissions/` - Get permissions for group
-
-#### **PATCH**
-- `/update_role/` - Update role
-- `/update_group/` - Update group
-- `/update_permission/` - Update permission
-
-#### **DELETE**
-- `/remove_role_from_member/` - Remove role from member
-- `/remove_group_from_member/` - Remove group from member
-- `/remove_permission_from_role/` - Remove permission from role
-- `/remove_permission_from_group/` - Remove permission from group
-- `/delete_role/` - Delete role
-- `/delete_group/` - Delete group
-- `/delete_permission/` - Delete permission
-
 
 ## Requirements
 
