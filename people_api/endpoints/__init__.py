@@ -2,6 +2,7 @@ from .certificate import certificate_router
 from .data import data_router
 from .google_workspace import google_workspace_router
 from .group import group_router
+from .iam import iam_router
 from .member_address import member_address_router
 from .member_email import member_email_router
 from .member_legal_representative import member_legal_representative_router
@@ -24,4 +25,5 @@ __all__ = [
     "missing_fields_router",
     "whatsapp_router",
     "oauth_router",
+    "iam_router",
 ]

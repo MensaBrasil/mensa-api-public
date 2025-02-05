@@ -5,6 +5,7 @@ from .endpoints import (
     data_router,
     google_workspace_router,
     group_router,
+    iam_router,
     member_address_router,
     member_email_router,
     member_legal_representative_router,
@@ -28,6 +29,7 @@ APP_ROUTERS = [
     google_workspace_router,
     missing_fields_router,
     oauth_router,
+    iam_router,
 ]
 
 all_routers = APIRouter()
