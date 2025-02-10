@@ -1,7 +1,7 @@
 """Service for managing members phone numbers."""
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..models.member_data import PhoneCreate, PhoneUpdate
 from ..repositories import MemberRepository

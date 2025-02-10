@@ -2,14 +2,14 @@
 
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 from starlette.status import HTTP_403_FORBIDDEN
 
 from people_api.endpoints.errors import (
     DatabaseConnectionError,
+    InsufficientPrivilegeError,
     QueryExecutionError,
     QuerySyntaxError,
-    ReadOnlyTransactionError,
 )
 
 from ..database.models import QueryRequest, QueryResponse
@@ -42,7 +42,7 @@ class DataService:
         except QuerySyntaxError as qse:
             raise HTTPException(status_code=400, detail=str(qse)) from qse
 
-        except ReadOnlyTransactionError as rote:
+        except InsufficientPrivilegeError as rote:
             raise HTTPException(status_code=403, detail=str(rote)) from rote
 
         except DatabaseConnectionError as dce:

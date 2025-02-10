@@ -1,7 +1,7 @@
 """Endpoints for managing miscellaneous member-related operations in the .."""
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..auth import verify_firebase_token
 from ..dbs import get_session

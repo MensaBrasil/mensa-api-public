@@ -1,3 +1,5 @@
+"""Fixtures for the test suite."""
+
 import subprocess
 import time
 from pathlib import Path
@@ -32,19 +34,47 @@ def wait_for_db(timeout=60):
 def setup_db():
     """Set up the database before any tests run."""
     try:
+        # Make sure composer is down before starting the test
+        subprocess.run(["uv", "run", "docker", "compose", "down"], check=True)
+
         # Start the test database container
         subprocess.run(
-            ["uv", "run", "docker", "compose", "up", "-d", "test-db", "redis"], check=True
+            ["uv", "run", "docker", "compose", "up", "-d", "test-db", "redis"],
+            check=True,
         )
 
         # Apply migrations
         subprocess.run(
-            ["uv", "run", "alembic", "-c", "people_api/database/alembic.ini", "upgrade", "head"],
+            [
+                "uv",
+                "run",
+                "alembic",
+                "-c",
+                "people_api/database/alembic.ini",
+                "upgrade",
+                "head",
+            ],
             check=True,
         )
 
     except subprocess.CalledProcessError as e:
         pytest.exit(f"Failed to set up the database: {e}")
+
+    # Create read-only user for database
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        with conn.cursor() as cur:
+            cur.execute("CREATE USER mensa_ro WITH PASSWORD 'postgres';")
+            cur.execute("GRANT CONNECT ON DATABASE stats TO mensa_ro;")
+            cur.execute("GRANT USAGE ON SCHEMA public TO mensa_ro;")
+            cur.execute("GRANT SELECT ON ALL TABLES IN SCHEMA public TO mensa_ro;")
+            cur.execute(
+                "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO mensa_ro;"
+            )
+            conn.commit()
+    except psycopg2.Error as e:
+        if "already exists" not in str(e):
+            pytest.exit(f"Failed to create read-only user: {e}")
 
     # Make sure composer is down after all tests
     yield
@@ -87,12 +117,12 @@ def reset_db():
     yield
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def test_client():
     """Create a FastAPI test client, ensuring DB is connected"""
     wait_for_db()  # Ensure DB is ready before starting the test client
-    client = TestClient(app)
-    yield client
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture(scope="function")
@@ -130,6 +160,8 @@ def mock_valid_token():
 
 @pytest.fixture(autouse=True)
 def mock_firebase_initialization():
+    """Mock the Firebase Admin SDK initialization"""
+
     with mock.patch("firebase_admin.initialize_app") as mock_initialize_app:
         with mock.patch("firebase_admin.credentials.Certificate") as mock_certificate:
             mock_certificate.return_value = mock.Mock()

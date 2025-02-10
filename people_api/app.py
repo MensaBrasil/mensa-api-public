@@ -1,25 +1,18 @@
-# type: ignore
-# pylint: disable-all
-# ruff: noqa
-
 """APP
 FastAPI app definition, initialization and definition of routes
 """
 
-# # Installed # #
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import all_routers
 from .middlewares import request_handler
+from .routers import all_routers
+from .settings import get_settings
 
-# # Package # #
-from .settings import Settings
-
-SETTINGS = Settings()
+settings = get_settings()
 
 app = FastAPI(
-    title=SETTINGS.api_title,
+    title=settings.api_title,
     docs_url="/documentation$@vtW6qodxYLQ",
     redoc_url=None,
     openapi_url="/api/vtW6qodxYLQ/openapi.json",

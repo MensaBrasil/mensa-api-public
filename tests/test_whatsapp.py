@@ -12,13 +12,15 @@ def test_update_phone_with_valid_data_or_invalid_data(
 ) -> None:
     """Test updating a member's phone number when birth_date and CPF are valid"""
 
-    run_db_query("""
+    run_db_query(
+        """
         UPDATE registration
         SET cpf = '12345678909', birth_date = '01/01/1991', deceased = false
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
 
     registration_id = run_db_query(
         "SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'"
@@ -56,12 +58,14 @@ def test_update_phone_with_valid_data_or_invalid_data(
     assert response.status_code == 200
     assert response.json() == {"message": "Phone number updated successfully."}
 
-    updated_phone = run_db_query("""
+    updated_phone = run_db_query(
+        """
         SELECT phone_number FROM phones
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
     assert updated_phone == [("1234567890",)]
 
 
@@ -72,14 +76,17 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
     """Test updating a representative's phone number when CPF is valid"""
 
     # Clean and seed the database
-    run_db_query("""
+    run_db_query(
+        """
         DELETE FROM legal_representatives
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
 
-    run_db_query("""
+    run_db_query(
+        """
         INSERT INTO legal_representatives (registration_id, cpf, full_name, phone, alternative_phone)
         VALUES (
             (SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'),
@@ -88,7 +95,8 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
             '1234567890',
             '1234567890'
         )
-    """)
+    """
+    )
 
     # Fetch registration_id
     registration_id = run_db_query(
@@ -123,13 +131,15 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
 def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: Any):
     """Test updating a member's phone number with an incorrect API key."""
 
-    run_db_query("""
+    run_db_query(
+        """
         UPDATE registration
         SET cpf = '12345678909', birth_date = '01/01/1991', deceased = false
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
 
     registration_id = run_db_query(
         "SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'"

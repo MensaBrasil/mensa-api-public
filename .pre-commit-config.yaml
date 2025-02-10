@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -12,20 +12,20 @@ repos:
       - id: trailing-whitespace
 
 - repo: https://github.com/hadialqattan/pycln
-  rev: v2.4.0
+  rev: v2.5.0
   hooks:
     - id: pycln
       args: ["-a"]
       language_version: "3.12"
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.19.0
+  rev: v3.19.1
   hooks:
     - id: pyupgrade
       args: ["--py312-plus"]
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.5.1
+  rev: v0.9.4
   hooks:
     - id: ruff
       args: ["--fix", "--select", "I"]
@@ -34,7 +34,7 @@ repos:
       args: ["--line-length", "100"]
 
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.5.22
+  rev: 0.5.29
   hooks:
     - id: uv-lock
 

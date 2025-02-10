@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..models.member_data import LegalRepresentativeCreate, LegalRepresentativeUpdate
 from ..repositories import MemberRepository

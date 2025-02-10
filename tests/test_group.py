@@ -79,10 +79,12 @@ def test_get_participate_in_empty_participate_in(
 ) -> None:
     """Test retrieving member groups when the member is not participating in any group"""
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
+    run_db_query(
+        """
         DELETE FROM member_groups
         WHERE registration_id = 5
-    """)
+    """
+    )
     response = test_client.get("/get_participate_in", headers=headers)
     assert response.status_code == 200
     assert response.json() == []
@@ -104,10 +106,12 @@ def test_get_pending_requests_empty_pending_requests(
 ) -> None:
     """Test retrieving member groups when the member has no pending requests"""
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
+    run_db_query(
+        """
         DELETE FROM group_requests
         WHERE registration_id = 5
-    """)
+    """
+    )
     response = test_client.get("/get_pending_requests", headers=headers)
     assert response.status_code == 200
     assert response.json() == []
@@ -119,8 +123,16 @@ def test_get_pending_requests_date_format(test_client: Any, mock_valid_token: An
     response = test_client.get("/get_pending_requests", headers=headers)
     assert response.status_code == 200
     assert response.json() == [
-        {"group_name": "Mensa Bahia Regional", "last_attempt": "25/09/2023", "no_of_attempts": 2},
-        {"group_name": "Mensa DF Regional", "last_attempt": "20/09/2023", "no_of_attempts": 1},
+        {
+            "group_name": "Mensa Bahia Regional",
+            "last_attempt": "25/09/2023",
+            "no_of_attempts": 2,
+        },
+        {
+            "group_name": "Mensa DF Regional",
+            "last_attempt": "20/09/2023",
+            "no_of_attempts": 1,
+        },
         {
             "group_name": "Mensa Rio Grande do Sul Regional",
             "last_attempt": None,
@@ -134,10 +146,12 @@ def test_get_failed_requests_empty_failed_requests(
 ) -> None:
     """Test retrieving member groups when the member has no failed requests"""
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
+    run_db_query(
+        """
         DELETE FROM group_requests
         WHERE registration_id = 5
-    """)
+    """
+    )
     response = test_client.get("/get_failed_requests", headers=headers)
     assert response.status_code == 200
     assert response.json() == []
@@ -178,10 +192,12 @@ def test_request_join_group_no_phone(
     """Test requesting to join a group when the user has no phone number associated"""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    run_db_query("""
+    run_db_query(
+        """
         DELETE FROM phones
         WHERE registration_id = 5
-    """)
+    """
+    )
     response = test_client.post("/request_join_group", json={"group_id": "abc"}, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "Não há número de telefone registrado para o usuário."}
@@ -192,7 +208,9 @@ def test_request_join_group_pending_request(test_client: Any, mock_valid_token: 
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post(
-        "/request_join_group", json={"group_id": "556184020538-1393452040@g.us"}, headers=headers
+        "/request_join_group",
+        json={"group_id": "556184020538-1393452040@g.us"},
+        headers=headers,
     )
     assert response.status_code == 409
     assert response.json() == {"detail": "Já existe uma solicitação pendente para este grupo."}
@@ -203,7 +221,9 @@ def test_request_join_group_failed_request(test_client: Any, mock_valid_token: A
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post(
-        "/request_join_group", json={"group_id": "120363150360123420@g.us"}, headers=headers
+        "/request_join_group",
+        json={"group_id": "120363150360123420@g.us"},
+        headers=headers,
     )
     assert response.status_code == 200
     assert response.json() == {"message": "Request to join group sent successfully"}

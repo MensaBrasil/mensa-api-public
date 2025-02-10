@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 
 from people_api.endpoints.errors import (
     DatabaseConnectionError,
+    InsufficientPrivilegeError,
     QueryExecutionError,
     QuerySyntaxError,
-    ReadOnlyTransactionError,
 )
 
 
@@ -30,14 +30,14 @@ class QueryRequest(BaseModel):
             return [dict(zip(columns, row)) for row in rows]
 
         except ProgrammingError as pe:
+            if "must be" in str(pe):
+                raise InsufficientPrivilegeError(
+                    f"Insufficient privilege to execute the query: {str(pe)}"
+                ) from pe
+
             raise QuerySyntaxError(f"Syntax error in SQL query: {str(pe)}") from pe
 
         except DBAPIError as dbe:
-            # Check if the original exception is a ReadOnlySQLTransactionError
-            if "read-only" in repr(dbe):
-                raise ReadOnlyTransactionError(
-                    f"Attempted write operation in a read-only transaction: {str(dbe.orig)}"
-                ) from dbe
             raise DatabaseConnectionError(f"Database connection error: {str(dbe)}") from dbe
 
         except SQLAlchemyError as se:

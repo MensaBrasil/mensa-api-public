@@ -4,7 +4,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from pycpfcnpj.cpf import validate as validate_cpf
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..models.member_data import MissingFieldsCreate
 from ..repositories import MemberRepository
@@ -22,6 +22,7 @@ class MissingFieldsService:
         MB = MemberRepository.getMBByEmail(token_data["email"], session)
         # check if user really has those fields missing, if not, deny
         missing_fields_list = MemberRepository.getMissingFieldsFromPostgres(MB, session)
+
         # set only fields that are missing
         if missing_fields.cpf is not None:
             if "cpf" in missing_fields_list:

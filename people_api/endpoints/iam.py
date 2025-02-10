@@ -1,7 +1,6 @@
 """Endpoints for managing roles and groups."""
 
 from fastapi import APIRouter, Depends, status
-from sqlmodel import Session
 
 from ..auth import verify_firebase_token
 from ..database.models.iam_model import (
@@ -23,7 +22,7 @@ from ..database.models.iam_model import (
     UpdatePermission,
     UpdateRole,
 )
-from ..dbs import get_session
+from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..services import IamService
 
 iam_router = APIRouter(tags=["IAM"], prefix="/iam", dependencies=[Depends(verify_firebase_token)])
@@ -34,26 +33,26 @@ iam_router = APIRouter(tags=["IAM"], prefix="/iam", dependencies=[Depends(verify
 @iam_router.post("/create_role/", status_code=status.HTTP_201_CREATED, tags=["roles"])
 async def _create_role(
     role: CreateRole,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Create a new role"""
-    return IamService.create_role(
+    return await IamService.create_role(
         role_name=role.role_name,
         role_description=role.role_description,
-        session=session,
+        session=sessions.rw,
     )
 
 
 @iam_router.post("/create_group/", status_code=status.HTTP_201_CREATED, tags=["groups"])
 async def _create_group(
     group: CreateGroup,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Create a new group"""
-    return IamService.create_group(
+    return await IamService.create_group(
         group_name=group.group_name,
         group_description=group.group_description,
-        session=session,
+        session=sessions.rw,
     )
 
 
@@ -64,13 +63,13 @@ async def _create_group(
 )
 async def _create_permission(
     permission: CreatePermission,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Create a new permission"""
-    return IamService.create_permission(
+    return await IamService.create_permission(
         permission_name=permission.permission_name,
         permission_description=permission.permission_description,
-        session=session,
+        session=sessions.rw,
     )
 
 
@@ -81,11 +80,11 @@ async def _create_permission(
 )
 async def _add_role_to_member(
     role: AddRoleToMember,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Add role to member"""
-    return IamService.add_role_to_member(
-        role_name=role.role_name, member_id=role.member_id, session=session
+    return await IamService.add_role_to_member(
+        role_name=role.role_name, member_id=role.member_id, session=sessions.rw
     )
 
 
@@ -96,11 +95,11 @@ async def _add_role_to_member(
 )
 async def _add_group_to_member(
     group: AddGroupToMember,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Add group to member"""
-    return IamService.add_group_to_member(
-        group_name=group.group_name, member_id=group.member_id, session=session
+    return await IamService.add_group_to_member(
+        group_name=group.group_name, member_id=group.member_id, session=sessions.rw
     )
 
 
@@ -111,13 +110,13 @@ async def _add_group_to_member(
 )
 async def _add_permission_to_role(
     data: AddPermissionToRole,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Add permission to role"""
-    return IamService.add_permission_to_role(
+    return await IamService.add_permission_to_role(
         role_name=data.role_name,
         permission_name=data.permission_name,
-        session=session,
+        session=sessions.rw,
     )
 
 
@@ -128,13 +127,13 @@ async def _add_permission_to_role(
 )
 async def _add_permission_to_group(
     data: AddPermissionToGroup,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Add permission to group"""
-    return IamService.add_permission_to_group(
+    return await IamService.add_permission_to_group(
         group_name=data.group_name,
         permission_name=data.permission_name,
-        session=session,
+        session=sessions.rw,
     )
 
 
@@ -143,18 +142,20 @@ async def _add_permission_to_group(
 
 @iam_router.get("/roles/", status_code=status.HTTP_200_OK, tags=["roles"])
 async def _get_roles(
-    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+    token_data=Depends(verify_firebase_token),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get roles for member"""
-    return IamService.get_member_roles(token_data=token_data, session=session)
+    return await IamService.get_member_roles(token_data=token_data, session=sessions.rw)
 
 
 @iam_router.get("/groups/", status_code=status.HTTP_200_OK, tags=["groups"])
 async def _get_groups(
-    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+    token_data=Depends(verify_firebase_token),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get groups for member"""
-    return IamService.get_member_groups(token_data=token_data, session=session)
+    return await IamService.get_member_groups(token_data=token_data, session=sessions.rw)
 
 
 @iam_router.get(
@@ -164,10 +165,10 @@ async def _get_groups(
 )
 async def _get_members_with_role(
     role_name: str,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get members with specific role"""
-    return IamService.get_members_by_role_name(role_name=role_name, session=session)
+    return await IamService.get_members_by_role_name(role_name=role_name, session=sessions.rw)
 
 
 @iam_router.get(
@@ -177,10 +178,10 @@ async def _get_members_with_role(
 )
 async def _get_members_in_group(
     group_name: str,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get members in specific group"""
-    return IamService.get_members_by_group_name(group_name=group_name, session=session)
+    return await IamService.get_members_by_group_name(group_name=group_name, session=sessions.rw)
 
 
 @iam_router.get(
@@ -190,10 +191,12 @@ async def _get_members_in_group(
 )
 async def _get_role_permissions(
     role_name: str,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get permissions for role"""
-    return IamService.get_role_permissions_by_role_name(role_name=role_name, session=session)
+    return await IamService.get_role_permissions_by_role_name(
+        role_name=role_name, session=sessions.rw
+    )
 
 
 @iam_router.get(
@@ -203,10 +206,12 @@ async def _get_role_permissions(
 )
 async def _get_group_permissions(
     group_name: str,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get permissions for group"""
-    return IamService.get_group_permissions_by_group_name(group_name=group_name, session=session)
+    return await IamService.get_group_permissions_by_group_name(
+        group_name=group_name, session=sessions.rw
+    )
 
 
 # PATCH requests
@@ -215,13 +220,13 @@ async def _get_group_permissions(
 @iam_router.patch("/update_role/", status_code=status.HTTP_200_OK, tags=["roles"])
 async def _update_role(
     update_role: UpdateRole,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Update role"""
-    return IamService.edit_role_by_name(
+    return await IamService.edit_role_by_name(
         role_name=update_role.role_name,
         new_role_name=update_role.new_role_name,
-        session=session,
+        session=sessions.rw,
         new_role_description=update_role.new_role_description,
     )
 
@@ -229,13 +234,13 @@ async def _update_role(
 @iam_router.patch("/update_group/", status_code=status.HTTP_200_OK, tags=["groups"])
 async def _update_group(
     update_group: UpdateGroup,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Update group"""
-    return IamService.edit_group_by_name(
+    return await IamService.edit_group_by_name(
         group_name=update_group.group_name,
         new_group_name=update_group.new_group_name,
-        session=session,
+        session=sessions.rw,
         new_group_description=update_group.new_group_description,
     )
 
@@ -247,13 +252,13 @@ async def _update_group(
 )
 async def _update_permission(
     data: UpdatePermission,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Update permission"""
-    return IamService.edit_permission_by_name(
+    return await IamService.edit_permission_by_name(
         permission_name=data.permission_name,
         new_permission_name=data.new_permission_name,
-        session=session,
+        session=sessions.rw,
         new_permission_description=data.new_permission_description,
     )
 
@@ -268,11 +273,11 @@ async def _update_permission(
 )
 async def _remove_role_from_member(
     request: RemoveRoleFromMember,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Remove role from member"""
-    return IamService.remove_role_from_member(
-        role_name=request.role_name, member_id=request.member_id, session=session
+    return await IamService.remove_role_from_member(
+        role_name=request.role_name, member_id=request.member_id, session=sessions.rw
     )
 
 
@@ -283,11 +288,11 @@ async def _remove_role_from_member(
 )
 async def _remove_group_from_member(
     request: RemoveGroupFromMember,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Remove group from member"""
-    return IamService.remove_group_from_member(
-        group_name=request.group_name, member_id=request.member_id, session=session
+    return await IamService.remove_group_from_member(
+        group_name=request.group_name, member_id=request.member_id, session=sessions.rw
     )
 
 
@@ -298,13 +303,13 @@ async def _remove_group_from_member(
 )
 async def _remove_permission_from_role(
     request: RemovePermissionFromRole,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Remove permission from role"""
-    return IamService.remove_permission_from_role(
+    return await IamService.remove_permission_from_role(
         role_name=request.role_name,
         permission_name=request.permission_name,
-        session=session,
+        session=sessions.rw,
     )
 
 
@@ -315,32 +320,32 @@ async def _remove_permission_from_role(
 )
 async def _remove_permission_from_group(
     request: RemovePermissionFromGroup,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Remove permission from group"""
-    return IamService.remove_permission_from_group(
+    return await IamService.remove_permission_from_group(
         group_name=request.group_name,
         permission_name=request.permission_name,
-        session=session,
+        session=sessions.rw,
     )
 
 
 @iam_router.delete("/delete_role/", status_code=status.HTTP_200_OK, tags=["roles"])
 async def _delete_role(
     request: DeleteRole,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Delete role"""
-    return IamService.delete_role(role_name=request.role_name, session=session)
+    return await IamService.delete_role(role_name=request.role_name, session=sessions.rw)
 
 
 @iam_router.delete("/delete_group/", status_code=status.HTTP_200_OK, tags=["groups"])
 async def _delete_group(
     request: DeleteGroup,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Delete group"""
-    return IamService.delete_group(group_name=request.group_name, session=session)
+    return await IamService.delete_group(group_name=request.group_name, session=sessions.rw)
 
 
 @iam_router.delete(
@@ -350,7 +355,9 @@ async def _delete_group(
 )
 async def _delete_permission(
     request: DeletePermission,
-    session: Session = Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Delete permission"""
-    return IamService.delete_permission(permission_name=request.permission_name, session=session)
+    return await IamService.delete_permission(
+        permission_name=request.permission_name, session=sessions.rw
+    )

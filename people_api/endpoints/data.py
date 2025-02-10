@@ -1,7 +1,7 @@
 """Data endpoint for querying the database"""
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..database.models import QueryRequest, QueryResponse
 from ..dbs import get_read_only_session

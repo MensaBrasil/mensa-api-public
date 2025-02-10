@@ -52,6 +52,8 @@ jobs:
           discord_client_id: state
           discord_client_secret: state
           discord_redirect_uri: state
+          POSTGRES_RO_USER: mensa_ro
+          POSTGRES_RO_PASSWORD: postgres
         run: |
           uv run coverage run -m pytest -sv .
           uv run coverage report

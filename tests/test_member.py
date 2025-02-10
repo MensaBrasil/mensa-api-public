@@ -40,13 +40,15 @@ def test_get_missing_fields_missing_cpf(
 ) -> None:
     """Test when the CPF is missing"""
     # Delete CPF from the member with the email 'calvin@mensa.org.br'
-    run_db_query("""
+    run_db_query(
+        """
         UPDATE registration
         SET cpf = NULL
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/missing_fields", headers=headers)
     assert response.status_code == 200
@@ -58,13 +60,15 @@ def test_get_missing_fields_missing_birth_date(
 ) -> None:
     """Test when the birth_date is missing"""
     # Delete birth_date from the member with the email 'calvin@mensa.org.br'
-    run_db_query("""
+    run_db_query(
+        """
         UPDATE registration
         SET birth_date = NULL
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/missing_fields", headers=headers)
@@ -79,13 +83,15 @@ def test_get_missing_fields_missing_both_fields(
 ) -> None:
     """Test when both CPF and birth_date are missing"""
     # Delete both CPF and birth_date from the member with the email 'calvin@mensa.org.br'
-    run_db_query("""
+    run_db_query(
+        """
         UPDATE registration
         SET cpf = NULL, birth_date = NULL
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/missing_fields", headers=headers)
@@ -110,13 +116,13 @@ def test_set_missing_fields_valid_data(
     """Test setting missing fields (CPF and birth_date) with valid data"""
 
     # Set up the member with missing fields (CPF and birth_date)
-    run_db_query("""
+    run_db_query(
+        """
     UPDATE registration
     SET cpf = NULL, birth_date = NULL
-    WHERE registration_id IN (
-        SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
+    WHERE registration.registration_id = 5
+"""
     )
-""")
 
     # Define the payload with valid CPF and birth_date
     payload = {"cpf": "12345678909", "birth_date": "1992-02-02"}
@@ -130,12 +136,12 @@ def test_set_missing_fields_valid_data(
     assert response.json() == {"message": "Missing fields set successfully"}
 
     # Verify that the member's fields were updated in the database
-    updated_member = run_db_query("""
+    updated_member = run_db_query(
+        """
         SELECT cpf, birth_date FROM registration
-        WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
-        )
-    """)
+        WHERE registration.registration_id = 5
+    """
+    )
     assert [(cpf, birth_date.strftime("%Y-%m-%d")) for cpf, birth_date in updated_member] == [
         ("12345678909", "1992-02-02")
     ]
@@ -235,13 +241,15 @@ def test_set_missing_fields_no_update_needed(
     """Test setting missing fields when no update is needed"""
 
     # Ensure member already has CPF and birth_date set
-    run_db_query("""
+    run_db_query(
+        """
         UPDATE registration
         SET cpf = '12345678909', birth_date = '1990-01-01'
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
 
     # Define the payload with the same CPF and birth_date
     payload = {"cpf": "12345678909", "birth_date": "1995-02-02"}
@@ -255,12 +263,14 @@ def test_set_missing_fields_no_update_needed(
     assert response.json() == {"message": "Missing fields set successfully"}
 
     # Ensure no changes were made in the database
-    unchanged_member = run_db_query("""
+    unchanged_member = run_db_query(
+        """
         SELECT cpf, birth_date FROM registration
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
-    """)
+    """
+    )
     assert [(cpf, birth_date.strftime("%Y-%m-%d")) for cpf, birth_date in unchanged_member] == [
         ("12345678909", "1990-01-01")
     ]
@@ -281,9 +291,11 @@ def test_update_fb_profession_valid_data(
     assert response.json() == {"message": "Member updated successfully"}
 
     # Verify that the member's data was updated in the database
-    updated_member = run_db_query("""
+    updated_member = run_db_query(
+        """
         SELECT profession, facebook FROM registration WHERE registration_id = 5
-    """)
+    """
+    )
     assert updated_member == [("Engineer", "https://facebook.com/new_profile")]
 
 

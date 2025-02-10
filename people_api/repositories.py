@@ -9,7 +9,7 @@ import json
 from datetime import date, datetime
 
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from .dbs import firebase_collection
 from .exceptions import (

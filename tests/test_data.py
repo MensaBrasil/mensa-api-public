@@ -44,7 +44,7 @@ def test_read_only_constraint(test_client: TestClient):
     response = test_client.post(
         "/data/query",
         headers={"data_endpoint_token": MOCK_API_KEY},
-        json={"query": "DROP TABLE cadastro_naousar;"},
+        json={"query": "DROP TABLE emails;"},
     )
     assert response.status_code == 403  # Should fail due to read-only mode
     assert "detail" in response.json()

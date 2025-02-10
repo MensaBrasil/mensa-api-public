@@ -1,9 +1,11 @@
 """This module contains the service class for IAM."""
 
 from fastapi import HTTPException, status
-from sqlmodel import Session, col, select
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database.models import (
+    Emails,
     IAMGroupPermissionsMap,
     IAMGroups,
     IAMPermissions,
@@ -13,64 +15,88 @@ from ..database.models import (
     IAMUserRolesMap,
     Registration,
 )
-from ..repositories import MemberRepository
 
 
 class IamService:
     """Service class for IAM."""
 
     @staticmethod
-    def get_member_by_id(member_id: int, session: Session) -> Registration:
+    async def get_member_id_by_email(email: str, session: AsyncSession) -> int:
+        """Get member id by email."""
+        return (
+            await session.exec(
+                select(Emails.registration_id).where(col(Emails.email_address) == email)
+            )
+        ).first()  # type: ignore
+
+    @staticmethod
+    async def get_member_by_id(member_id: int, session: AsyncSession) -> Registration:
         """Get member by member id."""
-        return session.exec(
-            select(Registration).where(col(Registration.registration_id) == member_id)
+        return (
+            await session.exec(
+                select(Registration).where(col(Registration.registration_id) == member_id)
+            )
         ).first()  # type: ignore
 
     @staticmethod
-    def get_role_by_role_name(role_name: str, session: Session) -> IAMRoles:
+    async def get_role_by_role_name(role_name: str, session: AsyncSession) -> IAMRoles:
         """Get role by role name."""
-        return session.exec(select(IAMRoles).filter(col(IAMRoles.role_name) == role_name)).first()  # type: ignore
+        return (
+            await session.exec(select(IAMRoles).filter(col(IAMRoles.role_name) == role_name))
+        ).first()  # type: ignore
 
     @staticmethod
-    def get_role_id_by_role_name(role_name: str, session: Session) -> IAMRoles:
+    async def get_role_id_by_role_name(role_name: str, session: AsyncSession) -> IAMRoles:
         """Get role by role name."""
-        return session.exec(select(IAMRoles).filter(col(IAMRoles.role_name) == role_name)).first()  # type: ignore
+        return (
+            await session.exec(select(IAMRoles).filter(col(IAMRoles.role_name) == role_name))
+        ).first()  # type: ignore
 
     @staticmethod
-    def get_group_by_group_name(group_name: str, session: Session) -> IAMGroups:
+    async def get_group_by_group_name(group_name: str, session: AsyncSession) -> IAMGroups:
         """Get group by group name."""
-        return session.exec(
-            select(IAMGroups).filter(col(IAMGroups.group_name) == group_name)
+        return (
+            await session.exec(select(IAMGroups).filter(col(IAMGroups.group_name) == group_name))
         ).first()  # type: ignore
 
     @staticmethod
-    def get_group_id_by_group_name(group_name: str, session: Session) -> IAMGroups:
+    async def get_group_id_by_group_name(group_name: str, session: AsyncSession) -> IAMGroups:
         """Get group by group name."""
-        return session.exec(
-            select(IAMGroups).filter(col(IAMGroups.group_name) == group_name)
+        return (
+            await session.exec(select(IAMGroups).filter(col(IAMGroups.group_name) == group_name))
         ).first()  # type: ignore
 
     @staticmethod
-    def get_permission_by_permission_name(permission_name: str, session: Session) -> IAMPermissions:
-        """Get permission by permission name."""
-        return session.exec(
-            select(IAMPermissions).filter(col(IAMPermissions.permission_name) == permission_name)
-        ).first()  # type: ignore
-
-    @staticmethod
-    def get_permission_id_by_permission_name(
-        permission_name: str, session: Session
+    async def get_permission_by_permission_name(
+        permission_name: str, session: AsyncSession
     ) -> IAMPermissions:
         """Get permission by permission name."""
-        return session.exec(
-            select(IAMPermissions).filter(col(IAMPermissions.permission_name) == permission_name)
+        return (
+            await session.exec(
+                select(IAMPermissions).filter(
+                    col(IAMPermissions.permission_name) == permission_name
+                )
+            )
         ).first()  # type: ignore
 
     @staticmethod
-    def get_member_roles(token_data: dict, session: Session):
+    async def get_permission_id_by_permission_name(
+        permission_name: str, session: AsyncSession
+    ) -> IAMPermissions:
+        """Get permission by permission name."""
+        return (
+            await session.exec(
+                select(IAMPermissions).filter(
+                    col(IAMPermissions.permission_name) == permission_name
+                )
+            )
+        ).first()  # type: ignore
+
+    @staticmethod
+    async def get_member_roles(token_data: dict, session: AsyncSession):
         """Get roles for a member by member id."""
 
-        registration_id = MemberRepository.getMBByEmail(token_data["email"], session)
+        registration_id = await IamService.get_member_id_by_email(token_data["email"], session)
 
         statement = (
             select(col(col(IAMRoles.role_name)))
@@ -78,7 +104,7 @@ class IamService:
             .join(IAMRoles, col(col(IAMUserRolesMap.role_id)) == col(col(IAMRoles.id)))
             .where(col(IAMUserRolesMap.registration_id) == registration_id)
         )
-        roles = session.exec(statement).all()
+        roles = (await session.exec(statement)).all()
         if roles:
             return roles
         else:
@@ -88,10 +114,10 @@ class IamService:
             )
 
     @staticmethod
-    def get_member_groups(token_data: dict, session: Session):
+    async def get_member_groups(token_data: dict, session: AsyncSession):
         """Get groups for a member by member id."""
 
-        registration_id = MemberRepository.getMBByEmail(token_data["email"], session)
+        registration_id = await IamService.get_member_id_by_email(token_data["email"], session)
 
         statement = (
             select(col(IAMGroups.group_name))
@@ -99,7 +125,7 @@ class IamService:
             .join(IAMGroups, col(col(IAMUserGroupsMap.group_id)) == col(col(IAMGroups.id)))
             .where(col(IAMUserGroupsMap.registration_id) == registration_id)
         )
-        groups = session.exec(statement).all()
+        groups = (await session.exec(statement)).all()
         if groups:
             return groups
         else:
@@ -109,10 +135,10 @@ class IamService:
             )
 
     @staticmethod
-    def get_role_permissions_by_role_name(role_name: str, session: Session):
+    async def get_role_permissions_by_role_name(role_name: str, session: AsyncSession):
         """Get permissions for a role by role name."""
 
-        if not IamService.get_role_by_role_name(role_name, session):
+        if not await IamService.get_role_by_role_name(role_name, session):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
@@ -128,7 +154,7 @@ class IamService:
             .join(IAMRoles, col(IAMRolePermissionsMap.role_id) == col(IAMRoles.id))
             .where(col(IAMRoles.role_name) == role_name)
         )
-        permissions = session.exec(statement).all()
+        permissions = (await session.exec(statement)).all()
         if permissions:
             return permissions
         else:
@@ -138,10 +164,10 @@ class IamService:
             )
 
     @staticmethod
-    def get_group_permissions_by_group_name(group_name: str, session: Session):
+    async def get_group_permissions_by_group_name(group_name: str, session: AsyncSession):
         """Get permissions for a group by group name."""
 
-        if not IamService.get_group_by_group_name(group_name, session):
+        if not await IamService.get_group_by_group_name(group_name, session):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
@@ -157,7 +183,7 @@ class IamService:
             .join(IAMGroups, col(IAMGroupPermissionsMap.group_id) == col(IAMGroups.id))
             .where(col(IAMGroups.group_name) == group_name)
         )
-        permissions = session.exec(statement).all()
+        permissions = (await session.exec(statement)).all()
         if permissions:
             return permissions
         else:
@@ -167,16 +193,16 @@ class IamService:
             )
 
     @staticmethod
-    def get_members_by_role_name(role_name: str, session: Session):
+    async def get_members_by_role_name(role_name: str, session: AsyncSession):
         """Get members by role."""
 
-        if not IamService.get_role_by_role_name(role_name, session):
+        if not await IamService.get_role_by_role_name(role_name, session):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
 
-        statement = (
+        results = await session.exec(
             select(Registration.name, col(IAMUserRolesMap.registration_id))
             .join(IAMRoles, col(IAMUserRolesMap.role_id) == col(IAMRoles.id))
             .join(
@@ -185,7 +211,6 @@ class IamService:
             )
             .where(col(IAMRoles.role_name) == role_name)
         )
-        results = session.exec(statement)
         members = [[row[0], row[1]] for row in results.all()]
         if members:
             return members
@@ -196,16 +221,16 @@ class IamService:
             )
 
     @staticmethod
-    def get_members_by_group_name(group_name: str, session: Session):
+    async def get_members_by_group_name(group_name: str, session: AsyncSession):
         """Get members by group."""
 
-        if not IamService.get_group_by_group_name(group_name, session):
+        if not await IamService.get_group_by_group_name(group_name, session):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
             )
 
-        statement = (
+        results = await session.exec(
             select(Registration.name, col(IAMUserGroupsMap.registration_id))
             .join(IAMGroups, col(IAMUserGroupsMap.group_id) == col(IAMGroups.id))
             .join(
@@ -214,7 +239,6 @@ class IamService:
             )
             .where(col(IAMGroups.group_name) == group_name)
         )
-        results = session.exec(statement)
         members = [[row[0], row[1]] for row in results.all()]
         if members:
             return members
@@ -225,10 +249,10 @@ class IamService:
             )
 
     @staticmethod
-    def create_role(role_name: str, role_description: str, session: Session):
+    async def create_role(role_name: str, role_description: str, session: AsyncSession):
         """Create a new role."""
 
-        if IamService.get_role_by_role_name(role_name, session):
+        if await IamService.get_role_by_role_name(role_name, session):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Role: {role_name} already exists.",
@@ -244,10 +268,10 @@ class IamService:
             ) from e
 
     @staticmethod
-    def create_group(group_name: str, group_description: str, session: Session):
+    async def create_group(group_name: str, group_description: str, session: AsyncSession):
         """Create a new group."""
 
-        if IamService.get_group_by_group_name(group_name, session):
+        if await IamService.get_group_by_group_name(group_name, session):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Group: {group_name} already exists.",
@@ -262,10 +286,12 @@ class IamService:
             ) from e
 
     @staticmethod
-    def create_permission(permission_name: str, permission_description: str, session: Session):
+    async def create_permission(
+        permission_name: str, permission_description: str, session: AsyncSession
+    ):
         """Create a new permission."""
 
-        if IamService.get_permission_by_permission_name(permission_name, session):
+        if await IamService.get_permission_by_permission_name(permission_name, session):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Permission: {permission_name} already exists.",
@@ -283,15 +309,15 @@ class IamService:
             ) from e
 
     @staticmethod
-    def edit_role_by_name(
+    async def edit_role_by_name(
         role_name: str,
         new_role_name: str,
-        session: Session,
+        session: AsyncSession,
         new_role_description: str | None = None,
     ):
         """Edit a role by role name."""
 
-        role = IamService.get_role_by_role_name(role_name, session)
+        role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -305,15 +331,15 @@ class IamService:
         return {"detail": f"Role: {role_name} updated successfully."}
 
     @staticmethod
-    def edit_group_by_name(
+    async def edit_group_by_name(
         group_name: str,
         new_group_name: str,
-        session: Session,
+        session: AsyncSession,
         new_group_description: str | None = None,
     ):
         """Edit a group by group name."""
 
-        group = IamService.get_group_by_group_name(group_name, session)
+        group = await IamService.get_group_by_group_name(group_name, session)
         if not group:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -327,15 +353,15 @@ class IamService:
         return {"detail": f"Group: {group_name} updated successfully."}
 
     @staticmethod
-    def edit_permission_by_name(
+    async def edit_permission_by_name(
         permission_name: str,
         new_permission_name: str,
-        session: Session,
+        session: AsyncSession,
         new_permission_description: str | None = None,
     ):
         """Edit a permission by permission name."""
 
-        permission = IamService.get_permission_by_permission_name(permission_name, session)
+        permission = await IamService.get_permission_by_permission_name(permission_name, session)
         if not permission:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -351,30 +377,32 @@ class IamService:
         return {"detail": f"Permission: {permission_name} updated successfully."}
 
     @staticmethod
-    def add_permission_to_role(role_name: str, permission_name: str, session: Session):
+    async def add_permission_to_role(role_name: str, permission_name: str, session: AsyncSession):
         """Add a permission to a role."""
 
-        role = IamService.get_role_by_role_name(role_name, session)
+        role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
 
-        permission = IamService.get_permission_by_permission_name(permission_name, session)
+        permission = await IamService.get_permission_by_permission_name(permission_name, session)
         if not permission:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Permission: {permission_name} does not exist.",
             )
 
-        role_id = IamService.get_role_id_by_role_name(role_name, session).id
-        permission_id = IamService.get_permission_id_by_permission_name(permission_name, session).id
+        role_id = (await IamService.get_role_id_by_role_name(role_name, session)).id
+        permission_id = (
+            await IamService.get_permission_id_by_permission_name(permission_name, session)
+        ).id
         statement = select(IAMRolePermissionsMap).filter(
             col(IAMRolePermissionsMap.role_id) == role_id,
             col(IAMRolePermissionsMap.permission_id) == permission_id,
         )
-        role_already_has_permission = session.exec(statement).first()
+        role_already_has_permission = (await session.exec(statement)).first()
 
         if role_already_has_permission:
             raise HTTPException(
@@ -396,30 +424,34 @@ class IamService:
             ) from e
 
     @staticmethod
-    def add_permission_to_group(group_name: str, permission_name: str, session: Session):
+    async def add_permission_to_group(group_name: str, permission_name: str, session: AsyncSession):
         """Add a permission to a group."""
 
-        group = IamService.get_group_by_group_name(group_name, session)
+        group = await IamService.get_group_by_group_name(group_name, session)
         if not group:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
             )
 
-        permission = IamService.get_permission_by_permission_name(permission_name, session)
+        permission = await IamService.get_permission_by_permission_name(permission_name, session)
         if not permission:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Permission: {permission_name} does not exist.",
             )
 
-        group_id = IamService.get_group_id_by_group_name(group_name, session).id
-        permission_id = IamService.get_permission_id_by_permission_name(permission_name, session).id
+        group_id = (await IamService.get_group_id_by_group_name(group_name, session)).id
+        permission_id = (
+            await IamService.get_permission_id_by_permission_name(permission_name, session)
+        ).id
 
-        group_already_has_permission = session.exec(
-            select(IAMGroupPermissionsMap).filter(
-                col(IAMGroupPermissionsMap.group_id) == group_id,
-                col(IAMGroupPermissionsMap.permission_id) == permission_id,
+        group_already_has_permission = (
+            await session.exec(
+                select(IAMGroupPermissionsMap).filter(
+                    col(IAMGroupPermissionsMap.group_id) == group_id,
+                    col(IAMGroupPermissionsMap.permission_id) == permission_id,
+                )
             )
         ).first()
 
@@ -442,22 +474,24 @@ class IamService:
             ) from e
 
     @staticmethod
-    def add_role_to_member(role_name: str, member_id: int, session: Session):
+    async def add_role_to_member(role_name: str, member_id: int, session: AsyncSession):
         """Add a role to a member."""
 
-        role = IamService.get_role_by_role_name(role_name, session)
+        role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
 
-        role_id = IamService.get_role_id_by_role_name(role_name, session).id
+        role_id = (await IamService.get_role_id_by_role_name(role_name, session)).id
 
-        check_role_assigned = session.exec(
-            select(IAMUserRolesMap).filter(
-                col(IAMUserRolesMap.role_id) == role_id,
-                col(IAMUserRolesMap.registration_id) == member_id,
+        check_role_assigned = (
+            await session.exec(
+                select(IAMUserRolesMap).filter(
+                    col(IAMUserRolesMap.role_id) == role_id,
+                    col(IAMUserRolesMap.registration_id) == member_id,
+                )
             )
         ).first()
 
@@ -479,21 +513,23 @@ class IamService:
             ) from e
 
     @staticmethod
-    def add_group_to_member(group_name: str, member_id: int, session: Session):
+    async def add_group_to_member(group_name: str, member_id: int, session: AsyncSession):
         """Add a group to a member."""
 
-        group = IamService.get_group_by_group_name(group_name, session)
+        group = await IamService.get_group_by_group_name(group_name, session)
         if not group:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
             )
 
-        group_id = IamService.get_group_id_by_group_name(group_name, session).id
-        check_group_assigned = session.exec(
-            select(IAMUserGroupsMap).filter(
-                col(IAMUserGroupsMap.group_id) == group_id,
-                col(IAMUserGroupsMap.registration_id) == member_id,
+        group_id = (await IamService.get_group_id_by_group_name(group_name, session)).id
+        check_group_assigned = (
+            await session.exec(
+                select(IAMUserGroupsMap).filter(
+                    col(IAMUserGroupsMap.group_id) == group_id,
+                    col(IAMUserGroupsMap.registration_id) == member_id,
+                )
             )
         ).first()
 
@@ -515,27 +551,31 @@ class IamService:
             ) from e
 
     @staticmethod
-    def remove_permission_from_role(role_name: str, permission_name: str, session: Session):
+    async def remove_permission_from_role(
+        role_name: str, permission_name: str, session: AsyncSession
+    ):
         """Remove a permission from a role."""
 
-        role = IamService.get_role_by_role_name(role_name, session)
+        role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
 
-        permission = IamService.get_permission_by_permission_name(permission_name, session)
+        permission = await IamService.get_permission_by_permission_name(permission_name, session)
         if not permission:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Permission: {permission_name} does not exist.",
             )
 
-        role_permission_map = session.exec(
-            select(IAMRolePermissionsMap).filter(
-                col(IAMRolePermissionsMap.role_id) == role.id,
-                col(IAMRolePermissionsMap.permission_id) == permission.id,
+        role_permission_map = (
+            await session.exec(
+                select(IAMRolePermissionsMap).filter(
+                    col(IAMRolePermissionsMap.role_id) == role.id,
+                    col(IAMRolePermissionsMap.permission_id) == permission.id,
+                )
             )
         ).first()
 
@@ -545,33 +585,37 @@ class IamService:
                 detail=f"Role: {role_name} does not have permission: {permission_name}.",
             )
 
-        session.delete(role_permission_map)
+        await session.delete(role_permission_map)
         return {
             "detail": f"Permission: {permission_name} removed from role: {role_name} successfully."
         }
 
     @staticmethod
-    def remove_permission_from_group(group_name: str, permission_name: str, session: Session):
+    async def remove_permission_from_group(
+        group_name: str, permission_name: str, session: AsyncSession
+    ):
         """Remove a permission from a group."""
 
-        group = IamService.get_group_by_group_name(group_name, session)
+        group = await IamService.get_group_by_group_name(group_name, session)
         if not group:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
             )
 
-        permission = IamService.get_permission_by_permission_name(permission_name, session)
+        permission = await IamService.get_permission_by_permission_name(permission_name, session)
         if not permission:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Permission: {permission_name} does not exist.",
             )
 
-        group_permission_map = session.exec(
-            select(IAMGroupPermissionsMap).filter(
-                col(IAMGroupPermissionsMap.group_id) == group.id,
-                col(IAMGroupPermissionsMap.permission_id) == permission.id,
+        group_permission_map = (
+            await session.exec(
+                select(IAMGroupPermissionsMap).filter(
+                    col(IAMGroupPermissionsMap.group_id) == group.id,
+                    col(IAMGroupPermissionsMap.permission_id) == permission.id,
+                )
             )
         ).first()
 
@@ -581,33 +625,35 @@ class IamService:
                 detail=f"Group: {group_name} does not have permission: {permission_name}.",
             )
 
-        session.delete(group_permission_map)
+        await session.delete(group_permission_map)
         return {
             "detail": f"Permission: {permission_name} removed from group: {group_name} successfully."
         }
 
     @staticmethod
-    def remove_role_from_member(role_name: str, member_id: int, session: Session):
+    async def remove_role_from_member(role_name: str, member_id: int, session: AsyncSession):
         """Remove a role from a member."""
 
-        role = IamService.get_role_by_role_name(role_name, session)
+        role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
 
-        member = IamService.get_member_by_id(member_id, session)
+        member = await IamService.get_member_by_id(member_id, session)
         if not member:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Member with id: {member_id} does not exist.",
             )
 
-        role_member_map = session.exec(
-            select(IAMUserRolesMap).filter(
-                col(IAMUserRolesMap.role_id) == role.id,
-                col(IAMUserRolesMap.registration_id) == member_id,
+        role_member_map = (
+            await session.exec(
+                select(IAMUserRolesMap).filter(
+                    col(IAMUserRolesMap.role_id) == role.id,
+                    col(IAMUserRolesMap.registration_id) == member_id,
+                )
             )
         ).first()
         if not role_member_map:
@@ -616,16 +662,16 @@ class IamService:
                 detail=f"Role: {role_name} not assigned to member with id: {member_id}.",
             )
 
-        session.delete(role_member_map)
+        await session.delete(role_member_map)
         return {
             "detail": f"Role: {role_name} removed from member with id: {member_id} successfully."
         }
 
     @staticmethod
-    def remove_group_from_member(group_name: str, member_id: int, session: Session):
+    async def remove_group_from_member(group_name: str, member_id: int, session: AsyncSession):
         """Remove a group from a member."""
 
-        group = IamService.get_group_by_group_name(group_name, session)
+        group = await IamService.get_group_by_group_name(group_name, session)
 
         if not group:
             raise HTTPException(
@@ -633,17 +679,19 @@ class IamService:
                 detail=f"Group: {group_name} does not exist.",
             )
 
-        member = IamService.get_member_by_id(member_id, session)
+        member = await IamService.get_member_by_id(member_id, session)
         if not member:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Member with id: {member_id} does not exist.",
             )
 
-        group_member_map = session.exec(
-            select(IAMUserGroupsMap).filter(
-                col(IAMUserGroupsMap.group_id) == group.id,
-                col(IAMUserGroupsMap.registration_id) == member_id,
+        group_member_map = (
+            await session.exec(
+                select(IAMUserGroupsMap).filter(
+                    col(IAMUserGroupsMap.group_id) == group.id,
+                    col(IAMUserGroupsMap.registration_id) == member_id,
+                )
             )
         ).first()
         if not group_member_map:
@@ -651,49 +699,49 @@ class IamService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} not assigned to member with id: {member_id}.",
             )
-        session.delete(group_member_map)
+        await session.delete(group_member_map)
         return {
             "detail": f"Group: {group_name} removed from member with id: {member_id} successfully."
         }
 
     @staticmethod
-    def delete_role(role_name: str, session: Session):
+    async def delete_role(role_name: str, session: AsyncSession):
         """Delete a role by role name."""
 
-        role = IamService.get_role_by_role_name(role_name, session)
+        role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
 
-        session.delete(role)
+        await session.delete(role)
         return {"detail": f"Role: {role_name} deleted successfully."}
 
     @staticmethod
-    def delete_group(group_name: str, session: Session):
+    async def delete_group(group_name: str, session: AsyncSession):
         """Delete a group by group name."""
 
-        group = IamService.get_group_by_group_name(group_name, session)
+        group = await IamService.get_group_by_group_name(group_name, session)
         if not group:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
             )
 
-        session.delete(group)
+        await session.delete(group)
         return {"detail": f"Group: {group_name} deleted successfully."}
 
     @staticmethod
-    def delete_permission(permission_name: str, session: Session):
+    async def delete_permission(permission_name: str, session: AsyncSession):
         """Delete a permission by permission name."""
 
-        permission = IamService.get_permission_by_permission_name(permission_name, session)
+        permission = await IamService.get_permission_by_permission_name(permission_name, session)
         if not permission:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Permission: {permission_name} does not exist.",
             )
 
-        session.delete(permission)
+        await session.delete(permission)
         return {"detail": f"Permission: {permission_name} deleted successfully."}

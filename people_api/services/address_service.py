@@ -3,7 +3,7 @@
 """Service for managing members addresses."""
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..models.member_data import AddressCreate, AddressUpdate
 from ..repositories import MemberRepository

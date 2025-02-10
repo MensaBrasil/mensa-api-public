@@ -6,7 +6,7 @@ import json
 
 from fastapi import HTTPException
 from pydantic import ValidationError
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..models.member import PostgresMemberRead, PronounsCreate
 from ..models.member_data import MemberProfessionFacebookUpdate

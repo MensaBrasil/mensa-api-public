@@ -13,5 +13,5 @@ class DatabaseConnectionError(QueryExecutionError):
     """Raised when the connection to the database fails."""
 
 
-class ReadOnlyTransactionError(QueryExecutionError):
-    """Raised when an attempt is made to write in a read-only transaction."""
+class InsufficientPrivilegeError(QueryExecutionError):
+    """Raised when the user lacks the necessary privileges to execute the query."""

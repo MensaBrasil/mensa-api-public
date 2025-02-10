@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     postgres_password: str
     postgres_database: str
 
+    postgres_ro_user: str
+    postgres_ro_password: str
+
     data_route_api_key: str
     whatsapp_route_api_key: str
 

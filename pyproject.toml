@@ -6,47 +6,47 @@ authors = []
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
-    "babel>=2.15.0,<3",
-    "fastapi>=0.112.0,<0.113",
-    "firebase-admin>=6.5.0,<7",
-    "freezegun>=1.5.1,<2",
-    "google-api-python-client>=2.140.0,<3",
-    "pillow>=10.4.0,<11",
-    "psycopg2-binary>=2.9.9,<3",
-    "pydantic>=2.8.2,<3",
-    "pymongo>=4.8.0,<5",
-    "uvicorn>=0.30.5,<0.31",
-    "python-multipart>=0.0.9,<0.0.10",
-    "pytest>=8.3.2,<9",
-    "sqlalchemy>=2.0.32,<3",
-    "asyncpg>=0.29.0,<0.30",
-    "pre-commit>=3.8.0,<4",
-    "pytest-asyncio>=0.23.8,<0.24",
-    "coverage>=7.6.1,<8",
-    "pytest-mock>=3.14.0,<4",
-    "alembic>=1.13.3,<2",
-    "sqlmodel>=0.0.22,<0.0.23",
-    "openai>=1.58.1,<2",
-    "twilio>=9.4.1,<10",
-    "pycpfcnpj~=1.8",
-    "pydantic-settings>=2.7.0,<3",
+    "alembic>=1.14.1",
+    "asyncpg>=0.30.0",
+    "babel>=2.17.0",
+    "coverage>=7.6.10",
     "detect-secrets>=1.5.0",
-    "redis>=5.2.1",
+    "fastapi>=0.115.8",
+    "firebase-admin>=6.6.0",
+    "freezegun>=1.5.1",
+    "mypy>=1.15.0",
     "nltk>=3.9.1",
+    "openai>=1.61.1",
+    "pillow>=11.1.0",
+    "pre-commit>=4.1.0",
+    "psycopg2-binary>=2.9.10",
+    "pycpfcnpj>=1.8",
+    "pydantic>=2.10.6",
+    "pydantic-settings>=2.7.1",
+    "pymongo>=4.11",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
+    "pytest-mock>=3.14.0",
+    "python-multipart>=0.0.20",
+    "redis>=5.2.1",
+    "sqlalchemy>=2.0.38",
+    "sqlmodel>=0.0.22",
+    "twilio>=9.4.4",
+    "uvicorn>=0.34.0",
 ]
 
 [dependency-groups]
 dev = [
-    "freezegun==1.5.1",
-    "httpx==0.27.0",
-    "mypy>=1.14.1",
-    "pydantic==2.8.2",
-    "pytest-asyncio>=0.23.8",
-    "python-dateutil==2.8.2",
+    "freezegun>=1.5.1",
+    "httpx>=0.28.1",
+    "mypy>=1.15.0",
+    "pydantic>=2.10.6",
+    "pytest-asyncio>=0.25.3",
+    "python-dateutil>=2.9.0.post0",
     "respx>=0.22.0",
     "types-python-dateutil>=2.9.0.20241206",
     "types-redis>=4.6.0.20241004",
-    "wait4it==0.2.1",
+    "wait4it>=0.2.1",
 ]
 
 [tool.pylint]
@@ -127,3 +127,6 @@ cache_dir = ".mypy_cache"
 incremental = true
 
 exclude = "/alembic/"
+
+[tool.pytest]
+asyncio_mode="auto"

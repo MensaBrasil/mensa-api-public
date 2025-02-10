@@ -5,7 +5,7 @@
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..models.member import GroupJoinRequest
 from ..repositories import MemberRepository
