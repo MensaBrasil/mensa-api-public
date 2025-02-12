@@ -1,0 +1,312 @@
+
+
+# nullify invalid birth_dates
+
+UPDATE registration
+SET birth_date = NULL
+WHERE birth_date = '2000-01-01';
+
+# sanitise zip codes:
+
+UPDATE addresses
+SET zip = REGEXP_REPLACE(zip, '[^a-zA-Z0-9]', '', 'g')
+WHERE zip IS NOT NULL
+  AND zip !~ '^[a-zA-Z0-9]+$';
+
+# nullify invalid zip codes:
+
+UPDATE addresses
+SET zip = NULL
+WHERE zip IS NOT NULL
+  AND zip !~ '^[a-zA-Z0-9]+$';
+
+#fix gender typos and change to 'feminino' and 'masculino':
+
+UPDATE registration
+SET gender = CASE
+    WHEN lower(gender) LIKE '%hom%' THEN 'Homem'
+    WHEN lower(gender) LIKE '%mul%' THEN 'Mulher'
+    ELSE gender
+END;
+
+UPDATE registration
+SET gender = CASE
+    WHEN gender = 'Homem' THEN 'Masculino'
+    WHEN gender = 'Mulher' THEN 'Feminino'
+    ELSE gender
+END;
+
+# sanitising email_address on table emails:
+
+INSERT INTO emails (email_address, created_at, updated_at, registration_id, email_id, email_type)
+SELECT
+    TRIM(regexp_replace(split_part(email_address, '[ /]+', 1), '(\(m�e\)|\(pai\))', '', 'g')) AS cleaned_email_1,
+    created_at,
+    updated_at,
+    registration_id,
+    nextval('emails_email_id_seq') AS email_id,
+    CASE
+        WHEN TRIM(regexp_replace(split_part(email_address, '[ /]+', 1), '(\(m�e\)|\(pai\))', '', 'g')) LIKE '%mensa%' THEN 'mensa'
+        ELSE 'main'
+    END AS email_type
+FROM emails
+WHERE email_address LIKE '% e %'
+   OR email_address LIKE '%/%'
+   OR email_address LIKE '%(m�e)%'
+   OR email_address LIKE '%(pai)%'
+   OR email_address LIKE '% /%'
+   OR email_address LIKE '%/ %';
+
+INSERT INTO emails (email_address, created_at, updated_at, registration_id, email_id, email_type)
+SELECT
+    -- Clean the second email (split after ' e ', '/', or ' /')
+    TRIM(regexp_replace(split_part(email_address, '[ /]+', 2), '(\(m�e\)|\(pai\))', '', 'g')) AS cleaned_email_2,
+    created_at,
+    updated_at,
+    registration_id,
+    nextval('emails_email_id_seq') AS email_id,
+    CASE
+        WHEN TRIM(regexp_replace(split_part(email_address, '[ /]+', 2), '(\(m�e\)|\(pai\))', '', 'g')) LIKE '%mensa%' THEN 'mensa'
+        ELSE 'alternative'
+    END AS email_type
+FROM emails
+WHERE email_address LIKE '% e %'
+   OR email_address LIKE '%/%'
+   OR email_address LIKE '%(m�e)%'
+   OR email_address LIKE '%(pai)%'
+   OR email_address LIKE '% /%'
+   OR email_address LIKE '%/ %';
+
+DELETE FROM emails
+WHERE email_address LIKE '% e %'
+   OR email_address LIKE '%/%'
+   OR email_address LIKE '%(m�e)%'
+   OR email_address LIKE '%(pai)%'
+   OR email_address LIKE '% /%'
+   OR email_address LIKE '%/ %';
+
+
+INSERT INTO emails (email_address, created_at, updated_at, registration_id, email_id, email_type)
+VALUES ('ibprojetos@uol.com.br', '2023-08-20 18:03:04.912', '2023-08-20 18:03:04.912', 319, nextval('emails_email_id_seq'), 'main');
+
+INSERT INTO emails (email_address, created_at, updated_at, registration_id, email_id, email_type)
+VALUES ('jeanbraatz@gmail.com', '2023-08-20 18:03:04.912', '2023-08-20 18:03:04.912', 2521, nextval('emails_email_id_seq'), 'main');
+
+INSERT INTO emails (email_address, created_at, updated_at, registration_id, email_id, email_type)
+VALUES ('roberto.mouraaf@gmail.com', '2023-08-20 18:03:04.912', '2023-08-20 18:03:04.912', 1715, nextval('emails_email_id_seq'), 'main');
+
+DELETE FROM emails
+WHERE email_address = 'ibprojetos@uol.com.bribprojetos@uol.com.br'
+   OR email_address = 'jeanbraatz@gmail.com.'
+   OR email_address = 'roberto.mouraaf@gmailcom';
+
+UPDATE emails
+SET email_address = REPLACE(email_address, ' ', '')
+WHERE email_address LIKE '% %';
+
+UPDATE emails
+SET email_address = NULL
+WHERE email_address IS NOT NULL
+  AND (
+    -- Check if email does not match the general email pattern
+    email_address !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    -- Additional invalid cases
+    OR email_address = '-'
+    OR email_address ~ '^\s*$'
+  );
+
+# sanitising email on legal_representatives table:
+
+INSERT INTO legal_representatives (email, created_at, updated_at, representative_id, registration_id, cpf, full_name, phone, alternative_phone, observations)
+SELECT
+    TRIM(regexp_replace(split_part(email, '[ /;|]+', 1), '(\(m�e\)|\(pai\))', '', 'g')) AS cleaned_email_1,
+    created_at,
+    updated_at,
+    nextval('legal_representatives_representative_id_seq') AS representative_id,
+    registration_id,
+    cpf,
+    full_name,
+    phone,
+    alternative_phone,
+    observations
+FROM legal_representatives
+WHERE email LIKE '% e %'
+   OR email LIKE '%/%'
+   OR email LIKE '%|%'
+   OR email LIKE '%;%'
+   OR email LIKE '%(m�e)%'
+   OR email LIKE '%(pai)%'
+   OR email LIKE '% /%'
+   OR email LIKE '%/ %';
+
+INSERT INTO legal_representatives (email, created_at, updated_at, representative_id, registration_id, cpf, full_name, phone, alternative_phone, observations)
+SELECT
+    TRIM(regexp_replace(split_part(email, '[ /;|]+', 2), '(\(m�e\)|\(pai\))', '', 'g')) AS cleaned_email_2,
+    created_at,
+    updated_at,
+    nextval('legal_representatives_representative_id_seq') AS representative_id,
+    registration_id,
+    cpf,
+    full_name,
+    phone,
+    alternative_phone,
+    observations
+FROM legal_representatives
+WHERE email LIKE '% e %'
+   OR email LIKE '%/%'
+   OR email LIKE '%|%'
+   OR email LIKE '%;%'
+   OR email LIKE '%(m�e)%'
+   OR email LIKE '%(pai)%'
+   OR email LIKE '% /%'
+   OR email LIKE '%/ %';
+
+DELETE FROM legal_representatives
+WHERE email LIKE '% e %'
+   OR email LIKE '%/%'
+   OR email LIKE '%|%'
+   OR email LIKE '%;%'
+   OR email LIKE '%(m�e)%'
+   OR email LIKE '%(pai)%'
+   OR email LIKE '% /%'
+   OR email LIKE '%/ %';
+
+
+#fix the remaining cases:
+
+UPDATE legal_representatives
+SET email =
+    CASE
+        WHEN email = 'Alex_r_Morales@Hotmail.' THEN 'Alex_r_Morales@Hotmail.com'
+        WHEN email = 'jeanbraatz@gmail.com.' THEN 'jeanbraatz@gmail.com'
+    END
+WHERE email IN ('Alex_r_Morales@Hotmail.', 'jeanbraatz@gmail.com.');
+
+UPDATE legal_representatives
+SET email = NULL
+WHERE email IN ('Rafael Douglas Ferreira da Silva', 'PREENCHER');
+
+UPDATE legal_representatives
+SET email = REPLACE(email, ' ', '')
+WHERE email LIKE '% %';
+
+UPDATE legal_representatives
+SET email = NULL
+WHERE email IS NOT NULL
+  AND (
+    -- Check if email does not match the general email pattern
+    email !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    -- Additional invalid cases
+    OR email = '-'
+    OR email ~ '^\s*$'
+  );
+
+# fix and nullify invalid cpf numbers in legal representatives:
+
+UPDATE legal_representatives
+SET cpf = REGEXP_REPLACE(cpf, '[^0-9]', '', 'g')
+WHERE cpf IS NOT NULL AND cpf ~ '[^0-9]';
+
+UPDATE legal_representatives
+SET cpf = NULL
+WHERE cpf IS NOT NULL
+  AND (LENGTH(cpf) != 11 OR cpf ~ '[^0-9]');
+
+# fix and nullify invalid cpfs on registration:
+
+
+UPDATE registration
+SET cpf = REGEXP_REPLACE(cpf, '[^0-9]', '', 'g')
+WHERE cpf IS NOT NULL AND cpf ~ '[^0-9]';
+
+UPDATE registration
+SET cpf = NULL
+WHERE cpf IS NOT NULL
+  AND (LENGTH(cpf) != 11 OR cpf ~ '[^0-9]');
+
+#fixing phone numbers for members:
+
+UPDATE phones
+SET phone_number =
+    CASE
+        WHEN phone_number IS NOT NULL
+             AND phone_number != regexp_replace(phone_number, '[^\d\+]', '', 'g')
+        THEN regexp_replace(phone_number, '[^\d\+]', '', 'g')
+        ELSE phone_number
+    END
+WHERE phone_number IS NOT NULL
+  AND phone_number != regexp_replace(phone_number, '[^\d\+]', '', 'g');
+
+
+#fix phone numbers for legal_representatives
+
+UPDATE legal_representatives
+SET phone =
+    CASE
+        WHEN phone IS NOT NULL
+             AND phone != regexp_replace(phone, '[^\d\+]', '', 'g')
+        THEN regexp_replace(phone, '[^\d\+]', '', 'g')
+        ELSE phone
+    END
+WHERE phone IS NOT NULL
+  AND phone != regexp_replace(phone, '[^\d\+]', '', 'g');
+
+UPDATE legal_representatives
+SET alternative_phone =
+    CASE
+        WHEN alternative_phone IS NOT NULL
+             AND alternative_phone != regexp_replace(alternative_´phone, '[^\d\+]', '', 'g')
+        THEN regexp_replace(alternative_phone, '[^\d\+]', '', 'g')
+        ELSE phone
+    END
+WHERE phone IS NOT NULL
+  AND phone != regexp_replace(alternative_phone, '[^\d\+]', '', 'g');
+
+  #adding +55 to Brazilian numbers that do not have INTO
+
+-- Query to preview updated rows (cross-checking with address table):
+SELECT phone_number
+FROM phones
+WHERE phone_number NOT LIKE '+%'
+  AND LENGTH(phone_number) BETWEEN 10 AND 11
+  AND phone_number ~ '^\d{10,11}$';
+
+-- Query to add +55 to Brazilian numbers that currently lack it:
+UPDATE phones
+SET phone_number = CONCAT('+55', phone_number)
+WHERE phone_number NOT LIKE '+%'
+  AND LENGTH(phone_number) BETWEEN 10 AND 11
+  AND phone_number ~ '^\d{10,11}$';
+
+  -- Preview Query: Count rows where either phone or alternative_phone meets the criteria
+SELECT COUNT(*) AS rows_to_be_changed
+FROM legal_representatives
+WHERE (phone NOT LIKE '+%'
+         AND LENGTH(phone) BETWEEN 10 AND 11
+         AND phone ~ '^\d{10,11}$')
+   OR (alternative_phone NOT LIKE '+%'
+         AND LENGTH(alternative_phone) BETWEEN 10 AND 11
+         AND alternative_phone ~ '^\d{10,11}$');
+
+-- Update Query: Prepend '+55' to phone and alternative_phone if they meet the criteria
+UPDATE legal_representatives
+SET phone = CASE 
+              WHEN phone NOT LIKE '+%'
+                   AND LENGTH(phone) BETWEEN 10 AND 11
+                   AND phone ~ '^\d{10,11}$'
+              THEN CONCAT('+55', phone)
+              ELSE phone
+            END,
+    alternative_phone = CASE 
+                          WHEN alternative_phone NOT LIKE '+%'
+                               AND LENGTH(alternative_phone) BETWEEN 10 AND 11
+                               AND alternative_phone ~ '^\d{10,11}$'
+                          THEN CONCAT('+55', alternative_phone)
+                          ELSE alternative_phone
+                        END
+WHERE (phone NOT LIKE '+%'
+         AND LENGTH(phone) BETWEEN 10 AND 11
+         AND phone ~ '^\d{10,11}$')
+   OR (alternative_phone NOT LIKE '+%'
+         AND LENGTH(alternative_phone) BETWEEN 10 AND 11
+         AND alternative_phone ~ '^\d{10,11}$');

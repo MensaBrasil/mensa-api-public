@@ -47,7 +47,7 @@ jobs:
           twilio_account_sid: ${{ secrets.twilio_account_sid }}
           twilio_auth_token: ${{ secrets.twilio_auth_token }}
           twilio_from_whatsapp_number: ${{ secrets.twilio_from_whatsapp_number }}
-          whatsapp_route_api_key: ${{ secrets.whatsapp_route_api_key }}
+          whatsapp_route_api_key: WHATSAPP_ROUTE_API_KEY
           redis_host: localhost
           discord_client_id: state
           discord_client_secret: state

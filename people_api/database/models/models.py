@@ -4,11 +4,10 @@ SQLmodels
 
 from datetime import date, datetime, timezone
 
-from pydantic import condecimal
+from pydantic import EmailStr, condecimal
 from sqlmodel import (
     JSON,
     Boolean,
-    CheckConstraint,
     Column,
     DateTime,
     Field,
@@ -19,11 +18,16 @@ from sqlmodel import (
     String,
     Text,
     UniqueConstraint,
+    and_,
+    delete,
     func,
+    insert,
     select,
     text,
     update,
 )
+
+from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
 
 
 class BaseSQLModel(SQLModel):
@@ -98,12 +102,6 @@ class Registration(BaseSQLModel, table=True):
     """Model for user registration, including personal, social, and contact information."""
 
     __tablename__ = "registration"
-    __table_args__ = (
-        CheckConstraint(
-            "(length((cpf)::text) = 11) OR (cpf IS NULL) OR ((cpf)::text = ''::text)",
-            name="check_cpf_length",
-        ),
-    )
 
     registration_id: int | None = Field(default=None, primary_key=True)
     expelled: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
@@ -114,7 +112,7 @@ class Registration(BaseSQLModel, table=True):
     first_name: str | None = None
     last_name: str | None = None
     birth_date: date | None = None
-    cpf: str | None = Field(max_length=11, min_length=11)
+    cpf: CPFNumber | None = Field(max_length=11, min_length=11)
     profession: str | None = None
     gender: str | None = None
     join_date: date | None = Field(default_factory=date.today)
@@ -122,7 +120,6 @@ class Registration(BaseSQLModel, table=True):
     discord_id: str | None = None
     suspended_until: date | None = None
     pronouns: str | None = None
-
     addresses: list["Addresses"] = Relationship(back_populates="registration")
     certs_antec_criminais: list["CertsAntecCriminais"] = Relationship(back_populates="registration")
     emails: list["Emails"] = Relationship(back_populates="registration")
@@ -142,7 +139,6 @@ class Registration(BaseSQLModel, table=True):
     def select_stmt_by_email(cls, email: str):
         """
         Return a select statement for the registration record associated with the given email.
-        This uses a join with the Emails table.
         """
         return select(cls).join(Emails).where(Emails.email_address == email)
 
@@ -177,11 +173,58 @@ class Addresses(BaseSQLModel, table=True):
     city: str | None = Field(max_length=100)
     address: str | None = Field(max_length=255)
     neighborhood: str | None = Field(max_length=100)
-    zip: str | None = Field(max_length=40)
+    zip: ZipNumber | None = Field(None, max_length=12)
     country: str | None = None
     latlong: str | None = None
-
     registration: "Registration" = Relationship(back_populates="addresses")
+
+    @classmethod
+    def get_address_for_member(cls, member_id: int):
+        """
+        Return a select statement for Addresses instances for a given member_id.
+        """
+        return select(cls).where(cls.registration_id == member_id)
+
+    @classmethod
+    def insert_stmt_for_address(cls, mb: int, address: "Addresses"):
+        """
+        Return an insert statement for adding an address for the given member.
+        """
+        return insert(cls).values(
+            registration_id=mb,
+            state=address.state,
+            city=address.city,
+            address=address.address,
+            neighborhood=address.neighborhood,
+            zip=address.zip,
+        )
+
+    @classmethod
+    def update_stmt_for_address(cls, mb: int, address_id: int, new_address: "Addresses"):
+        """
+        Return an update statement for updating an address record based on the given
+        member id (mb) and address id, using the new address details.
+        """
+        return (
+            update(cls)
+            .where(and_(cls.registration_id == mb, cls.address_id == address_id))
+            .values(
+                state=new_address.state,
+                city=new_address.city,
+                address=new_address.address,
+                neighborhood=new_address.neighborhood,
+                zip=new_address.zip,
+            )
+        )
+
+    @classmethod
+    def delete_stmt_for_address(cls, mb: int, address_id: int):
+        """
+        Return a delete statement for an address record based on the given member (mb)
+        and address ID.
+        """
+        return delete(Addresses).where(
+            and_(Addresses.registration_id == mb, Addresses.address_id == address_id))
 
 
 class CertsAntecCriminais(BaseSQLModel, table=True):
@@ -202,30 +245,122 @@ class Emails(BaseSQLModel, table=True):
     """Model for storing email information linked to user registrations."""
 
     __tablename__ = "emails"
-
     email_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
     email_type: str | None = Field(max_length=50)
-    email_address: str | None = Field(max_length=255, min_length=5, index=True)
+    email_address: EmailStr | None = Field(None, max_length=255, min_length=5, index=True)
     registration: "Registration" = Relationship(back_populates="emails")
+
+    @classmethod
+    def insert_stmt_for_email(cls, mb: int, email: "Emails"):
+        """
+        Return an insert statement for adding an email record for the given member.
+        """
+        return insert(cls).values(
+            registration_id=mb,
+            email_type=email.email_type,
+            email_address=email.email_address,
+        )
+
+    @classmethod
+    def update_stmt_for_email(cls, mb: int, email_id: int, new_email: "Emails"):
+        """
+        Return an update statement for modifying an email record based on the given
+        member id (mb) and email id, setting the new email_type and email_address.
+        """
+        return (
+            update(cls)
+            .where(and_(cls.registration_id == mb, cls.email_id == email_id))
+            .values(
+                email_type=new_email.email_type,
+                email_address=new_email.email_address,
+            )
+        )
+
+    @classmethod
+    def get_emails_for_member(cls, member_id: int):
+        """
+        Return a select statement for Email instances for a given member_id.
+        """
+        return select(cls).where(cls.registration_id == member_id)
+
+    @classmethod
+    def delete_stmt_for_email(cls, mb: int, email_id: int):
+        """
+        Return a delete statement for an email record based on the given member id (mb)
+        and email id.
+        """
+        return delete(cls).where(and_(cls.registration_id == mb, cls.email_id == email_id))
+
 
 
 class LegalRepresentatives(BaseSQLModel, table=True):
     """Model for legal representatives associated with a user registration."""
 
     __tablename__ = "legal_representatives"
-
     representative_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
-    cpf: str | None = Field(max_length=11, min_length=11)
+    cpf: CPFNumber | None = Field(None, max_length=11, min_length=11)
     full_name: str | None = Field(max_length=255)
-    email: str | None = Field(max_length=255, min_length=5, index=True)
-    phone: str | None = Field(max_length=60, min_length=9)
-    alternative_phone: str | None = Field(default=None, max_length=60, min_length=9)
+    email: EmailStr | None = Field(None, max_length=255, min_length=5, index=True)
+    phone: PhoneNumber | None = Field(max_length=60, min_length=9)
+    alternative_phone: PhoneNumber | None = Field(max_length=60, min_length=9)
     observations: str | None = None
-
     registration: "Registration" = Relationship(back_populates="legal_representatives")
 
+    @classmethod
+    def insert_stmt_for_legal_representative(
+        cls, mb: int, legal_representative: "LegalRepresentatives"
+    ):
+        """
+        Return an insert statement for adding a legal representative for the given member.
+        """
+        return insert(cls).values(
+            registration_id=mb,
+            cpf=legal_representative.cpf,
+            full_name=legal_representative.full_name,
+            email=legal_representative.email,
+            phone=legal_representative.phone,
+            alternative_phone=legal_representative.alternative_phone,
+            observations=legal_representative.observations,
+        )
+
+    @classmethod
+    def get_legal_representatives_for_member(cls, member_id: int):
+        """
+        Return a select statement for LegalRepresentative instances for a given member_id.
+        """
+        return select(cls).where(cls.registration_id == member_id)
+
+    @classmethod
+    def update_stmt_for_legal_representative(
+        cls, mb: int, legal_rep_id: int, new_legal_rep: "LegalRepresentatives"
+    ):
+        """
+        Return an update statement for a legal representative record based on the given member id (mb)
+        and legal representative id, using the new legal representative details.
+        """
+        return (
+            update(cls)
+            .where(and_(cls.registration_id == mb, cls.representative_id == legal_rep_id))
+            .values(
+                cpf=new_legal_rep.cpf,
+                full_name=new_legal_rep.full_name,
+                email=new_legal_rep.email,
+                phone=new_legal_rep.phone,
+                alternative_phone=new_legal_rep.alternative_phone,
+                observations=new_legal_rep.observations,
+            )
+        )
+
+    @classmethod
+    def delete_stmt_for_legal_representative(cls, mb: int, legal_rep_id: int):
+        """
+        Return a delete statement for a legal representative record based on the given member (mb)
+        and legal representative id.
+        """
+        return delete(cls).where(and_(cls.registration_id == mb, cls.representative_id == legal_rep_id))
+        
 
 class MemberGroups(BaseSQLModel, table=True):
     """Model representing group memberships for members, including entry and exit data."""
@@ -279,10 +414,9 @@ class Phones(BaseSQLModel, table=True):
     """Model for phone numbers associated with user registrations."""
 
     __tablename__ = "phones"
-
     phone_id: int | None = Field(default=None, primary_key=True)
     registration_id: int = Field(foreign_key="registration.registration_id")
-    phone_number: str = Field(max_length=60, min_length=9)
+    phone_number: PhoneNumber = Field(max_length=60, min_length=9)
     registration: Registration | None = Relationship(back_populates="phones")
 
     @classmethod
@@ -303,6 +437,38 @@ class Phones(BaseSQLModel, table=True):
                 func.cast(func.regexp_replace(cls.phone_number, r"\D", "", "g"), String)
             ).like(phone_pattern)
         )
+
+    @classmethod
+    def get_phones_for_member(cls, member_id: int):
+        """
+        Return a select statement for Phones instances for a given member_id.
+        """
+        return select(cls).where(Phones.registration_id == member_id)
+
+    @classmethod
+    def insert_stmt_for_phone(cls, mb: int, phone: PhoneNumber):
+        """Return an insert statement for adding a phone for the given member."""
+        return insert(Phones).values(registration_id=mb, phone_number=phone)
+
+    @classmethod
+    def update_stmt_for_phone(cls, mb: int, phone_id: int, new_phone: PhoneNumber):
+        """
+        Return an update statement for the phone number for the given registration (mb)
+        and phone ID.
+        """
+        return (
+            update(Phones)
+            .where(and_(Phones.registration_id == mb, Phones.phone_id == phone_id))
+            .values(phone_number=new_phone)
+        )
+
+    @classmethod
+    def delete_stmt_for_phone(cls, mb: int, phone_id: int):
+        """
+        Return a delete statement for a phone record based on the given registration (mb)
+        and phone ID.
+        """
+        return delete(cls).where(and_(cls.registration_id == mb, cls.phone_id == phone_id))
 
 
 class WhatsappComms(BaseSQLModel, table=True):
@@ -346,6 +512,19 @@ class WhatsappMessages(SQLModel, table=True):
     message_type: str = Field(max_length=50)
     device_type: str = Field(max_length=50)
     content: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+
+
+class PhoneInput(SQLModel):
+    """Model for phone input data."""
+
+    phone: PhoneNumber
+
+
+class EmailInput(SQLModel):
+    """Model for email input data."""
+
+    email_address: EmailStr
+    email_type: str | None = Field(max_length=50)
 
 
 class IAMRoles(SQLModel, table=True):

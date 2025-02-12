@@ -6,6 +6,24 @@ authors = []
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
+    "babel>=2.15.0,<3",
+    "firebase-admin>=6.5.0,<7",
+    "freezegun>=1.5.1,<2",
+    "google-api-python-client>=2.140.0,<3",
+    "psycopg2-binary>=2.9.9,<3",
+    "pydantic[email]>=2.8.2,<3",
+    "pymongo>=4.8.0,<5",
+    "python-multipart>=0.0.9,<0.0.10",
+    "pytest>=8.3.2,<9",
+    "sqlalchemy>=2.0.32,<3",
+    "coverage>=7.6.1,<8",
+    "pytest-mock>=3.14.0,<4",
+    "alembic>=1.13.3,<2",
+    "sqlmodel>=0.0.22,<0.0.23",
+    "openai>=1.58.1,<2",
+    "twilio>=9.4.1,<10",
+    "pycpfcnpj~=1.8",
+    "pydantic-settings>=2.7.0,<3",
     "alembic>=1.14.1",
     "asyncpg>=0.30.0",
     "babel>=2.17.0",
@@ -16,6 +34,8 @@ dependencies = [
     "freezegun>=1.5.1",
     "mypy>=1.15.0",
     "nltk>=3.9.1",
+    "email-validator>=2.2.0",
+    "phonenumbers>=8.13.54",
     "openai>=1.61.1",
     "pillow>=11.1.0",
     "pre-commit>=4.1.0",
@@ -27,12 +47,12 @@ dependencies = [
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.3",
     "pytest-mock>=3.14.0",
-    "python-multipart>=0.0.20",
     "redis>=5.2.1",
     "sqlalchemy>=2.0.38",
     "sqlmodel>=0.0.22",
     "twilio>=9.4.4",
     "uvicorn>=0.34.0",
+
 ]
 
 [dependency-groups]

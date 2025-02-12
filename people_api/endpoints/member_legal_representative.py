@@ -3,12 +3,10 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
+from people_api.database.models.models import LegalRepresentatives
+
 from ..auth import verify_firebase_token
 from ..dbs import get_session
-from ..models.member_data import (
-    LegalRepresentativeCreate,
-    LegalRepresentativeUpdate,
-)
 from ..services.legal_representative_service import (
     LegalRepresentativeRequest,
     LegalRepresentativeService,
@@ -38,7 +36,7 @@ async def add_legal_representative_api_key(
 )
 async def _add_legal_representative(
     mb: int,
-    legal_representative: LegalRepresentativeCreate,
+    legal_representative: LegalRepresentatives,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
@@ -56,7 +54,7 @@ async def _add_legal_representative(
 async def update_legal_representative(
     mb: int,
     legal_rep_id: int,
-    updated_legal_rep: LegalRepresentativeUpdate,
+    updated_legal_rep: LegalRepresentatives,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):

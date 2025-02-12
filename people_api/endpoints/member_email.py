@@ -3,9 +3,10 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
+from people_api.database.models.models import EmailInput
+
 from ..auth import verify_firebase_token
 from ..dbs import get_session
-from ..models.member_data import EmailCreate, EmailUpdate
 from ..services import EmailService
 
 member_email_router = APIRouter()
@@ -15,7 +16,7 @@ member_email_router = APIRouter()
 @member_email_router.post("/email/{mb}", description="Add email to member", tags=["email"])
 async def _add_email(
     mb: int,
-    email: EmailCreate,
+    email: EmailInput,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
@@ -29,7 +30,7 @@ async def _add_email(
 async def update_email(
     mb: int,
     email_id: int,
-    updated_email: EmailUpdate,
+    updated_email: EmailInput,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):

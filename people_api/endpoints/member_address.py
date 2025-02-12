@@ -3,12 +3,10 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
+from people_api.database.models.models import Addresses
+
 from ..auth import verify_firebase_token
 from ..dbs import get_session
-from ..models.member_data import (
-    AddressCreate,
-    AddressUpdate,
-)
 from ..services import AddressService
 
 member_address_router = APIRouter()
@@ -18,7 +16,7 @@ member_address_router = APIRouter()
 @member_address_router.post("/address/{mb}", description="Add address to member", tags=["address"])
 async def _add_address(
     mb: int,
-    address: AddressCreate,
+    address: Addresses,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
@@ -34,7 +32,7 @@ async def _add_address(
 async def update_address(
     mb: int,
     address_id: int,
-    updated_address: AddressUpdate,
+    updated_address: Addresses,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):

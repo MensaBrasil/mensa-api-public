@@ -3,12 +3,10 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
+from people_api.database.models.models import PhoneInput
+
 from ..auth import verify_firebase_token
 from ..dbs import get_session
-from ..models.member_data import (
-    PhoneCreate,
-    PhoneUpdate,
-)
 from ..services import PhoneService
 
 member_phone_router = APIRouter()
@@ -18,7 +16,7 @@ member_phone_router = APIRouter()
 @member_phone_router.post("/phone/{mb}", description="Add phone to member", tags=["phone"])
 async def _add_phone(
     mb: int,
-    phone: PhoneCreate,
+    phone: PhoneInput,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
@@ -32,7 +30,7 @@ async def _add_phone(
 async def update_phone(
     mb: int,
     phone_id: int,
-    updated_phone: PhoneUpdate,
+    updated_phone: PhoneInput,
     token_data=Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):

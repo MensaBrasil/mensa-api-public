@@ -9,8 +9,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from ..models.member_data import LegalRepresentativeCreate, LegalRepresentativeUpdate
-from ..repositories import MemberRepository
+from people_api.database.models.models import LegalRepresentatives, Registration
+
 from ..settings import Settings
 
 SETTINGS = Settings()
@@ -22,7 +22,7 @@ class LegalRepresentativeRequest(BaseModel):
     mb: str
     birth_date: str
     cpf: str
-    legal_representative: LegalRepresentativeCreate
+    legal_representative: LegalRepresentatives
 
 
 class LegalRepresentativeService:
@@ -30,9 +30,11 @@ class LegalRepresentativeService:
     def add_legal_representative_api_key(request: LegalRepresentativeRequest, session: Session):
         if request.token != SETTINGS.whatsapp_route_api_key:
             raise HTTPException(status_code=401, detail="Unauthorized")
-
         request.mb = int(request.mb)
-        member_data = MemberRepository.getFromPostgres(request.mb, session)
+        reg_stmt = Registration.select_stmt_by_id(request.mb)
+        member_data = session.exec(reg_stmt).first()
+        if not member_data:
+            raise HTTPException(status_code=404, detail="Member not found")
 
         try:
             request.birth_date = datetime.strptime(request.birth_date, "%d/%m/%Y").date()
@@ -41,37 +43,37 @@ class LegalRepresentativeService:
                 status_code=400, detail="Invalid birth date format. Use dd/mm/YYYY."
             )
 
-        # check birth matches
         if member_data.birth_date != request.birth_date:
             raise HTTPException(status_code=400, detail="Birth date does not match")
 
         if member_data.cpf != request.cpf:
             raise HTTPException(status_code=400, detail="CPF does not match")
 
-        legal_representative = request.legal_representative
-
-        member_data = MemberRepository.getFromPostgres(request.mb, session)
         if member_data.birth_date is None:
             raise HTTPException(
                 status_code=400,
                 detail="User must have birth date to add legal representative",
             )
 
-        MemberRepository.addLegalRepresentativeToPostgres(request.mb, legal_representative, session)
+        stmt = LegalRepresentatives.insert_stmt_for_legal_representative(
+            request.mb, request.legal_representative
+        )
+        session.exec(stmt)
         return {"message": "Legal representative added successfully"}
 
     @staticmethod
     def add_legal_representative(
         mb: int,
-        legal_representative: LegalRepresentativeCreate,
+        legal_representative: LegalRepresentatives,
         token_data: Any,
         session: Session,
     ):
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
-        if MB != mb:
+        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        member_data = session.exec(reg_stmt).first()
+        if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
-        # user must be under 18 to add legal representative
-        member_data = MemberRepository.getFromPostgres(mb, session)
+        reg_stmt_by_id = Registration.select_stmt_by_id(mb)
+        member_data = session.exec(reg_stmt_by_id).first()
         if member_data.birth_date is None:
             raise HTTPException(
                 status_code=400,
@@ -84,51 +86,57 @@ class LegalRepresentativeService:
             - birth_date.year
             - ((current_date.month, current_date.day) < (birth_date.month, birth_date.day))
         )
-
         if age > 18:
             raise HTTPException(
                 status_code=400,
                 detail="User must be under 18 to add legal representative",
             )
-        # user can only have two legal representatives
-        member_data = MemberRepository.getLegalRepresentativesFromPostgres(mb, session)
-        if len(member_data) > 1:
+        stmt_get_lr = LegalRepresentatives.get_legal_representatives_for_member(mb)
+        existing_legal_reps = session.exec(stmt_get_lr).all()
+        if len(existing_legal_reps) > 1:
             raise HTTPException(
                 status_code=400, detail="User already has two legal representatives"
             )
-        MemberRepository.addLegalRepresentativeToPostgres(mb, legal_representative, session)
+        stmt_insert = LegalRepresentatives.insert_stmt_for_legal_representative(
+            mb, legal_representative
+        )
+        session.exec(stmt_insert)
         return {"message": "Legal representative added successfully"}
 
     @staticmethod
     def update_legal_representative(
         mb: int,
         legal_rep_id: int,
-        updated_legal_rep: LegalRepresentativeUpdate,
+        updated_legal_rep: LegalRepresentatives,
         token_data: Any,
         session: Session,
     ):
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
-        if MB != mb:
+        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        member_data = session.exec(reg_stmt).first()
+        if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
-        # Call the update method to modify the legal representative
-        success = MemberRepository.updateLegalRepresentativeInPostgres(
-            mb, legal_rep_id, updated_legal_rep, session
+        update_stmt = LegalRepresentatives.update_stmt_for_legal_representative(
+            mb, legal_rep_id, updated_legal_rep
         )
-        if not success:
+        result = session.exec(update_stmt)
+        if result.rowcount is None or result.rowcount == 0:
             raise HTTPException(status_code=404, detail="Legal representative not found")
-
         return {"message": "Legal representative updated successfully"}
 
     @staticmethod
     def delete_legal_representative(mb: int, legal_rep_id: int, token_data: Any, session: Session):
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
-        if MB != mb:
+        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        member_data = session.exec(reg_stmt).first()
+
+        if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
-        # Call the delete method to remove the legal representative
-        success = MemberRepository.deleteLegalRepresentativeFromPostgres(mb, legal_rep_id, session)
-        if not success:
+        delete_stmt = LegalRepresentatives.delete_stmt_for_legal_representative(mb, legal_rep_id)
+        result = session.exec(delete_stmt)
+
+        if result.rowcount == 0:  
             raise HTTPException(status_code=404, detail="Legal representative not found")
 
         return {"message": "Legal representative deleted successfully"}
+
