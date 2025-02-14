@@ -3,7 +3,6 @@ SQLmodels
 """
 
 from datetime import date, datetime, timezone
-
 from pydantic import EmailStr, condecimal
 from sqlmodel import (
     JSON,
@@ -497,6 +496,13 @@ class GroupList(SQLModel, table=True):
     group_id: str = Field(max_length=255, primary_key=True)
     group_name: str = Field(max_length=255)
 
+    @classmethod
+    def select_by_group_name(cls, group_name: str):
+        """
+        Return a select statement that retrieves GroupList instances whose group_name matches the given string.
+        """
+        return select(cls).where(cls.group_name == group_name)
+
 
 class WhatsappMessages(SQLModel, table=True):
     """Model for the whatsapp_messages table."""
@@ -512,7 +518,6 @@ class WhatsappMessages(SQLModel, table=True):
     message_type: str = Field(max_length=50)
     device_type: str = Field(max_length=50)
     content: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-
 
 class PhoneInput(SQLModel):
     """Model for phone input data."""

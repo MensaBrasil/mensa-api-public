@@ -257,7 +257,7 @@ SET alternative_phone =
         WHEN alternative_phone IS NOT NULL
              AND alternative_phone != regexp_replace(alternative_´phone, '[^\d\+]', '', 'g')
         THEN regexp_replace(alternative_phone, '[^\d\+]', '', 'g')
-        ELSE phone
+        ELSE alternative_phone
     END
 WHERE phone IS NOT NULL
   AND phone != regexp_replace(alternative_phone, '[^\d\+]', '', 'g');

@@ -1,24 +1,19 @@
 """Service for handling Registration database operations."""
 
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException
-from sqlalchemy.engine import TupleResult
-from sqlmodel import Session
 
 from ..database.models.models import Registration
+from sqlalchemy import text
 
 
 class RegistrationService:
     """Service for handling Registration database operations."""
-
     @staticmethod
-    def get_registration_by_id(registration_id: int, session: Session) -> Registration:
-        """Return a registration record by ID."""
+    async def get_registration_by_id(registration_id: int, session: AsyncSession) -> Registration:
+        """Return a registration record by ID asynchronously."""
         statement = Registration.select_stmt_by_id(registration_id)
-        results: TupleResult = session.exec(statement)
-        if not results:
-            raise HTTPException(
-                status_code=404, detail=f"Registration ID {registration_id} not found"
-            )
+        results = await session.exec(statement)
         registration = results.first()
         if registration is None:
             raise HTTPException(
@@ -27,13 +22,13 @@ class RegistrationService:
         return registration
 
     @staticmethod
-    def get_first_name(registration_id: int, session: Session) -> str:
+    async def get_first_name(registration_id: int, session: AsyncSession) -> str:
         """
         Return the first name of a user registration.
         If social_name is not empty, use it as the first name.
         If not, split the name and return the first part.
         """
-        registration = RegistrationService.get_registration_by_id(registration_id, session)
+        registration = await RegistrationService.get_registration_by_id(registration_id, session)
         if registration.social_name:
             return registration.social_name
         if registration.name:
@@ -41,21 +36,22 @@ class RegistrationService:
         raise HTTPException(status_code=404, detail="Registration name not found")
 
     @staticmethod
-    def get_by_email(email: str, session: Session) -> Registration | None:
+    async def get_by_email(email: str, session: AsyncSession) -> Registration | None: 
         """
         Return the registration record associated with the given email.
         This uses a join with the Emails table.
         """
         statement = Registration.select_stmt_by_email(email)
-        result: TupleResult = session.exec(statement)
-        return result.first()
+        result = await session.execute(statement)
+        row = result.first()
+        return row[0] if row else None
 
     @staticmethod
-    def update_discord_id(registration_id: int, discord_id: str, session: Session) -> None:
+    async def update_discord_id(registration_id: int, discord_id: str, session: AsyncSession) -> None:
         """
-        Update the discord_id for the given registration.
+        Update the discord_id for the given registration asynchronously.
         """
         statement = Registration.update_stmt_discord_id(registration_id, discord_id)
-        session.exec(
+        await session.exec(
             statement, params={"discord_id": discord_id, "registration_id": registration_id}
         )

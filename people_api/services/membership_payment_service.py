@@ -1,17 +1,17 @@
 """Service for handling MembershipPayment database operations."""
 
 from sqlalchemy.engine import TupleResult
-from sqlmodel import Session
 
 from ..database.models.models import MembershipPayments
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class MembershipPaymentService:
     """Service for handling MembershipPayment database operations."""
 
     @staticmethod
-    def get_last_payment(registration_id: int, session: Session) -> MembershipPayments | None:
-        """Return the last payment record for a given registration ID."""
+    async def get_last_payment(registration_id: int, session: AsyncSession) -> MembershipPayments | None:
+        """Return the last payment record for a given registration ID asynchronously."""
         statement = MembershipPayments.select_stmt_last_payment(registration_id)
-        results: TupleResult = session.exec(statement)
+        results = await session.exec(statement)
         return results.first()

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import HTMLResponse
 
 from ..auth import verify_firebase_token
-from ..dbs import get_redis_client, get_session
+from ..dbs import get_redis_client, get_async_sessions, AsyncSessionsTuple
 from ..schemas import OAuthStateResponse
 from ..services.discord_service import process_discord_callback
 from ..settings import get_settings
@@ -39,8 +39,8 @@ async def discord_callback(
     code: str = Query(...),
     state: str = Query(...),
     redis_client=Depends(get_redis_client),
-    session=Depends(get_session),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ) -> HTMLResponse:
     """Discord OAuth callback endpoint that upserts the discord id and triggers the browser tab close."""
-    html_content = await process_discord_callback(code, state, redis_client, session)
+    html_content = await process_discord_callback(code, state, redis_client, session=sessions.rw)
     return HTMLResponse(content=html_content)

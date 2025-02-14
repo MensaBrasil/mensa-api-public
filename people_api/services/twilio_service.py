@@ -2,6 +2,7 @@
 
 from twilio.rest import Client
 
+import asyncio
 from ..settings import get_settings
 
 SETTINGS = get_settings()
@@ -17,16 +18,18 @@ class TwilioService:
 
         self.client = Client(self.account_sid, self.auth_token)
 
-    def send_whatsapp_message(self, to_: str, message: str) -> None:
+    async def send_whatsapp_message(self, to_: str, message: str) -> None:
         """
-        Sends a WhatsApp message using Twilio's API.
-            - to_number should be in format "whatsapp:..."
-            - message is the text to send
+        Asynchronously sends a WhatsApp message using Twilio's API.
         """
         from_ = self.from_whatsapp_number
+        loop = asyncio.get_running_loop()
 
-        self.client.messages.create(
-            body=message,
-            from_=from_,
-            to=to_,
+        await loop.run_in_executor(
+            None,
+            lambda: self.client.messages.create(
+                body=message,
+                from_=from_,
+                to=to_,
+            )
         )

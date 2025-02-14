@@ -15,7 +15,7 @@ def test_update_phone_with_valid_data_or_invalid_data(
     run_db_query(
         """
         UPDATE registration
-        SET cpf = '12345678909', birth_date = '01/01/1991', deceased = false
+        SET cpf = '12345678909', birth_date = '1991-01-01', deceased = false
         WHERE registration_id IN (
             SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
         )
@@ -30,7 +30,7 @@ def test_update_phone_with_valid_data_or_invalid_data(
     payload = {
         "phone": "1234567890",
         "birth_date": "01/01/1991",
-        "cpf": "11111111111",  # Invalid CPF
+        "cpf": "11111111111",  
         "registration_id": registration_id,
         "is_representative": False,
         "token": MOCK_API_KEY,  # Add the token in the body
