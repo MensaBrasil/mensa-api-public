@@ -6,27 +6,30 @@ from fastapi import HTTPException
 from pycpfcnpj.cpf import validate as validate_cpf
 from sqlmodel import Session
 
+from people_api.schemas import FirebaseToken
 from ..models.member_data import MissingFieldsCreate
 from ..repositories import MemberRepository
 
 
 class MissingFieldsService:
+    """Service for managing missing fields of members."""
     @staticmethod
-    def get_missing_fields(token_data, session: Session):
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
+    def get_missing_fields(token_data: FirebaseToken, session: Session):
+        """Get missing fields for a member."""
+        MB = MemberRepository.getMBByEmail(token_data.email, session)
         missing_fields = MemberRepository.getMissingFieldsFromPostgres(MB, session)
         return missing_fields
 
     @staticmethod
-    def set_missing_fields(token_data, missing_fields: MissingFieldsCreate, session: Session):
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
-        # check if user really has those fields missing, if not, deny
+    def set_missing_fields(
+        token_data: FirebaseToken, missing_fields: MissingFieldsCreate, session: Session
+    ):
+        """Set missing fields for a member."""
+        MB = MemberRepository.getMBByEmail(token_data.email, session)
         missing_fields_list = MemberRepository.getMissingFieldsFromPostgres(MB, session)
 
-        # set only fields that are missing
         if missing_fields.cpf is not None:
             if "cpf" in missing_fields_list:
-                # Validate received CPF
                 if not validate_cpf(missing_fields.cpf):
                     raise HTTPException(status_code=422, detail="Invalid CPF")
 

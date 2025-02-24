@@ -11,6 +11,8 @@ from fastapi.testclient import TestClient
 
 from people_api.app import app  # type: ignore
 from people_api.auth import verify_firebase_token
+from people_api.schemas import FirebaseToken
+from tests.test_router import test_router
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/stats"
 TEST_DB_DUMP_PATH = Path(__file__).parent / "test_db_dump.sql"
@@ -119,8 +121,10 @@ def reset_db():
 
 @pytest.fixture(scope="session")
 def test_client():
-    """Create a FastAPI test client, ensuring DB is connected"""
-    wait_for_db()  # Ensure DB is ready before starting the test client
+    """Create a FastAPI test client, ensuring DB is connected and test routes are included."""
+    app.include_router(test_router)
+
+    wait_for_db()
     with TestClient(app) as c:
         yield c
 
@@ -130,26 +134,15 @@ def mock_valid_token():
     """Mock the verify_firebase_token function to return a valid token"""
 
     def mock_verify_firebase_token():
-        return {
-            "name": "Fernando Diniz Souza Filho",
-            "picture": "https://lh3.googleusercontent.com/a/ACg8ocLTbtfPMG0uE7NFMuxQxoNyYlQ0f_3WJDlpeX4wVnL3Gg=s96-c",
-            "iss": "https://securetoken.google.com/carteirinhasmensa",
-            "aud": "carteirinhasmensa",
-            "auth_time": 1709996057,
-            "user_id": "V3jqdbSNw3hQsbQMD5mcs2q88PJ3",
-            "sub": "V3jqdbSNw3hQsbQMD5mcs2q88PJ3",
-            "iat": 1722977514,
-            "exp": 1722981114,
-            "email": "fernando.filho@mensa.org.br",
-            "email_verified": True,
-            "firebase": {
-                "identities": {
-                    "google.com": ["101271401621105857573"],
-                    "email": ["fernando.filho@mensa.org.br"],
-                },
-                "sign_in_provider": "google.com",
-            },
-        }
+        return FirebaseToken(
+            iss="https://securetoken.google.com/carteirinhasmensa",
+            aud="carteirinhasmensa",
+            auth_time=1709996057,
+            sub="V3jqdbSNw3hQsbQMD5mcs2q88PJ3",
+            iat=1722977514,
+            exp=1722981114,
+            email="fernando.filho@mensa.org.br",
+        )
 
     # Override the dependency in the FastAPI app
     app.dependency_overrides[verify_firebase_token] = mock_verify_firebase_token
@@ -187,3 +180,24 @@ def run_db_query():
             conn.close()  # Ensure the connection is closed after the query
 
     return run_query
+
+
+@pytest.fixture
+def mock_valid_token_auth():
+    """Override verify_firebase_token to return a FirebaseToken instance only for auth tests."""
+
+    def override_verify_firebase_token():
+        return FirebaseToken(
+            email="fernando.filho@mensa.org.br",
+            permissions=["CREATE.EVENT", "WHATSAPP.BOT"],
+            exp=1722981114,
+            iat=1722977514,
+            aud="carteirinhasmensa",
+            iss="https://securetoken.google.com/carteirinhasmensa",
+            sub="V3jqdbSNw3hQsbQMD5mcs2q88PJ3",
+            auth_time=1709996057,
+        )
+
+    app.dependency_overrides[verify_firebase_token] = override_verify_firebase_token
+    yield
+    app.dependency_overrides.pop(verify_firebase_token, None)

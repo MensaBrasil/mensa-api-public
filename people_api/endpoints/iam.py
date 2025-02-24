@@ -146,7 +146,7 @@ async def _get_roles(
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get roles for member"""
-    return await IamService.get_member_roles(token_data=token_data, session=sessions.rw)
+    return await IamService.get_member_roles(token_data=token_data, session=sessions.ro)
 
 
 @iam_router.get("/groups/", status_code=status.HTTP_200_OK, tags=["groups"])
@@ -155,7 +155,16 @@ async def _get_groups(
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """Get groups for member"""
-    return await IamService.get_member_groups(token_data=token_data, session=sessions.rw)
+    return await IamService.get_member_groups(token_data=token_data, session=sessions.ro)
+
+
+@iam_router.get("/permissions/", status_code=status.HTTP_200_OK, tags=["permissions"])
+async def _get_permissions(
+    token_data=Depends(verify_firebase_token),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
+):
+    """Get permissions for member"""
+    return await IamService.get_member_permissions(token_data=token_data, session=sessions.ro)
 
 
 @iam_router.get(

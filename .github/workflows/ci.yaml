@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: test
+  code_check:
+    name: Code Checking
     runs-on: ubuntu-latest
 
     steps:
@@ -20,17 +20,33 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - uses: astral-sh/setup-uv@v1
         with:
           version: "latest"
-
       - name: Install dependencies
         run: uv sync -p 3.12
-
       - name: Run mypy type check
         run: uv run mypy .
+      - name: Check for secrets
+        run: |
+          uv add detect-secrets
+          uv run detect-secrets scan --baseline .secrets.baseline
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v1
+        with:
+          version: "latest"
+      - name: Install dependencies
+        run: uv sync -p 3.12
       - name: Run tests with coverage
         env:
           api_host: ${{ secrets.api_host }}
@@ -57,33 +73,25 @@ jobs:
         run: |
           uv run coverage run -m pytest -sv .
           uv run coverage report
-
       - name: Check coverage
         run: |
           COVERAGE=$(uv run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
-            echo "Coverage is $COVERAGE%"
-            if (( $(echo "$COVERAGE < 85" | bc -l) )); then
-              echo "Code coverage is below 85%"
-              exit 1
-            fi
-
-      - name: Check for secrets
-        run: |
-          uv add detect-secrets
-          uv run detect-secrets scan --baseline .secrets.baseline
+          echo "Coverage is $COVERAGE%"
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "Code coverage is below 85%"
+            exit 1
+          fi
 
   security_scan:
+    name: Security Scan
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
+          python-version: "3.12"
       - name: Set up Trivy
         uses: aquasecurity/trivy-action@master
         with:

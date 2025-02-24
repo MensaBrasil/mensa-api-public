@@ -3,21 +3,21 @@
 """Service for legal representative operations."""
 
 from datetime import datetime
-from typing import Any
 
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session
 
+from people_api.schemas import FirebaseToken
 from people_api.database.models.models import LegalRepresentatives, Registration
-
 from ..settings import Settings
 
 SETTINGS = Settings()
 
 
-# Model for request to add legal representative using API key
+
 class LegalRepresentativeRequest(BaseModel):
+    """Request model for adding legal representative with API key."""
     token: str
     mb: str
     birth_date: str
@@ -28,6 +28,7 @@ class LegalRepresentativeRequest(BaseModel):
 class LegalRepresentativeService:
     @staticmethod
     def add_legal_representative_api_key(request: LegalRepresentativeRequest, session: Session):
+        """Add legal representative to member using API key."""
         if request.token != SETTINGS.whatsapp_route_api_key:
             raise HTTPException(status_code=401, detail="Unauthorized")
         request.mb = int(request.mb)
@@ -65,10 +66,11 @@ class LegalRepresentativeService:
     def add_legal_representative(
         mb: int,
         legal_representative: LegalRepresentatives,
-        token_data: Any,
+        token_data: FirebaseToken,
         session: Session,
     ):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        """Add legal representative to member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
         if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -108,10 +110,11 @@ class LegalRepresentativeService:
         mb: int,
         legal_rep_id: int,
         updated_legal_rep: LegalRepresentatives,
-        token_data: Any,
+        token_data: FirebaseToken,
         session: Session,
     ):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        """Update legal representative for member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
         if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -125,8 +128,11 @@ class LegalRepresentativeService:
         return {"message": "Legal representative updated successfully"}
 
     @staticmethod
-    def delete_legal_representative(mb: int, legal_rep_id: int, token_data: Any, session: Session):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+    def delete_legal_representative(
+        mb: int, legal_rep_id: int, token_data: FirebaseToken, session: Session
+    ):
+        """Delete legal representative from member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
 
         if not member_data or member_data.registration_id != mb:
@@ -135,8 +141,7 @@ class LegalRepresentativeService:
         delete_stmt = LegalRepresentatives.delete_stmt_for_legal_representative(mb, legal_rep_id)
         result = session.exec(delete_stmt)
 
-        if result.rowcount == 0:  
+        if result.rowcount == 0:
             raise HTTPException(status_code=404, detail="Legal representative not found")
 
         return {"message": "Legal representative deleted successfully"}
-

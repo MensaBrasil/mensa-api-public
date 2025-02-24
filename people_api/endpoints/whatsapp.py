@@ -1,11 +1,10 @@
 """Whatsapp router for updating phone numbers for members and their legal representatives."""
 
 from fastapi import APIRouter, Depends, Request
-from sqlmodel import Session
 
 from ..database.models import UpdateInput
 from ..database.models.whatsapp import ReceivedWhatsappMessage
-from ..dbs import get_async_sessions, AsyncSessionsTuple
+from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..services import WhatsappChatBot, WhatsAppService
 
 
@@ -35,4 +34,6 @@ async def chatbot_message(
     data_dict = {key: str(value) for key, value in form_data.items()}
     received_message = ReceivedWhatsappMessage(**data_dict)
 
-    return await WhatsappChatBot.chatbot_message(received_message, session=sessions.rw)
+    await WhatsappChatBot.validate_member_and_permissions(received_message, sessions.ro)
+
+    return await WhatsappChatBot.chatbot_message(received_message, session=sessions.ro)

@@ -5,8 +5,9 @@ import secrets
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import HTMLResponse
 
+from people_api.schemas import FirebaseToken
 from ..auth import verify_firebase_token
-from ..dbs import get_redis_client, get_async_sessions, AsyncSessionsTuple
+from ..dbs import AsyncSessionsTuple, get_async_sessions, get_redis_client
 from ..schemas import OAuthStateResponse
 from ..services.discord_service import process_discord_callback
 from ..settings import get_settings
@@ -21,12 +22,13 @@ oauth_router = APIRouter(prefix="/oauth", tags=["oauth"])
     response_model=OAuthStateResponse,
 )
 async def get_state(
-    token_data: dict = Depends(verify_firebase_token), redis_client=Depends(get_redis_client)
+    token_data: FirebaseToken = Depends(verify_firebase_token),
+    redis_client=Depends(get_redis_client),
 ) -> OAuthStateResponse:
     """Get state for OAuth"""
     state = secrets.token_urlsafe(32)
     key = f"state:{state}"
-    await redis_client.set(key, token_data["email"], ex=300)
+    await redis_client.set(key, token_data.email, ex=300)
 
     return OAuthStateResponse(state=state)
 

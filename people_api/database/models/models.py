@@ -22,6 +22,7 @@ from sqlmodel import (
     func,
     insert,
     select,
+    col,
     text,
     update,
 )
@@ -291,6 +292,12 @@ class Emails(BaseSQLModel, table=True):
         """
         return delete(cls).where(and_(cls.registration_id == mb, cls.email_id == email_id))
 
+    @classmethod
+    def select_registration_id_by_email(cls, email: str):
+        """
+        Return a select statement that retrieves the registration_id based on email_address.
+        """
+        return select(cls.registration_id).where(cls.email_address == email)
 
 
 class LegalRepresentatives(BaseSQLModel, table=True):
@@ -359,7 +366,6 @@ class LegalRepresentatives(BaseSQLModel, table=True):
         and legal representative id.
         """
         return delete(cls).where(and_(cls.registration_id == mb, cls.representative_id == legal_rep_id))
-        
 
 class MemberGroups(BaseSQLModel, table=True):
     """Model representing group memberships for members, including entry and exit data."""
@@ -442,12 +448,12 @@ class Phones(BaseSQLModel, table=True):
         """
         Return a select statement for Phones instances for a given member_id.
         """
-        return select(cls).where(Phones.registration_id == member_id)
+        return select(cls).where(cls.registration_id == member_id)
 
     @classmethod
     def insert_stmt_for_phone(cls, mb: int, phone: PhoneNumber):
         """Return an insert statement for adding a phone for the given member."""
-        return insert(Phones).values(registration_id=mb, phone_number=phone)
+        return insert(cls).values(registration_id=mb, phone_number=phone)
 
     @classmethod
     def update_stmt_for_phone(cls, mb: int, phone_id: int, new_phone: PhoneNumber):
@@ -456,8 +462,8 @@ class Phones(BaseSQLModel, table=True):
         and phone ID.
         """
         return (
-            update(Phones)
-            .where(and_(Phones.registration_id == mb, Phones.phone_id == phone_id))
+            update(cls)
+            .where(and_(cls.registration_id == mb, cls.phone_id == phone_id))
             .values(phone_number=new_phone)
         )
 
@@ -541,6 +547,13 @@ class IAMRoles(SQLModel, table=True):
     role_name: str = Field(max_length=128)
     role_description: str = Field(max_length=512)
 
+    @classmethod
+    def select_by_role_name(cls, role_name: str):
+        """
+        Return a select statement for IAMRoles instances with the given role_name.
+        """
+        return select(cls).where(cls.role_name == role_name)
+
 
 class IAMGroups(SQLModel, table=True):
     """Model for the iam_groups table."""
@@ -551,6 +564,13 @@ class IAMGroups(SQLModel, table=True):
     group_name: str = Field(max_length=128)
     group_description: str = Field(max_length=512)
 
+    @classmethod
+    def select_by_group_name(cls, group_name: str):
+        """
+        Return a select statement for IAMGroups instances with the given group_name.
+        """
+        return select(cls).where(cls.group_name == group_name)
+
 
 class IAMPermissions(SQLModel, table=True):
     """Model for the iam_role_permissions table."""
@@ -560,6 +580,83 @@ class IAMPermissions(SQLModel, table=True):
     id: int = Field(primary_key=True)
     permission_name: str = Field(max_length=128)
     permission_description: str = Field(max_length=512)
+
+    @classmethod
+    def select_role_permissions_by_registration_id(cls, registration_id: int):
+        """
+        Get permissions for a member based on their roles.
+        """
+        return (
+            select(col(cls.permission_name))
+            .select_from(IAMUserRolesMap)
+            .join(
+                IAMRolePermissionsMap,
+                col(IAMUserRolesMap.role_id) == col(IAMRolePermissionsMap.role_id),
+            )
+            .join(
+                cls,
+                col(IAMRolePermissionsMap.permission_id) == col(cls.id),
+            )
+            .where(col(IAMUserRolesMap.registration_id) == registration_id)
+        )
+
+    @classmethod
+    def select_group_permissions_by_registration_id(cls, registration_id: int):
+        """
+        Get permissions for a member based on their groups.
+        """
+        return (
+            select(col(cls.permission_name))
+            .select_from(IAMUserGroupsMap)
+            .join(
+                IAMGroupPermissionsMap,
+                col(IAMUserGroupsMap.group_id) == col(IAMGroupPermissionsMap.group_id),
+            )
+            .join(
+                cls,
+                col(IAMGroupPermissionsMap.permission_id) == col(cls.id),
+            )
+            .where(col(IAMUserGroupsMap.registration_id) == registration_id)
+        )
+
+    @classmethod
+    def get_role_permissions_by_role_name(cls, role_name: str):
+        """
+        Get permissions for a role by role name.
+        """
+        return (
+            select(col(cls.permission_name))
+            .select_from(IAMRolePermissionsMap)
+            .join(
+                cls,
+                col(IAMRolePermissionsMap.permission_id) == col(cls.id),
+            )
+            .join(IAMRoles, col(IAMRolePermissionsMap.role_id) == col(IAMRoles.id))
+            .where(col(IAMRoles.role_name) == role_name)
+        )
+
+    @classmethod
+    def get_group_permissions_by_group_name(cls, group_name: str):
+        """
+        Get permissions for a group by group name.
+        """
+        return (
+            select(col(cls.permission_name))
+            .select_from(IAMGroupPermissionsMap)
+            .join(
+                cls,
+                col(IAMGroupPermissionsMap.permission_id) == col(cls.id),
+            )
+            .join(IAMGroups, col(IAMGroupPermissionsMap.group_id) == col(IAMGroups.id))
+            .where(col(IAMGroups.group_name) == group_name)
+        )
+
+    @classmethod
+    def select_by_permission_name(cls, permission_name: str):
+        """
+        Return a select statement for IAMPermissions instances with the given permission_name.
+        """
+        return select(cls).where(cls.permission_name == permission_name)
 
 
 class IAMRolePermissionsMap(SQLModel, table=True):
@@ -572,6 +669,13 @@ class IAMRolePermissionsMap(SQLModel, table=True):
     permission_id: int = Field(
         sa_column=Column(Integer, ForeignKey("iam_permissions.id", ondelete="CASCADE"))
     )
+
+    @classmethod
+    def select_by_role_and_permission(cls, role_id: int, permission_id: int):
+        """
+        Return a select statement to check if a mapping exists for the given role_id and permission_id.
+        """
+        return select(cls).where(cls.role_id == role_id, cls.permission_id == permission_id)
 
 
 class IAMGroupPermissionsMap(SQLModel, table=True):
@@ -587,6 +691,13 @@ class IAMGroupPermissionsMap(SQLModel, table=True):
         sa_column=Column(Integer, ForeignKey("iam_permissions.id", ondelete="CASCADE"))
     )
 
+    @classmethod
+    def select_by_group_and_permission(cls, group_id: int, permission_id: int):
+        """
+        Return a select statement to check if a mapping exists for the given group_id and permission_id.
+        """
+        return select(cls).where(cls.group_id == group_id, cls.permission_id == permission_id)
+
 
 class IAMUserRolesMap(SQLModel, table=True):
     """Model for the iam_user_roles_map table."""
@@ -598,6 +709,37 @@ class IAMUserRolesMap(SQLModel, table=True):
         sa_column=Column(Integer, ForeignKey("registration.registration_id", ondelete="CASCADE"))
     )
     role_id: int = Field(sa_column=Column(Integer, ForeignKey("iam_roles.id", ondelete="CASCADE")))
+
+    @classmethod
+    def select_role_names_by_registration_id(cls, registration_id: int):
+        """
+        Return a select statement that retrieves role names for a given registration_id.
+        """
+        return (
+            select(IAMRoles.role_name)
+            .select_from(cls)
+            .join(IAMRoles, cls.role_id == IAMRoles.id) # type: ignore[arg-type]
+            .where(cls.registration_id == registration_id)
+        )
+
+    @classmethod
+    def select_members_by_role_name(cls, role_name: str):
+        """
+        Return a select statement that retrieves members (name and registration_id) for a given role name.
+        """
+        return (
+            select(Registration.name, cls.registration_id)
+            .join(IAMRoles, cls.role_id == IAMRoles.id) # type: ignore[arg-type]
+            .join(Registration, cls.registration_id == Registration.registration_id) # type: ignore[arg-type]
+            .where(IAMRoles.role_name == role_name)
+        )
+
+    @classmethod
+    def select_by_role_and_member(cls, role_id: int, member_id: int):
+        """
+        Return a select statement to check if a role is already assigned to a member.
+        """
+        return select(cls).where(cls.role_id == role_id, cls.registration_id == member_id)
 
 
 class IAMUserGroupsMap(SQLModel, table=True):
@@ -612,3 +754,34 @@ class IAMUserGroupsMap(SQLModel, table=True):
     group_id: int = Field(
         sa_column=Column(Integer, ForeignKey("iam_groups.id", ondelete="CASCADE"))
     )
+
+    @classmethod
+    def select_group_names_by_registration_id(cls, registration_id: int):
+        """
+        Return a select statement that retrieves group names for a given registration_id.
+        """
+        return (
+            select(IAMGroups.group_name)
+            .select_from(cls)
+            .join(IAMGroups, cls.group_id == IAMGroups.id)  # type: ignore[arg-type]
+            .where(cls.registration_id == registration_id)
+        )
+
+    @classmethod
+    def select_members_by_group_name(cls, group_name: str):
+        """
+        Return a select statement that retrieves members (name and registration_id) for a given group name.
+        """
+        return (
+            select(Registration.name, cls.registration_id)
+            .join(IAMGroups, cls.group_id == IAMGroups.id) # type: ignore[arg-type]
+            .join(Registration, cls.registration_id == Registration.registration_id) # type: ignore[arg-type]
+            .where(IAMGroups.group_name == group_name)
+        )
+
+    @classmethod
+    def select_by_group_and_member(cls, group_id: int, member_id: int):
+        """
+        Return a select statement to check if a group is already assigned to a member.
+        """
+        return select(cls).where(cls.group_id == group_id, cls.registration_id == member_id)

@@ -73,49 +73,49 @@ VALUES
 -- Roles table
 INSERT INTO iam_roles (role_name, role_description)
 VALUES
-    ('Diretor Regional', 'Diretor Regional da Mensa Brasil. Responsável pela gestão regional da Mensa Brasil. Representa a Mensa Brasil em eventos nacionais e internacionais.'),
-    ('Tesoureiro', 'Tesoureiro da Mensa Brasil. Responsável pela gestão financeira da Mensa Brasil. Controla as finanças da Mensa Brasil e presta contas à diretoria.'),
-    ('Diretor De Marketing', 'Diretor de Marketing da Mensa Brasil. Responsável pela divulgação da Mensa Brasil. Cuida da imagem da Mensa Brasil e promove eventos e ações de marketing.'),
-    ('Secretário', 'Secretário da Mensa Brasil. Responsável pela documentação da Mensa Brasil. Registra as reuniões e eventos da Mensa Brasil e mantém a documentação atualizada.');
+    ('DIRETOR.REGIONAL', 'Diretor regional da Mensa Brasil. Responsável pela gestão regional da Mensa Brasil. Representa a Mensa Brasil em eventos nacionais e internacionais.'),
+    ('TESOUREIRO', 'Tesoureiro da Mensa Brasil. Responsável pela gestão financeira da Mensa Brasil. Controla as finanças da Mensa Brasil e presta contas à diretoria.'),
+    ('DIRETOR.MARKETING', 'Diretor de marketing da Mensa Brasil. Responsável pela divulgação da Mensa Brasil. Cuida da imagem da Mensa Brasil e promove eventos e ações de marketing.'),
+    ('SECRETARIO', 'Secretário da Mensa Brasil. Responsável pela documentação da Mensa Brasil. Registra as reuniões e eventos da Mensa Brasil e mantém a documentação atualizada.');
 
 -- Groups table
 INSERT INTO iam_groups (group_name, group_description)
 VALUES
-    ('Beta Tester', 'Grupo de testadores beta da Mensa Brasil.'),
-    ('Sig Matemática', 'Grupo de interesse especial em matemática da Mensa Brasil.');
+    ('BETA.TESTER', 'Grupo de testadores beta da Mensa Brasil.'),
+    ('SIG.MATEMATICA', 'Grupo de interesse especial em matemática da Mensa Brasil.');
 
 -- Permissions table
 INSERT INTO iam_permissions (permission_name, permission_description)
 VALUES
-    ('create_event', 'Can create events.'),
-    ('edit_event', 'Can edit events.'),
-    ('delete_event', 'Can delete events.'),
-    ('whatsapp_bot', 'Can interact with the WhatsApp bot.');
+    ('CREATE.EVENT', 'Can create events.'),
+    ('EDIT.EVENT', 'Can edit events.'),
+    ('DELETE.EVENT', 'Can delete events.'),
+    ('WHATSAPP.BOT', 'Can interact with the WhatsApp bot.');
 
 -- Role assignments table
 INSERT INTO iam_user_roles_map (role_id, registration_id)
 VALUES
-    ((SELECT id FROM iam_roles WHERE role_name = 'Diretor Regional'), 5);
+    ((SELECT id FROM iam_roles WHERE role_name = 'DIRETOR.REGIONAL'), 5);
 
 INSERT INTO iam_user_roles_map (role_id, registration_id)
 VALUES
-    ((SELECT id FROM iam_roles WHERE role_name = 'Diretor De Marketing'), 5);
+    ((SELECT id FROM iam_roles WHERE role_name = 'DIRETOR.MARKETING'), 5);
 
 -- Group assignments table
 INSERT INTO iam_user_groups_map (group_id, registration_id)
 VALUES
-    ((SELECT id FROM iam_groups WHERE group_name = 'Beta Tester'), 5);
+    ((SELECT id FROM iam_groups WHERE group_name = 'BETA.TESTER'), 5);
 
 -- Role permissions table
 INSERT INTO iam_role_permissions_map (role_id, permission_id)
 VALUES
-    ((SELECT id FROM iam_roles WHERE role_name = 'Diretor Regional'), (SELECT id FROM iam_permissions WHERE permission_name = 'create_event'));
+    ((SELECT id FROM iam_roles WHERE role_name = 'DIRETOR.REGIONAL'), (SELECT id FROM iam_permissions WHERE permission_name = 'CREATE.EVENT'));
 
 INSERT INTO iam_role_permissions_map (role_id, permission_id)
 VALUES
-    ((SELECT id FROM iam_roles WHERE role_name = 'Diretor De Marketing'), (SELECT id FROM iam_permissions WHERE permission_name = 'delete_event'));
+    ((SELECT id FROM iam_roles WHERE role_name = 'DIRETOR.MARKETING'), (SELECT id FROM iam_permissions WHERE permission_name = 'DELETE.EVENT'));
 
 -- Group permissions table
 INSERT INTO iam_group_permissions_map (group_id, permission_id)
 VALUES
-    ((SELECT id FROM iam_groups WHERE group_name = 'Beta Tester'), (SELECT id FROM iam_permissions WHERE permission_name = 'whatsapp_bot'));
+    ((SELECT id FROM iam_groups WHERE group_name = 'BETA.TESTER'), (SELECT id FROM iam_permissions WHERE permission_name = 'WHATSAPP.BOT'));

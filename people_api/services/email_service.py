@@ -3,16 +3,19 @@
 """Service for managing members email addresses."""
 
 from fastapi import HTTPException
-
 from sqlalchemy.orm import Session
 
+from people_api.schemas import FirebaseToken
 from people_api.database.models.models import EmailInput, Emails, Registration
 
 
+
 class EmailService:
+    """Service for managing members email addresses."""
     @staticmethod
-    def add_email(mb: int, email: EmailInput, token_data: dict, session: Session):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+    def add_email(mb: int, email: EmailInput, token_data: FirebaseToken, session: Session):
+        """Add email to member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
         if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -31,9 +34,14 @@ class EmailService:
 
     @staticmethod
     def update_email(
-        mb: int, email_id: int, updated_email: EmailInput, token_data: dict, session: Session
+        mb: int,
+        email_id: int,
+        updated_email: EmailInput,
+        token_data: FirebaseToken,
+        session: Session,
     ):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        """Update email for member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
         if not member_data or member_data.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -48,8 +56,9 @@ class EmailService:
         return {"message": "Email updated successfully"}
 
     @staticmethod
-    def delete_email(mb: int, email_id: int, token_data: dict, session: Session):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+    def delete_email(mb: int, email_id: int, token_data: FirebaseToken, session: Session):
+        """Delete email from member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
 
         if not member_data or member_data.registration_id != mb:
@@ -63,7 +72,7 @@ class EmailService:
                 raise HTTPException(status_code=400, detail="Cannot delete email of type mensa")
 
         delete_stmt = Emails.delete_stmt_for_email(mb, email_id)
-        result = session.exec(delete_stmt)  
+        result = session.exec(delete_stmt)
 
         if result.rowcount == 0:
             raise HTTPException(status_code=404, detail="Email not found")

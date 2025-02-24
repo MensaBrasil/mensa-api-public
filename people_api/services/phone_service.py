@@ -3,14 +3,16 @@
 from fastapi import HTTPException
 from sqlmodel import Session
 
+from people_api.schemas import FirebaseToken
 from people_api.database.models.models import PhoneInput, Phones, Registration
 
 
 class PhoneService:
     @staticmethod
-    def add_phone(mb: int, phone_input: PhoneInput, token_data: dict, session: Session):
+    def add_phone(mb: int, phone_input: PhoneInput, token_data: FirebaseToken, session: Session):
+        """Add phone to member."""
         phone = phone_input.phone
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()
         if not reg or reg.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -24,10 +26,11 @@ class PhoneService:
 
     @staticmethod
     def update_phone(
-        mb: int, phone_id: int, phone_input: PhoneInput, token_data: dict, session: Session
+        mb: int, phone_id: int, phone_input: PhoneInput, token_data: FirebaseToken, session: Session
     ):
+        """Update phone for member."""
         phone = phone_input.phone
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()
         if not reg or reg.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -38,8 +41,9 @@ class PhoneService:
         return {"message": "Phone updated successfully"}
 
     @staticmethod
-    def delete_phone(mb: int, phone_id: int, token_data: dict, session: Session):
-        reg_stmt = Registration.select_stmt_by_email(token_data["email"])
+    def delete_phone(mb: int, phone_id: int, token_data: FirebaseToken, session: Session):
+        """Delete phone from member."""
+        reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()
         if not reg or reg.registration_id != mb:
             raise HTTPException(status_code=401, detail="Unauthorized")

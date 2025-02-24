@@ -54,41 +54,61 @@ class MemberRepository:
                     registration_id,
                     entry_date,
                     exit_date,
-                    row_number() over (partition by group_id
-                order by
-                    entry_date desc,
-                    exit_date desc nulls first) as rn
+                    row_number() over (
+                        partition by group_id
+                        order by entry_date desc,
+                                exit_date desc nulls first
+                    ) as rn
                 from
                     member_groups
                 where
                     registration_id = :mb
-            ) mg on
-                gl.group_id = mg.group_id
-                and mg.rn = 1
-            inner join registration r on
-                r.registration_id = :mb
+            ) mg on gl.group_id = mg.group_id and mg.rn = 1
+            inner join registration r on r.registration_id = :mb
             where
-                ((r.birth_date <= CURRENT_DATE - interval '18 year'
-                    and gl.group_name not like '%%JB%%'
-                    and gl.group_name not like '%%OrgMB%%')
-                or (r.birth_date > CURRENT_DATE - interval '18 year'
-                    and gl.group_name like '%%JB%%'
-                    and gl.group_name not like '%%OrgMB%%'
-                    and gl.group_name not like 'Avisos Mensa JB%%'))
-                and (mg.entry_date is null
-                    or mg.exit_date is not null)
+                (
+                    r.birth_date <= CURRENT_DATE - interval '18 year'
+                    and gl.group_name not like '%JB%'
+                    and gl.group_name not like '%OrgMB%'
+                )
+                or (
+                    r.birth_date > CURRENT_DATE - interval '18 year'
+                    and gl.group_name not like '%OrgMB%'
+                    and gl.group_name not like 'Avisos Mensa JB%'
+                    and (
+                        (
+                            DATE_PART('year', AGE(r.birth_date)) < 11
+                            and (
+                                gl.group_name ilike 'R.JB%'
+                                or gl.group_name ilike 'R. JB%'
+                                or gl.group_name ilike 'M.JB%'
+                                or gl.group_name ilike 'M. JB%'
+                            )
+                        )
+                        or (
+                            DATE_PART('year', AGE(r.birth_date)) >= 11
+                            and (
+                                gl.group_name ilike 'R.JB%'
+                                or gl.group_name ilike 'R. JB%'
+                                or gl.group_name ilike 'JB%'
+                            )
+                        )
+                    )
+                )
+                and (mg.entry_date is null or mg.exit_date is not null)
                 and not exists (
-                select
-                    1
-                from
-                    group_requests gr
-                where
-                    gr.registration_id = :mb
-                    and gr.group_id = gl.group_id
-                    and gr.no_of_attempts < 3
+                    select
+                        1
+                    from
+                        group_requests gr
+                    where
+                        gr.registration_id = :mb
+                        and gr.group_id = gl.group_id
+                        and gr.no_of_attempts < 3
                 )
             order by
                 gl.group_name;
+
             """
         )
         result = session.execute(query, {"mb": mb})

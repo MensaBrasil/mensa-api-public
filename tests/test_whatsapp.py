@@ -1,10 +1,17 @@
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, AsyncMock
+import os
+import pytest
+
 
 from fastapi.testclient import TestClient
 
 MOCK_API_KEY = "bia"
 
+os.environ["OPENAI_API_KEY"] = "dummy_openai_key"
+
+dummy_threads = MagicMock()
+dummy_threads.create.return_value = MagicMock(id="dummy_thread_id")
 
 @patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
 def test_update_phone_with_valid_data_or_invalid_data(
@@ -26,34 +33,29 @@ def test_update_phone_with_valid_data_or_invalid_data(
         "SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'"
     )[0][0]
 
-    # Invalid CPF test case
     payload = {
         "phone": "1234567890",
         "birth_date": "01/01/1991",
         "cpf": "11111111111",  
         "registration_id": registration_id,
         "is_representative": False,
-        "token": MOCK_API_KEY,  # Add the token in the body
+        "token": MOCK_API_KEY,  
     }
 
     response = test_client.post("/whatsapp/update-data", json=payload)
     assert response.status_code == 400
 
-    # Valid CPF test case
+   
     payload = {
         "phone": "1234567890",
         "birth_date": "01/01/1991",
-        "cpf": "12345678909",  # Valid CPF
+        "cpf": "12345678909",  
         "registration_id": registration_id,
         "is_representative": False,
-        "token": MOCK_API_KEY,  # Add the token in the body
+        "token": MOCK_API_KEY,  
     }
 
     response = test_client.post("/whatsapp/update-data", json=payload)
-
-    # Debugging output
-    print("Response status code:", response.status_code)
-    print("Response content:", response.json())
 
     assert response.status_code == 200
     assert response.json() == {"message": "Phone number updated successfully."}
@@ -75,7 +77,7 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
 ) -> None:
     """Test updating a representative's phone number when CPF is valid"""
 
-    # Clean and seed the database
+
     run_db_query(
         """
         DELETE FROM legal_representatives
@@ -98,34 +100,28 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
     """
     )
 
-    # Fetch registration_id
+
     registration_id = run_db_query(
         "SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'"
     )[0][0]
 
     print("Fetched registration_id:", registration_id)
 
-    # Payload
+
     payload = {
         "phone": "0987654321",
-        "birth_date": None,  # Ensure None is valid or provide a date
-        "cpf": "98765432100",  # Adjust format if needed
+        "birth_date": None,
+        "cpf": "98765432100", 
         "registration_id": registration_id,
         "is_representative": True,
-        "token": MOCK_API_KEY,  # Adjust if token should be a header
+        "token": MOCK_API_KEY, 
     }
 
-    # Send request
     response = test_client.post("/whatsapp/update-data", json=payload)
 
-    # Log response
-    print("Response status code:", response.status_code)
-    print("Response JSON:", response.json())
 
-    # Assertions
     assert response.status_code == 200
     assert response.json() == {"message": "Representative's phone number updated successfully."}
-
 
 @patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
 def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: Any):
@@ -145,16 +141,176 @@ def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: 
         "SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'"
     )[0][0]
 
-    # Test case with wrong API key in the payload
     payload = {
         "phone": "1234567890",
         "birth_date": "01/01/1991",
         "cpf": "12345678909",
         "registration_id": registration_id,
         "is_representative": False,
-        "token": "wrong_api_key",  # Wrong API key
-    }
+        "token": "wrong_api_key",  
+}
 
     response = test_client.post("/whatsapp/update-data", json=payload)
     assert response.status_code == 403
     assert response.json()["detail"] == "Invalid API Key"
+
+@patch("people_api.services.twilio_service.TwilioService.send_whatsapp_message", new_callable=AsyncMock, return_value=None)
+@patch("people_api.services.whatsapp_service.openai_client", new=MagicMock(beta=MagicMock(threads=dummy_threads)))
+@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
+def test_chatbot_message_valid(mock_twilio, run_db_query, test_client: TestClient):
+    """
+    Integration test for /whatsapp/chatbot-message with a valid member (registration id 5).
+    Expected: 200 response.
+    """
+
+    run_db_query(
+        """
+        INSERT INTO membership_payments (registration_id, payment_date, expiration_date, amount_paid, observation, payment_method, transaction_id, payment_status)
+        VALUES (
+            5, 
+            CURRENT_DATE, 
+            CURRENT_DATE + INTERVAL '1 year', 
+            100.00, 
+            'Test Payment for reg ', 
+            'Credit Card', 
+            'TX456', 
+            'active'
+        )
+        """
+    )
+
+    payload = {
+        "SmsMessageSid": "SM123",
+        "NumMedia": "0",
+        "ProfileName": "TestUser",
+        "MessageType": "text",
+        "SmsSid": "SM123",
+        "WaId": "0000000097654322", 
+        "SmsStatus": "received",
+        "Body": "Hello from registration 5",
+        "To": "whatsapp:+10000000000",
+        "MessagingServiceSid": "MG123",
+        "NumSegments": "1",
+        "ReferralNumMedia": "0",
+        "MessageSid": "SM123",
+        "AccountSid": "AC123",
+        "From": "whatsapp:+552197654322",
+        "ApiVersion": "2010-04-01",
+    }
+    response = test_client.post("/whatsapp/chatbot-message", data=payload)
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    result = response.json()
+    assert isinstance(result, str), "Expected the chatbot response to be a string"
+
+@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
+def test_chatbot_message_missing_phone(test_client: TestClient):
+    """
+    Integration test for /whatsapp/chatbot-message when no phone record is found.
+    Expected: 404 response.
+    """
+    payload = {
+        "SmsMessageSid": "SM124",
+        "NumMedia": "0",
+        "ProfileName": "TestUser",
+        "MessageType": "text",
+        "SmsSid": "SM124",
+        "WaId": "0000000099999999",  
+        "SmsStatus": "received",
+        "Body": "Hello, no phone!",
+        "To": "whatsapp:+10000000000",
+        "MessagingServiceSid": "MG124",
+        "NumSegments": "1",
+        "ReferralNumMedia": "0",
+        "MessageSid": "SM124",
+        "AccountSid": "AC124",
+        "From": "whatsapp:+0000000000",
+        "ApiVersion": "2010-04-01",
+    }
+    response = test_client.post("/whatsapp/chatbot-message", data=payload)
+    assert response.status_code == 404, f"Expected 404, got {response.status_code}"
+    error_detail = response.json().get("detail", "")
+    assert "Member not found" in error_detail, f"Unexpected error detail: {error_detail}"
+
+@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
+def test_chatbot_message_missing_permission(test_client: TestClient, run_db_query: Any):
+    """
+    Integration test for /whatsapp/chatbot-message when member (registration id 6)
+    is active but lacks the required permission (WHATSAPP.BOT).
+    Expected: 403 response.
+    """
+    
+    run_db_query(
+        """
+        INSERT INTO membership_payments (registration_id, payment_date, expiration_date, amount_paid, observation, payment_method, transaction_id, payment_status)
+        VALUES (
+            6, 
+            CURRENT_DATE, 
+            CURRENT_DATE + INTERVAL '1 year', 
+            100.00, 
+            'Test Payment for reg 6', 
+            'Credit Card', 
+            'TX456', 
+            'active'
+        )
+        """
+    )
+    
+    run_db_query(
+        """
+        INSERT INTO iam_roles (role_name, role_description)
+        VALUES ('TEST.ROLE', 'Test role with limited permissions.')
+        ON CONFLICT DO NOTHING
+        """
+    )
+
+    run_db_query(
+        """
+        INSERT INTO iam_user_roles_map (role_id, registration_id)
+        VALUES ((SELECT id FROM iam_roles WHERE role_name = 'TEST.ROLE'), 6)
+        """
+    )
+    
+    run_db_query(
+        """
+        INSERT INTO iam_role_permissions_map (role_id, permission_id)
+        VALUES (
+            (SELECT id FROM iam_roles WHERE role_name = 'TEST.ROLE'),
+            (SELECT id FROM iam_permissions WHERE permission_name = 'CREATE.EVENT')
+        )
+        """
+    )
+
+    payload = {
+        "SmsMessageSid": "SM125",
+        "NumMedia": "0",
+        "ProfileName": "TestUser",
+        "MessageType": "text",
+        "SmsSid": "SM125",
+        "WaId": "0000000098765432",  
+        "SmsStatus": "received",
+        "Body": "Hello from registration 6",
+        "To": "whatsapp:+10000000000",
+        "MessagingServiceSid": "MG125",
+        "NumSegments": "1",
+        "ReferralNumMedia": "0",
+        "MessageSid": "SM125",
+        "AccountSid": "AC125",
+        "From": "whatsapp:+552198765432",
+        "ApiVersion": "2010-04-01",
+    }
+    print("DEBUG: Payload for missing permission test:", payload)
+    
+    response = test_client.post("/whatsapp/chatbot-message", data=payload)
+    
+    print("DEBUG: Response status code:", response.status_code)
+    try:
+        response_content = response.json()
+    except Exception as e:
+        response_content = response.text
+    print("DEBUG: Response content:", response_content)
+    
+    assert response.status_code == 403, f"Expected 403, got {response.status_code}"
+    error_detail = (response_content.get("detail", "") 
+                    if isinstance(response_content, dict) else response_content)
+    print("DEBUG: Error detail:", error_detail)
+    assert "Access denied" in error_detail, f"Unexpected error detail: {error_detail}"

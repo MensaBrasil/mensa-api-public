@@ -1,0 +1,50 @@
+IAM API DOCUMENTATION
+=====================
+
+This document outlines the naming conventions and usage guidelines for managing Identity and Access Management (IAM) in Mensa-API. It details the syntax rules for creating names for groups, roles, and permissions, along with best practices on when to use groups versus roles.
+
+------------------------
+NAMING CONVENTIONS
+------------------------
+1. NO SPACES ALLOWED:
+   - Names for groups, roles, and permissions must not contain spaces and must be written in uppercase.
+   - Use dots (.) to separate words or segments.
+
+2. ALLOWED FORMAT EXAMPLES:
+   - ROLES:
+     - D.REGIONAL
+     - TESOUREIRO
+     - D.MARKETING
+     - SECRETARIO
+   - GROUPS:
+     - BETA.TESTER
+     - SIG.MATEMATICA
+   - PERMISSIONS:
+     - EVENT.CREATE
+     - EVENT.EDIT
+     - EVENT.DELETE
+     - WHATSAPP.BOT
+
+------------------------
+WHEN TO USE GROUPS, ROLES, AND PERMISSIONS
+------------------------
+GROUPS:
+   - PURPOSE: Groups are used for broad, general assignments that provide a baseline set of permissions or access.
+   - USE CASE EXAMPLES:
+     - A group like BETA.TESTER may grant its members access to unreleased features.
+     - A group like SIG.MATEMATICA might grant members access to features exclusive to members of the mathematics SIG.
+
+ROLES:
+   - PURPOSE: Roles are used for more specific assignments that require finer-grained control, often associated with official positions such as president, treasurer, or secretary.
+   - USE CASE EXAMPLES:
+     - A role such as DIRETOR.REGIONAL or DIRETOR.MARKETING might carry specific responsibilities and access rights.
+     - A specialized role (e.g., ADMIN) might have the authority to delegate roles, groups, and permissions to other users.
+
+PERMISSIONS:
+   - PURPOSE: Permissions define the specific actions or operations that can be performed within the system.
+   - USE CASE EXAMPLES:
+     - A permission like CREATE.EVENT grants the ability to create new events.
+     - Permissions can be assigned to both groups and roles to fine-tune access control.
+
+------------------------
+Following these guidelines ensures a well-organized, secure, and manageable IAM strategy for Mensa-API.

@@ -53,6 +53,8 @@ dependencies = [
     "uvicorn>=0.34.0",
     "python-multipart>=0.0.20",
     "semgrep>=1.108.0",
+    "aiofiles>=24.1.0",
+    "types-aiofiles>=24.1.0.20241221",
 ]
 
 [dependency-groups]

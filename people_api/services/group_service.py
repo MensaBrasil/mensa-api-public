@@ -6,7 +6,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from sqlmodel import Session
-
+from people_api.schemas import FirebaseToken
 from ..models.member import GroupJoinRequest
 from ..repositories import MemberRepository
 
@@ -15,34 +15,34 @@ class GroupService:
     """Service for handling requests from group endpoints."""
 
     @staticmethod
-    def get_can_participate(token_data, session: Session):
+    def get_can_participate(token_data: FirebaseToken, session: Session):
         """Determines if a member can participate based on their email."""
 
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
+        MB = MemberRepository.getMBByEmail(token_data.email, session)
         can_participate = MemberRepository.getCanParticipate(MB, session)
         return can_participate
 
     @staticmethod
-    def get_participate_in(token_data, session: Session):
+    def get_participate_in(token_data: FirebaseToken, session: Session):
         """Retrieves the groups that a member is participating in."""
 
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
+        MB = MemberRepository.getMBByEmail(token_data.email, session)
         participate_in = MemberRepository.getParticipateIn(MB, session)
         return participate_in
 
     @staticmethod
-    def get_pending_requests(token_data, session: Session):
+    def get_pending_requests(token_data: FirebaseToken, session: Session):
         """Retrieves the pending group join requests for a member."""
 
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
+        MB = MemberRepository.getMBByEmail(token_data.email, session)
         pending_requests = MemberRepository.getPendingRequests(MB, session)
         return pending_requests
 
     @staticmethod
-    def get_failed_requests(token_data, session: Session):
+    def get_failed_requests(token_data: FirebaseToken, session: Session):
         """Retrieves the failed group join requests for a member."""
 
-        MB = MemberRepository.getMBByEmail(token_data["email"], session)
+        MB = MemberRepository.getMBByEmail(token_data.email, session)
         failed_requests = MemberRepository.getFailedRequests(MB, session)
         return failed_requests
 
@@ -50,7 +50,7 @@ class GroupService:
     def request_join_group(join_request: GroupJoinRequest, token_data, session: Session):
         """Handles a request to join a group."""
 
-        registration_id = MemberRepository.getMBByEmail(token_data["email"], session)
+        registration_id = MemberRepository.getMBByEmail(token_data.email, session)
         phones = MemberRepository.getAllMemberAndLegalRepPhonesFromPostgres(
             registration_id, session
         )

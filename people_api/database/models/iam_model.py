@@ -21,8 +21,13 @@ def validate_name(data, field_name: str):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'Field: "{field_name}" cannot be numeric.',
         )
+    if " " in data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'Field: "{field_name}" cannot contain spaces.',
+        )
 
-    processed_data = data.strip().lower().title()
+    processed_data = data.upper()
     return processed_data
 
 
@@ -43,8 +48,13 @@ def validate_permission_name(data, field_name: str):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'Field: "{field_name}" cannot be numeric.',
         )
+    if " " in data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'Field: "{field_name}" cannot contain spaces.',
+    )
 
-    processed_data = data.strip().lower()
+    processed_data = data.upper()
     return processed_data
 
 
