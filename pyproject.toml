@@ -55,6 +55,10 @@ dependencies = [
     "semgrep>=1.108.0",
     "aiofiles>=24.1.0",
     "types-aiofiles>=24.1.0.20241221",
+    "opentelemetry-api>=1.25.0",
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0",
+    "opentelemetry-exporter-otlp>=1.25.0",
 ]
 
 [dependency-groups]
