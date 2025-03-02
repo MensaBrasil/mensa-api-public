@@ -7,12 +7,14 @@ from pycpfcnpj.cpf import validate as validate_cpf
 from sqlmodel import Session
 
 from people_api.schemas import FirebaseToken
+
 from ..models.member_data import MissingFieldsCreate
 from ..repositories import MemberRepository
 
 
 class MissingFieldsService:
     """Service for managing missing fields of members."""
+
     @staticmethod
     def get_missing_fields(token_data: FirebaseToken, session: Session):
         """Get missing fields for a member."""
@@ -36,10 +38,7 @@ class MissingFieldsService:
                 MemberRepository.setCPFOnPostgres(MB, missing_fields.cpf, session)
         if missing_fields.birth_date is not None:
             if "birth_date" in missing_fields_list:
-                try:
-                    birth_date = datetime.strptime(missing_fields.birth_date, "%Y-%m-%d")
-                    MemberRepository.setBirthDateOnPostgres(MB, birth_date, session)
-                except Exception as e:
-                    raise HTTPException(status_code=422, detail="Invalid birth_date format") from e
+                birth_date = datetime.strptime(missing_fields.birth_date, "%Y-%m-%d")
+                MemberRepository.setBirthDateOnPostgres(MB, birth_date, session)
 
         return {"message": "Missing fields set successfully"}

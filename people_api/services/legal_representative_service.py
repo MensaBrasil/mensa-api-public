@@ -8,16 +8,17 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from people_api.schemas import FirebaseToken
 from people_api.database.models.models import LegalRepresentatives, Registration
+from people_api.schemas import FirebaseToken
+
 from ..settings import Settings
 
 SETTINGS = Settings()
 
 
-
 class LegalRepresentativeRequest(BaseModel):
     """Request model for adding legal representative with API key."""
+
     token: str
     mb: str
     birth_date: str
@@ -37,12 +38,7 @@ class LegalRepresentativeService:
         if not member_data:
             raise HTTPException(status_code=404, detail="Member not found")
 
-        try:
-            request.birth_date = datetime.strptime(request.birth_date, "%d/%m/%Y").date()
-        except ValueError:
-            raise HTTPException(
-                status_code=400, detail="Invalid birth date format. Use dd/mm/YYYY."
-            )
+        request.birth_date = datetime.strptime(request.birth_date, "%d/%m/%Y").date()
 
         if member_data.birth_date != request.birth_date:
             raise HTTPException(status_code=400, detail="Birth date does not match")

@@ -1,10 +1,10 @@
 """This module contains the service class for IAM."""
 
-from typing import List
 from fastapi import HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from people_api.schemas import FirebaseToken
+
 from ..database.models import (
     Emails,
     IAMGroupPermissionsMap,
@@ -53,20 +53,32 @@ class IamService:
         return (await session.exec(IAMGroups.select_by_group_name(group_name))).first()
 
     @staticmethod
-    async def get_permission_by_permission_name(permission_name: str, session: AsyncSession) -> IAMPermissions:
+    async def get_permission_by_permission_name(
+        permission_name: str, session: AsyncSession
+    ) -> IAMPermissions:
         """Get permission by permission name."""
-        return (await session.exec(IAMPermissions.select_by_permission_name(permission_name))).first()
+        return (
+            await session.exec(IAMPermissions.select_by_permission_name(permission_name))
+        ).first()
 
     @staticmethod
-    async def get_permission_id_by_permission_name(permission_name: str, session: AsyncSession) -> IAMPermissions:
+    async def get_permission_id_by_permission_name(
+        permission_name: str, session: AsyncSession
+    ) -> IAMPermissions:
         """Get permission by permission name."""
-        return (await session.exec(IAMPermissions.select_by_permission_name(permission_name))).first()
+        return (
+            await session.exec(IAMPermissions.select_by_permission_name(permission_name))
+        ).first()
 
     @staticmethod
     async def get_member_roles(token_data: FirebaseToken, session: AsyncSession):
         """Get roles for a member by member id."""
         registration_id = await IamService.get_member_id_by_email(token_data.email, session)
-        roles = (await session.exec(IAMUserRolesMap.select_role_names_by_registration_id(registration_id))).all()
+        roles = (
+            await session.exec(
+                IAMUserRolesMap.select_role_names_by_registration_id(registration_id)
+            )
+        ).all()
         if roles:
             return roles
         else:
@@ -80,7 +92,11 @@ class IamService:
         """Get groups for a member by member id."""
         registration_id = await IamService.get_member_id_by_email(token_data.email, session)
 
-        groups = (await session.exec(IAMUserGroupsMap.select_group_names_by_registration_id(registration_id))).all()
+        groups = (
+            await session.exec(
+                IAMUserGroupsMap.select_group_names_by_registration_id(registration_id)
+            )
+        ).all()
         if groups:
             return groups
         else:
@@ -90,12 +106,16 @@ class IamService:
             )
 
     @staticmethod
-    async def get_member_permissions(token_data: FirebaseToken, session: AsyncSession) -> List[str]:
+    async def get_member_permissions(token_data: FirebaseToken, session: AsyncSession) -> list[str]:
         """Get permissions for a member by member id."""
         registration_id = await IamService.get_member_id_by_email(token_data.email, session)
 
-        role_permissions_stmt = IAMPermissions.select_role_permissions_by_registration_id(registration_id)
-        group_permissions_stmt = IAMPermissions.select_group_permissions_by_registration_id(registration_id)
+        role_permissions_stmt = IAMPermissions.select_role_permissions_by_registration_id(
+            registration_id
+        )
+        group_permissions_stmt = IAMPermissions.select_group_permissions_by_registration_id(
+            registration_id
+        )
 
         role_permissions = (await session.exec(role_permissions_stmt)).all()
         group_permissions = (await session.exec(group_permissions_stmt)).all()
@@ -116,7 +136,7 @@ class IamService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not exist.",
             )
-        
+
         stmt = IAMPermissions.get_role_permissions_by_role_name(role_name)
         permissions = (await session.exec(stmt)).all()
         if permissions:
@@ -135,7 +155,7 @@ class IamService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not exist.",
             )
-        
+
         stmt = IAMPermissions.get_group_permissions_by_group_name(group_name)
         permissions = (await session.exec(stmt)).all()
         if permissions:
@@ -196,14 +216,9 @@ class IamService:
                 detail=f"Role: {role_name} already exists.",
             )
 
-        try:
-            new_role = IAMRoles(role_name=role_name, role_description=role_description)
-            session.add(new_role)
-            return {"detail": f"Role: {new_role.role_name} created successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {e}"
-            ) from e
+        new_role = IAMRoles(role_name=role_name, role_description=role_description)
+        session.add(new_role)
+        return {"detail": f"Role: {new_role.role_name} created successfully."}
 
     @staticmethod
     async def create_group(group_name: str, group_description: str, session: AsyncSession):
@@ -214,14 +229,9 @@ class IamService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Group: {group_name} already exists.",
             )
-        try:
-            new_group = IAMGroups(group_name=group_name, group_description=group_description)
-            session.add(new_group)
-            return {"detail": f"Group: {new_group.group_name} created successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {e}"
-            ) from e
+        new_group = IAMGroups(group_name=group_name, group_description=group_description)
+        session.add(new_group)
+        return {"detail": f"Group: {new_group.group_name} created successfully."}
 
     @staticmethod
     async def create_permission(
@@ -234,17 +244,12 @@ class IamService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Permission: {permission_name} already exists.",
             )
-        try:
-            new_permission = IAMPermissions(
-                permission_name=permission_name,
-                permission_description=permission_description,
-            )
-            session.add(new_permission)
-            return {"detail": f"Permission: {new_permission.permission_name} created successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {e}"
-            ) from e
+        new_permission = IAMPermissions(
+            permission_name=permission_name,
+            permission_description=permission_description,
+        )
+        session.add(new_permission)
+        return {"detail": f"Permission: {new_permission.permission_name} created successfully."}
 
     @staticmethod
     async def edit_role_by_name(
@@ -332,23 +337,23 @@ class IamService:
             )
 
         role_id = (await IamService.get_role_id_by_role_name(role_name, session)).id
-        permission_id = (await IamService.get_permission_id_by_permission_name(permission_name, session)).id
+        permission_id = (
+            await IamService.get_permission_id_by_permission_name(permission_name, session)
+        ).id
 
-        exists = (await session.exec(IAMRolePermissionsMap.select_by_role_and_permission(role_id, permission_id))).first()
+        exists = (
+            await session.exec(
+                IAMRolePermissionsMap.select_by_role_and_permission(role_id, permission_id)
+            )
+        ).first()
         if exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Role: {role_name} already has permission: {permission_name}.",
             )
-        try:
-            role_permission_map = IAMRolePermissionsMap(role_id=role.id, permission_id=permission.id)
-            session.add(role_permission_map)
-            return {"detail": f"Permission: {permission_name} added to role: {role_name} successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error: {e}"
-            ) from e
+        role_permission_map = IAMRolePermissionsMap(role_id=role.id, permission_id=permission.id)
+        session.add(role_permission_map)
+        return {"detail": f"Permission: {permission_name} added to role: {role_name} successfully."}
 
     @staticmethod
     async def add_permission_to_group(group_name: str, permission_name: str, session: AsyncSession):
@@ -369,22 +374,26 @@ class IamService:
             )
 
         group_id = (await IamService.get_group_id_by_group_name(group_name, session)).id
-        permission_id = (await IamService.get_permission_id_by_permission_name(permission_name, session)).id
-        exists = (await session.exec(IAMGroupPermissionsMap.select_by_group_and_permission(group_id, permission_id))).first()
+        permission_id = (
+            await IamService.get_permission_id_by_permission_name(permission_name, session)
+        ).id
+        exists = (
+            await session.exec(
+                IAMGroupPermissionsMap.select_by_group_and_permission(group_id, permission_id)
+            )
+        ).first()
         if exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Group: {group_name} already has permission: {permission_name}.",
             )
-        try:
-            group_permission_map = IAMGroupPermissionsMap(group_id=group.id, permission_id=permission.id)
-            session.add(group_permission_map)
-            return {"detail": f"Permission: {permission_name} added to group: {group_name} successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error: {e}"
-            ) from e
+        group_permission_map = IAMGroupPermissionsMap(
+            group_id=group.id, permission_id=permission.id
+        )
+        session.add(group_permission_map)
+        return {
+            "detail": f"Permission: {permission_name} added to group: {group_name} successfully."
+        }
 
     @staticmethod
     async def add_role_to_member(role_name: str, member_id: int, session: AsyncSession):
@@ -398,21 +407,17 @@ class IamService:
             )
         role_id = (await IamService.get_role_id_by_role_name(role_name, session)).id
 
-        exists = (await session.exec(IAMUserRolesMap.select_by_role_and_member(role_id, member_id))).first()
+        exists = (
+            await session.exec(IAMUserRolesMap.select_by_role_and_member(role_id, member_id))
+        ).first()
         if exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Role: {role_name} already assigned to member with id: {member_id}.",
             )
-        try:
-            role_map = IAMUserRolesMap(role_id=role.id, registration_id=member_id)
-            session.add(role_map)
-            return {"detail": f"Role: {role_name} added to member with id: {member_id} successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error: {e}"
-            ) from e
+        role_map = IAMUserRolesMap(role_id=role.id, registration_id=member_id)
+        session.add(role_map)
+        return {"detail": f"Role: {role_name} added to member with id: {member_id} successfully."}
 
     @staticmethod
     async def add_group_to_member(group_name: str, member_id: int, session: AsyncSession):
@@ -425,24 +430,22 @@ class IamService:
                 detail=f"Group: {group_name} does not exist.",
             )
         group_id = (await IamService.get_group_id_by_group_name(group_name, session)).id
-        exists = (await session.exec(IAMUserGroupsMap.select_by_group_and_member(group_id, member_id))).first()
+        exists = (
+            await session.exec(IAMUserGroupsMap.select_by_group_and_member(group_id, member_id))
+        ).first()
         if exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Group: {group_name} already assigned to member with id: {member_id}.",
             )
-        try:
-            group_map = IAMUserGroupsMap(group_id=group.id, registration_id=member_id)
-            session.add(group_map)
-            return {"detail": f"Group: {group_name} added to member with id: {member_id} successfully."}
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error: {e}"
-            ) from e
+        group_map = IAMUserGroupsMap(group_id=group.id, registration_id=member_id)
+        session.add(group_map)
+        return {"detail": f"Group: {group_name} added to member with id: {member_id} successfully."}
 
     @staticmethod
-    async def remove_permission_from_role(role_name: str, permission_name: str, session: AsyncSession):
+    async def remove_permission_from_role(
+        role_name: str, permission_name: str, session: AsyncSession
+    ):
         """Remove a permission from a role."""
         role = await IamService.get_role_by_role_name(role_name, session)
         if not role:
@@ -456,18 +459,25 @@ class IamService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Permission: {permission_name} does not exist.",
             )
-        role_permission_map = (await session.exec(IAMRolePermissionsMap.select_by_role_and_permission(role.id, permission.id)
-        )).first()
+        role_permission_map = (
+            await session.exec(
+                IAMRolePermissionsMap.select_by_role_and_permission(role.id, permission.id)
+            )
+        ).first()
         if not role_permission_map:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} does not have permission: {permission_name}.",
             )
         await session.delete(role_permission_map)
-        return {"detail": f"Permission: {permission_name} removed from role: {role_name} successfully."}
+        return {
+            "detail": f"Permission: {permission_name} removed from role: {role_name} successfully."
+        }
 
     @staticmethod
-    async def remove_permission_from_group(group_name: str, permission_name: str, session: AsyncSession):
+    async def remove_permission_from_group(
+        group_name: str, permission_name: str, session: AsyncSession
+    ):
         """Remove a permission from a group."""
         group = await IamService.get_group_by_group_name(group_name, session)
         if not group:
@@ -482,14 +492,20 @@ class IamService:
                 detail=f"Permission: {permission_name} does not exist.",
             )
 
-        group_permission_map = (await session.exec(IAMGroupPermissionsMap.select_by_group_and_permission(group.id, permission.id))).first()
+        group_permission_map = (
+            await session.exec(
+                IAMGroupPermissionsMap.select_by_group_and_permission(group.id, permission.id)
+            )
+        ).first()
         if not group_permission_map:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} does not have permission: {permission_name}.",
             )
         await session.delete(group_permission_map)
-        return {"detail": f"Permission: {permission_name} removed from group: {group_name} successfully."}
+        return {
+            "detail": f"Permission: {permission_name} removed from group: {group_name} successfully."
+        }
 
     @staticmethod
     async def remove_role_from_member(role_name: str, member_id: int, session: AsyncSession):
@@ -508,14 +524,18 @@ class IamService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Member with id: {member_id} does not exist.",
             )
-        role_member_map = (await session.exec(IAMUserRolesMap.select_by_role_and_member(role.id, member_id))).first()
+        role_member_map = (
+            await session.exec(IAMUserRolesMap.select_by_role_and_member(role.id, member_id))
+        ).first()
         if not role_member_map:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Role: {role_name} not assigned to member with id: {member_id}.",
             )
         await session.delete(role_member_map)
-        return {"detail": f"Role: {role_name} removed from member with id: {member_id} successfully."}
+        return {
+            "detail": f"Role: {role_name} removed from member with id: {member_id} successfully."
+        }
 
     @staticmethod
     async def remove_group_from_member(group_name: str, member_id: int, session: AsyncSession):
@@ -536,14 +556,18 @@ class IamService:
                 detail=f"Member with id: {member_id} does not exist.",
             )
 
-        group_member_map = (await session.exec(IAMUserGroupsMap.select_by_group_and_member(group.id, member_id))).first()
+        group_member_map = (
+            await session.exec(IAMUserGroupsMap.select_by_group_and_member(group.id, member_id))
+        ).first()
         if not group_member_map:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Group: {group_name} not assigned to member with id: {member_id}.",
             )
         await session.delete(group_member_map)
-        return {"detail": f"Group: {group_name} removed from member with id: {member_id} successfully."}
+        return {
+            "detail": f"Group: {group_name} removed from member with id: {member_id} successfully."
+        }
 
     @staticmethod
     async def delete_role(role_name: str, session: AsyncSession):

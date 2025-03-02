@@ -5,10 +5,10 @@
 import json
 
 from fastapi import HTTPException
-from pydantic import ValidationError
 from sqlmodel import Session
 
 from people_api.schemas import FirebaseToken
+
 from ..models.member import PostgresMemberRead, PronounsCreate
 from ..models.member_data import MemberProfessionFacebookUpdate
 from ..repositories import MemberRepository
@@ -16,21 +16,14 @@ from ..repositories import MemberRepository
 
 class MiscService:
     """Service for miscellaneous member operations."""
+
     @staticmethod
     def get_member(mb: int, token_data: FirebaseToken, session: Session) -> PostgresMemberRead:
         MB = MemberRepository.getMBByEmail(token_data.email, session)
         member_data = MemberRepository.getAllMemberDataFromPostgres(MB, session)
 
-        try:
-            member_data_dict = json.loads(member_data)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON format")
-
-        try:
-            validated_data = PostgresMemberRead(**member_data_dict)
-        except ValidationError as e:
-            print(e.json())
-            raise HTTPException(status_code=400, detail="Data validation failed")
+        member_data_dict = json.loads(member_data)
+        validated_data = PostgresMemberRead(**member_data_dict)
 
         return validated_data
 
