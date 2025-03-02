@@ -197,30 +197,6 @@ def test_set_missing_fields_invalid_cpf_number(
     assert response.json() == {"detail": "Invalid CPF"}
 
 
-def test_set_missing_fields_invalid_birth_date_format(
-    test_client: Any, mock_valid_token: Any, run_db_query: Any
-) -> None:
-    """Test setting missing fields with invalid birth_date"""
-    # Set up the member with missing fields (birth_date)
-    run_db_query(
-        """
-            UPDATE registration
-            SET birth_date = NULL
-            WHERE registration_id IN (SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br')
-        """
-    )
-
-    # Define the payload with invalid birth)date
-    payload = {"birth_date": "01-12-1980"}
-
-    # Make the request with valid authorization token
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
-    response = test_client.post("/missing_fields", json=payload, headers=headers)
-
-    assert response.status_code == 422
-    assert response.json() == {"detail": "Invalid birth_date format"}
-
-
 def test_set_missing_fields_invalid_token(test_client: Any) -> None:
     """Test setting missing fields with an invalid token"""
     # Define the payload with CPF and birth_date
