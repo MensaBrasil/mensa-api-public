@@ -7,7 +7,6 @@ from ..database.models.whatsapp import ReceivedWhatsappMessage
 from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..services import WhatsappChatBot, WhatsAppService
 
-
 whatsapp_router = APIRouter(tags=["Whatsapp"], prefix="/whatsapp")
 
 

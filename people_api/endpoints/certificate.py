@@ -1,5 +1,6 @@
 """Endpoints for generating and downloading certificates."""
 
+import asyncio
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +13,7 @@ certificate_router = APIRouter()
     "/download_certificate.png", description="Gerar certificado", tags=["certificado"]
 )
 async def _get_certificado(MB: int, key: str):
-    return CertificateService.generate_certificate(MB, key)
+    return await CertificateService.generate_certificate(MB, key)
 
 
 @certificate_router.get(

@@ -2,6 +2,7 @@
 
 """Service for generating certificates."""
 
+import asyncio
 from fastapi.responses import StreamingResponse
 
 from ..repositories import MemberRepository
@@ -11,11 +12,11 @@ from ..utils import create_certificate
 
 class CertificateService:
     @staticmethod
-    def generate_certificate(MB: int, key: str):
+    async def generate_certificate(MB: int, key: str):
         member = MemberRepository.getFromFirebase(MB)
         if member.CertificateToken != key:
             return {"error": "Chave inválida"}
-        cert = create_certificate(member.display_name, MB, member.expiration_date)
+        cert = await asyncio.to_thread(create_certificate, member.display_name, MB, member.expiration_date)
         return StreamingResponse(
             cert,
             media_type="application/octet-stream",
