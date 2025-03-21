@@ -1,5 +1,7 @@
 """This module contains functions to get emails from the database."""
 
+import logging
+
 from sqlmodel import and_, col, func, select, text
 
 from people_api.database.models import (
@@ -11,8 +13,10 @@ from people_api.database.models import (
 from people_api.dbs import get_async_sessions
 
 
-async def get_active_adult_emails():
+async def get_active_adult_emails() -> list[tuple[str, str]]:
     """Get emails of active adult members"""
+    logging.log(logging.INFO, "Getting active adult emails from database")
+    all_results: list[tuple[str, str]] = []
     async for sessions in get_async_sessions():
         # Build subquery for active adults based on payments and age
         active_adults = (
@@ -20,8 +24,7 @@ async def get_active_adult_emails():
             .distinct()
             .join(
                 MembershipPayments,
-                col(Registration.registration_id)
-                == col(MembershipPayments.registration_id),
+                col(Registration.registration_id) == col(MembershipPayments.registration_id),
             )
             .where(
                 and_(
@@ -53,11 +56,15 @@ async def get_active_adult_emails():
             )
         ).all()
 
-        return result
+        all_results.extend(result)
+
+    return all_results
 
 
-async def get_inactive_adult_emails():
+async def get_inactive_adult_emails() -> list[tuple[str, str]]:
     """Get emails of inactive adult members"""
+    logging.log(logging.INFO, "Getting inactive adult emails from database")
+    all_results: list[tuple[str, str]] = []
     async for sessions in get_async_sessions():
         # Build subquery for getting max expiration date per registration
         max_expiration = (
@@ -75,8 +82,7 @@ async def get_inactive_adult_emails():
             .distinct()
             .outerjoin(
                 max_expiration,
-                col(Registration.registration_id)
-                == col(max_expiration.c.registration_id),
+                col(Registration.registration_id) == col(max_expiration.c.registration_id),
             )
             .where(
                 and_(
@@ -109,11 +115,15 @@ async def get_inactive_adult_emails():
             )
         ).all()
 
-        return result
+        all_results.extend(result)
+
+    return all_results
 
 
-async def get_active_jb_emails():
+async def get_active_jb_emails() -> list[tuple[str, str]]:
     """Get emails of active junior branch members"""
+    logging.log(logging.INFO, "Getting active JB emails from database")
+    all_results: list[tuple[str, str]] = []
     async for sessions in get_async_sessions():
         # Build subquery for active JBs based on payments and age
         active_jbs = (
@@ -134,9 +144,7 @@ async def get_active_jb_emails():
 
         # Combine emails from both registration emails and legal representatives
         emails_union = (
-            select(
-                col(Emails.registration_id), col(Emails.email_address).label("email")
-            )
+            select(col(Emails.registration_id), col(Emails.email_address).label("email"))
             .union(
                 select(
                     col(LegalRepresentatives.registration_id),
@@ -159,11 +167,15 @@ async def get_active_jb_emails():
             )
         ).all()
 
-        return result
+        all_results.extend(result)
+
+    return all_results
 
 
-async def get_inactive_jb_emails():
+async def get_inactive_jb_emails() -> list[tuple[str, str]]:
     """Get emails of inactive junior branch members"""
+    logging.log(logging.INFO, "Getting inactive JB emails from database")
+    all_results: list[tuple[str, str]] = []
     async for sessions in get_async_sessions():
         # Build subquery for getting max expiration date per registration
         max_expiration = (
@@ -181,8 +193,7 @@ async def get_inactive_jb_emails():
             .distinct()
             .outerjoin(
                 max_expiration,
-                col(Registration.registration_id)
-                == col(max_expiration.c.registration_id),
+                col(Registration.registration_id) == col(max_expiration.c.registration_id),
             )
             .where(
                 and_(
@@ -199,9 +210,7 @@ async def get_inactive_jb_emails():
 
         # Combine emails from both registration emails and legal representatives
         emails_union = (
-            select(
-                col(Emails.registration_id), col(Emails.email_address).label("email")
-            )
+            select(col(Emails.registration_id), col(Emails.email_address).label("email"))
             .union(
                 select(
                     col(LegalRepresentatives.registration_id),
@@ -224,4 +233,6 @@ async def get_inactive_jb_emails():
             )
         ).all()
 
-        return result
+        all_results.extend(result)
+
+    return all_results

@@ -11,4 +11,4 @@ FROM base AS runtime
 COPY --from=deps /app/.venv .venv
 COPY . /app
 ENV PATH="/app/.venv/bin:$PATH"
-CMD ["uv", "run", "uvicorn", "people_api:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uv", "run", "-m", "people_api", "api"]

@@ -2,6 +2,7 @@
 FastAPI app definition, initialization and definition of routes
 """
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,3 +34,12 @@ app.add_middleware(
 )
 
 app.include_router(all_routers)
+
+
+def start_api():
+    """Start the FastAPI app."""
+    uvicorn.run(app, host="0.0.0.0", port=5000)
+
+
+if __name__ == "__main__":
+    start_api()

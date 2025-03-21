@@ -40,4 +40,4 @@ jobs:
           ssh -f -o ExitOnForwardFailure=yes -N -L 5432:localhost:5432 ${{ secrets.SSH_USERNAME }}@${{ secrets.EC2_DATABASE_ADDRESS }}
 
       - name: Run update workspace groups
-        run: uv run people_api/cronjobs/workspace_groups/update_workspace_groups.py
+        run: uv run -m people_api update_workspace_groups
