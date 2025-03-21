@@ -1,22 +1,46 @@
 -- Registration table
 INSERT INTO registration (registration_id, name, expelled, deceased, transferred, cpf, birth_date, profession, gender, join_date, facebook, created_at, updated_at)
 VALUES
-    (5, 'Fernando Diniz Souza Filho', false, false, false, '12345678901', '2000-01-01', 'Engineer', 'Homem', '2010-01-01', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+    (5, 'Fernando Diniz Souza Filho', false, false, false, '12345678901', '2000-01-01', 'Engineer', 'Homem', '2010-01-01', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (6, 'Inimigos da HP', false, false, false, '12345678901', '1985-07-15', 'Musician', 'Homem', '2005-09-12', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (7, 'Ana Silva Junior', false, false, false, '23456789012', '2012-03-10', 'Student', 'Mulher', '2023-01-15', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (8, 'Pedro Santos', false, false, false, '34567890123', '2008-06-20', 'Student', 'Homem', '2022-11-30', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (9, 'Maria Oliveira', false, false, false, '45678901234', '1995-09-25', 'Teacher', 'Mulher', '2021-08-05', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (10, 'Lucas Costa', false, false, false, '56789012345', '2015-12-05', 'Student', 'Homem', '2023-03-20', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (11, 'Carla Ferreira', false, false, false, '67890123456', '1990-04-15', 'Lawyer', 'Mulher', '2020-10-10', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
 
 -- Emails table
 INSERT INTO emails (registration_id, email_address, created_at, updated_at)
 VALUES
-    (5, 'fernando.filho@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
+    (5, 'fernando.filho@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (6, 'calvin@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (7, 'ana.junior@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (8, 'pedro.santos@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (9, 'maria.oliveira@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (10, 'lucas.costa@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (11, 'carla.ferreira@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
 
 -- Phones table
 INSERT INTO phones (registration_id, phone_number, created_at, updated_at)
 VALUES
-    (5, '+552197654322', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
+    (5, '+552197654322', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (6, '+552198765432', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (7, '+552199876543', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (8, '+552191234567', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (9, '+552192345678', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (10, '+552193456789', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (11, '+552194567890', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
 
 -- Member groups table
 INSERT INTO member_groups (registration_id, phone_number, group_id, entry_date, status)
 VALUES
-    (5, '+552197654322', '120363045725875023@g.us', '2023-10-19', 'Active');
+    (5, '+552197654322', '120363045725875023@g.us', '2023-10-19', 'Active'),
+    (6, '+552198765432', '120363025301625133@g.us', '2023-10-19', 'Active'),
+    (7, '+552199876543', '120363115167512889@g.us', '2023-10-19', 'Active'),
+    (8, '+552191234567', '556184020538-1393452040@g.us', '2023-10-19', 'Active'),
+    (9, '+552192345678', '120363044979103954@g.us', '2023-10-19', 'Active'),
+    (10, '+552193456789', '120363045725875023@g.us', '2023-10-19', 'Active'),
+    (11, '+552194567890', '120363025301625133@g.us', '2023-10-19', 'Active');
 
 -- Group requests table
 INSERT INTO group_requests (registration_id, group_id, no_of_attempts, last_attempt, fulfilled)
@@ -26,7 +50,18 @@ VALUES
     (5, '556184020538-1393452040@g.us', '1', '2023-09-20', false),
     (5, '120363044979103954@g.us', '0', NULL, false),
     (5, '120363045725875023@g.us', '1', '2023-09-10', true),
-    (5, '120363025301625133@g.us', '3', '2023-09-05', false);
+    (5, '120363025301625133@g.us', '3', '2023-09-05', false),
+    (6, '120363150360123420@g.us', '2', '2023-10-01', false),
+    (6, '120363115167512889@g.us', '1', '2023-09-25', false),
+    (6, '556184020538-1393452040@g.us', '1', '2023-09-20', false),
+    (6, '120363044979103954@g.us', '0', NULL, false),
+    (6, '120363025301625133@g.us', '1', '2023-09-10', true),
+    (7, '120363150360123420@g.us', '1', '2023-10-02', false),
+    (7, '120363115167512889@g.us', '1', '2023-09-28', true),
+    (8, '556184020538-1393452040@g.us', '2', '2023-09-15', true),
+    (9, '120363044979103954@g.us', '1', '2023-09-30', true),
+    (10, '120363045725875023@g.us', '3', '2023-10-05', true),
+    (11, '120363025301625133@g.us', '2', '2023-09-20', true);
 
 -- Group list table
 INSERT INTO group_list (group_name, group_id)
@@ -38,38 +73,18 @@ VALUES
     ('Mensa Rio de Janeiro Regional', '120363045725875023@g.us'),
     ('Mensampa Regional', '120363025301625133@g.us');
 
-
--- Registration table
-INSERT INTO registration (registration_id, name, expelled, deceased, transferred, cpf, birth_date, profession, gender, join_date, facebook, created_at, updated_at)
+-- Membership payments table
+INSERT INTO membership_payments (created_at, updated_at, payment_id, registration_id, payment_date, expiration_date, amount_paid, observation, payment_method, transaction_id, payment_status)
 VALUES
-    (6, 'Inimigos da HP', false, false, false, '12345678901', '1985-07-15', 'Musician', 'Homem', '2005-09-12', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 1, 5, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS123456', 'CONFIRMED'),
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 2, 6, '2023-01-12', '2023-07-12', 100.00, 'Semi-annual membership', 'PIX', 'PIX567890', 'CONFIRMED'),
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 3, 7, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS345678', 'CONFIRMED'),
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 4, 8, '2023-03-05', '2023-09-05', 100.00, 'Semi-annual membership', 'PIX', 'PIX901234', 'CONFIRMED'),
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 5, 9, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 180.00, 'Annual membership fee', 'CREDIT_CARD', 'CARD567890', 'CONFIRMED'),
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 6, 10, '2023-04-15', '2023-10-15', 100.00, 'Semi-annual membership', 'PIX', 'PIX234567', 'CONFIRMED'),
+    ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 7, 11, '2023-08-01', '2024-08-01', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS678901', 'CONFIRMED');
 
--- Emails table
-INSERT INTO emails (registration_id, email_address, created_at, updated_at)
-VALUES
-    (6, 'calvin@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
-
--- Phones table
-INSERT INTO phones (registration_id, phone_number, created_at, updated_at)
-VALUES
-    (6, '+552198765432', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
-
--- Member groups table
-INSERT INTO member_groups (registration_id, phone_number, group_id, entry_date, status)
-VALUES
-    (6, '+552198765432', '120363025301625133@g.us', '2023-10-19', 'Active');
-
--- Group requests table
-INSERT INTO group_requests (registration_id, group_id, no_of_attempts, last_attempt, fulfilled)
-VALUES
-    (6, '120363150360123420@g.us', '2', '2023-10-01', false),
-    (6, '120363115167512889@g.us', '1', '2023-09-25', false),
-    (6, '556184020538-1393452040@g.us', '1', '2023-09-20', false),
-    (6, '120363044979103954@g.us', '0', NULL, false),
-    (6, '120363025301625133@g.us', '1', '2023-09-10', true);
-
--- Additional data for IAM tests
-
+-- Additional data for IAM tests, 
 -- Roles table
 INSERT INTO iam_roles (role_name, role_description)
 VALUES

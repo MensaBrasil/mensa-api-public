@@ -13,7 +13,7 @@ down:
 	docker compose down
 
 demo:
-	docker compose build; docker compose up -d; make migrate-upgrade;
+	docker compose down; docker compose build; docker compose up -d; make migrate-upgrade;
 
 restart: ## restart app
 	docker compose restart people_api
@@ -38,6 +38,9 @@ migrate-autogenerate: ## generate migration using alembic autogenerate
 
 migrate-upgrade: ## upgrade database using alembic (apply last generated migration)
 	uv run alembic -c people_api/database/alembic.ini upgrade head
+
+mypy: ## run mypy
+	uv run mypy .
 
 help: ## show this help
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'

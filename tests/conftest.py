@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from people_api.app import app  # type: ignore
 from people_api.auth import verify_firebase_token
 from people_api.schemas import FirebaseToken
-from tests.test_router import test_router
+from tests.router_config import test_router
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/stats"
 TEST_DB_DUMP_PATH = Path(__file__).parent / "test_db_dump.sql"

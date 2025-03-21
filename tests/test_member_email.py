@@ -24,6 +24,7 @@ def test_add_email_success(test_client, mock_valid_token, run_db_query):
     Test successfully adding an email for a member.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -60,6 +61,7 @@ def test_update_email_invalid_token(test_client, mock_valid_token, run_db_query)
     (Using member ID 2623 in the URL to trigger unauthorized access.)
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -95,6 +97,7 @@ def test_update_email_success(test_client, mock_valid_token, run_db_query):
     Test successfully updating an email for a member.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -137,6 +140,7 @@ def test_delete_email_invalid_token(test_client, mock_valid_token, run_db_query)
     (Using member ID 2623 in the URL to trigger unauthorized access.)
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -165,6 +169,7 @@ def test_delete_email_success(test_client, mock_valid_token, run_db_query):
     Test successfully deleting an email for a member.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -194,6 +199,7 @@ def test_add_email_invalid_format(test_client, mock_valid_token, run_db_query):
     Expect a 422 validation error.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -227,6 +233,7 @@ def test_update_email_invalid_format(test_client, mock_valid_token, run_db_query
     Expect a 422 validation error.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")

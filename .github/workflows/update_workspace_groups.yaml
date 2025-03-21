@@ -1,0 +1,43 @@
+name: Run Update Workspace Groups
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  run-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          version: 'latest'
+
+      - name: Install dependencies
+        run: uv sync -p 3.12
+
+      - name: Create .env file from secrets
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Decode and save JSON secret
+        run: echo "${{ secrets.CLIENT_SECRET_JSON }}" | base64 --decode > client_secret.json
+
+      - name: Setup SSH Tunnel
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          # Forward local port 5432 to remote localhost:5432
+          ssh -f -o ExitOnForwardFailure=yes -N -L 5432:localhost:5432 ${{ secrets.SSH_USERNAME }}@${{ secrets.EC2_DATABASE_ADDRESS }}
+
+      - name: Run update workspace groups
+        run: uv run people_api/cronjobs/workspace_groups/update_workspace_groups.py

@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     discord_client_secret: str
     discord_redirect_uri: str
 
+    service_account_file: str
+    google_api_scopes: str
+    google_service_account: str
+    google_workspace_cronjob_uptime_url: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 

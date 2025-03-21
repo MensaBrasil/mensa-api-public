@@ -70,6 +70,10 @@ jobs:
           discord_redirect_uri: state
           POSTGRES_RO_USER: mensa_ro
           POSTGRES_RO_PASSWORD: postgres
+          SERVICE_ACCOUNT_FILE: credential_file.json
+          GOOGLE_API_SCOPES: https://www.googleapis.com/auth/admin.directory.group
+          GOOGLE_SERVICE_ACCOUNT: example@example.iam.gserviceaccount.com
+          GOOGLE_WORKSPACE_CRONJOB_UPTIME_URL: testurl
         run: |
           uv run coverage run -m pytest -sv .
           uv run coverage report

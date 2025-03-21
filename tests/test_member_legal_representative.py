@@ -32,6 +32,7 @@ def test_add_legal_representative_api_key_success(test_client, run_db_query):
     """
 
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -96,6 +97,7 @@ def test_add_legal_representative_should_return_success(
     test_client, mock_valid_token, run_db_query
 ):
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -156,6 +158,7 @@ def test_update_legal_representative_should_return_success(
     Test successfully updating a legal representative.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
@@ -209,6 +212,7 @@ def test_delete_legal_representative_should_return_success(
     Test successfully deleting a legal representative.
     """
     run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
     run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
     run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")

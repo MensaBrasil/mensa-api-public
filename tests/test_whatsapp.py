@@ -163,28 +163,26 @@ def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: 
         )
     ),
 )
+
+@patch(
+    "people_api.services.twilio_service.TwilioService.send_whatsapp_message",
+    new_callable=AsyncMock,
+    return_value=None,
+)
+@patch(
+    "people_api.services.whatsapp_service.openai_client",
+    new=MagicMock(
+        beta=MagicMock(
+            threads=AsyncMock(create=AsyncMock(return_value=MagicMock(id="dummy_thread_id")))
+        )
+    ),
+)
 @patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
 def test_chatbot_message_valid(mock_twilio, run_db_query, test_client: TestClient):
     """
     Integration test for /whatsapp/chatbot-message with a valid member (registration id 5).
     Expected: 200 response.
     """
-
-    run_db_query(
-        """
-        INSERT INTO membership_payments (registration_id, payment_date, expiration_date, amount_paid, observation, payment_method, transaction_id, payment_status)
-        VALUES (
-            5,
-            CURRENT_DATE,
-            CURRENT_DATE + INTERVAL '1 year',
-            100.00,
-            'Test Payment for reg ',
-            'Credit Card',
-            'TX456',
-            'active'
-        )
-        """
-    )
 
     payload = {
         "SmsMessageSid": "SM123",
@@ -237,6 +235,9 @@ def test_chatbot_message_missing_phone(test_client: TestClient):
     response = test_client.post("/whatsapp/chatbot-message", data=payload)
     assert response.status_code == 404, f"Expected 404, got {response.status_code}"
     error_detail = response.json().get("detail", "")
-    assert "Member not found" in error_detail, f"Unexpected error detail: {error_detail}"
+    assert (
+        "Member not found" in error_detail
+    ), f"Unexpected error detail: {error_detail}"
+
 
 
