@@ -5,12 +5,9 @@ from googleapiclient.discovery import build
 
 from people_api.settings import get_settings
 
-settings = get_settings()
-
-
-SCOPES = settings.google_api_scopes.split(",")
-SERVICE_ACCOUNT_FILE = settings.service_account_file
-GOOGLE_SERVICE_ACCOUNT = settings.google_service_account
+SCOPES = get_settings().google_api_scopes.split(",")
+SERVICE_ACCOUNT_FILE = get_settings().service_account_file
+GOOGLE_SERVICE_ACCOUNT = get_settings().google_service_account
 
 
 def get_service():

@@ -4,12 +4,7 @@
 
 import asyncio
 import logging
-import os
 import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
 
 import requests
 
@@ -26,9 +21,7 @@ from people_api.cronjobs.workspace_groups.helpers.orm_queries import (
 )
 from people_api.settings import get_settings
 
-settings = get_settings()
-
-UPTIME_URL = settings.google_workspace_cronjob_uptime_url
+UPTIME_URL = get_settings().google_workspace_cronjob_uptime_url
 
 
 async def run_update() -> None:

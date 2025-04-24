@@ -2,42 +2,89 @@ name: Run Update Workspace Groups
 
 on:
   schedule:
-    - cron: '0 * * * *'
+  - cron: '0 * * * *'
 
 jobs:
   run-update:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v1
-        with:
-          version: 'latest'
+    - name: Install uv
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: 'latest'
 
-      - name: Install dependencies
-        run: uv sync -p 3.12
+    - name: Install dependencies
+      run: uv sync -p 3.12
 
-      - name: Create .env file from secrets
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+    - name: Decode and save JSON secret
+      run: echo "${{ secrets.CLIENT_SECRET_JSON }}" | base64 --decode > client_secret.json
 
-      - name: Decode and save JSON secret
-        run: echo "${{ secrets.CLIENT_SECRET_JSON }}" | base64 --decode > client_secret.json
+    - name: Setup SSH Tunnel
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "StrictHostKeyChecking no" >> ~/.ssh/config
+        # Forward local port 5432 to remote localhost:5432
+        ssh -f -o ExitOnForwardFailure=yes -N -L 5432:localhost:5432 ${{ secrets.SSH_USERNAME }}@${{ secrets.EC2_DATABASE_ADDRESS }}
 
-      - name: Setup SSH Tunnel
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
-          # Forward local port 5432 to remote localhost:5432
-          ssh -f -o ExitOnForwardFailure=yes -N -L 5432:localhost:5432 ${{ secrets.SSH_USERNAME }}@${{ secrets.EC2_DATABASE_ADDRESS }}
+    - name: Run update workspace groups
+      env:
+        api_title: Mensa API
+        api_port: 5000
+        api_host: 0.0.0.0
+        api_log_level: INFO
 
-      - name: Run update workspace groups
-        run: uv run -m people_api update_workspace_groups
+        postgres_host: 127.0.0.1
+        postgres_user: postgres
+        postgres_password: postgres
+        postgres_database: ${{ secrets.EC2_POSTGRES_DATABASE_NAME }}
+
+        postgres_ro_user: ${{ secrets.EC2_POSTGRES_RO_USER }}
+        postgres_ro_password: ${{ secrets.EC2_POSTGRES_RO_PASSWORD }}
+
+        site_ro_user: mensa_ro
+        site_ro_password: postgres
+        site_database: mensa_site
+
+        data_route_api_key: data_route_api_key
+        whatsapp_route_api_key: whatsapp_route_api_key
+
+        google_api_key: google_api_key
+
+        openai_api_key: openai_api_key
+        chatgpt_assistant_id: chatgpt_assistant_id
+
+        twilio_account_sid: twilio_account_sid
+        twilio_auth_token: twilio_auth_token
+        twilio_from_whatsapp_number: twilio_from_whatsapp_number
+
+        redis_host: localhost
+        redis_port: 6379
+
+        discord_client_id: discord_client_id
+        discord_client_secret: discord_client_secret
+        discord_redirect_uri: discord_redirect_uri
+
+        region_name: us-east-1
+        aws_access_key_id: testing
+        aws_secret_access_key: testing
+
+        private_jwt_key_file_name: ecdsa_private_key
+        private_jwt_key_file_password: testpw
+        public_jwt_key_file_name: ecdsa_public_key
+
+        service_account_file: client_secret.json
+        google_api_scopes: https://www.googleapis.com/auth/admin.directory.group
+        google_service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+        google_workspace_cronjob_uptime_url: ${{ secrets.GOOGLE_WORKSPACE_CRONJOB_UPTIME_URL }}
+
+      run: uv run -m people_api update_workspace_groups

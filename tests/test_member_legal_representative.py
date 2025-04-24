@@ -52,7 +52,7 @@ def test_add_legal_representative_api_key_success(test_client, run_db_query):
     )
 
     payload = {
-        "token": "WHATSAPP_ROUTE_API_KEY",
+        "token": "whatsapp_route_api_key",
         "mb": "5",
         "birth_date": "10/12/2025",
         "cpf": "11111111111",

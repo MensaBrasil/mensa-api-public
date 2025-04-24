@@ -8,6 +8,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Settings for the API"""
 
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
     api_title: str
     api_port: str
     api_host: str
@@ -47,8 +49,6 @@ class Settings(BaseSettings):
     google_api_scopes: str
     google_service_account: str
     google_workspace_cronjob_uptime_url: str
-
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     region_name: str
     aws_access_key_id: str
