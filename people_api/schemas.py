@@ -8,7 +8,7 @@ class OAuthStateResponse(BaseModel):
 
     state: str
 
-class FirebaseToken(BaseModel):
+class UserToken(BaseModel):
     """Pydantic model for Firebase token data."""
     email: EmailStr
     permissions: list[str] = []
@@ -17,6 +17,7 @@ class FirebaseToken(BaseModel):
     aud: str | None = None
     iss: str | None = None
     sub: str | None = None
+    registration_id: int
     auth_time: int | None = None
 
     class Config:

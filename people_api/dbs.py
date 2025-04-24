@@ -27,6 +27,8 @@ DATABASE_URL = f"postgresql://{settings.postgres_user}:{settings.postgres_passwo
 
 RO_DATABASE_URL = f"postgresql://{settings.postgres_ro_user}:{settings.postgres_ro_password}@{settings.postgres_host}/{settings.postgres_database}"
 
+SITE_RO_DATABASE_URL = f"postgresql://{settings.site_ro_user}:{settings.site_ro_password}@{settings.postgres_host}/{settings.site_database}"
+
 async_engine_rw = create_async_engine(
     url=ASYNC_DATABASE_URL,
     poolclass=AsyncAdaptedQueuePool,
@@ -53,6 +55,8 @@ ro_sessionmaker = async_sessionmaker(
 engine = create_engine(url=DATABASE_URL)
 ro_engine = create_engine(url=RO_DATABASE_URL)
 
+ro_site_engine = create_engine(url=SITE_RO_DATABASE_URL)
+
 
 def get_session() -> Generator[Session]:
     """Provide an sync sqlmodel session to the database."""
@@ -64,6 +68,13 @@ def get_session() -> Generator[Session]:
 def get_read_only_session() -> Generator[Session]:
     """Provide an sync sqlmodel read-only session to the database."""
     with Session(ro_engine) as session:
+        yield session
+
+
+def get_site_read_only_session() -> Generator[Session]:
+    """Provide a sync sqlmodel read-only session to the site-specific database."""
+    # Use the site read-only engine to target the separate site database
+    with Session(ro_site_engine) as session:
         yield session
 
 

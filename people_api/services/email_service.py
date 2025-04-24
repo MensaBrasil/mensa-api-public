@@ -5,7 +5,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from people_api.schemas import FirebaseToken
+from people_api.schemas import UserToken
 from people_api.database.models.models import EmailInput, Emails, Registration
 
 
@@ -13,7 +13,7 @@ from people_api.database.models.models import EmailInput, Emails, Registration
 class EmailService:
     """Service for managing members email addresses."""
     @staticmethod
-    def add_email(mb: int, email: EmailInput, token_data: FirebaseToken, session: Session):
+    def add_email(mb: int, email: EmailInput, token_data: UserToken, session: Session):
         """Add email to member."""
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()
@@ -37,7 +37,7 @@ class EmailService:
         mb: int,
         email_id: int,
         updated_email: EmailInput,
-        token_data: FirebaseToken,
+        token_data: UserToken,
         session: Session,
     ):
         """Update email for member."""
@@ -56,7 +56,7 @@ class EmailService:
         return {"message": "Email updated successfully"}
 
     @staticmethod
-    def delete_email(mb: int, email_id: int, token_data: FirebaseToken, session: Session):
+    def delete_email(mb: int, email_id: int, token_data: UserToken, session: Session):
         """Delete email from member."""
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
         member_data = session.exec(reg_stmt).first()

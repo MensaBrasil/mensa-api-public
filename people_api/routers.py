@@ -14,6 +14,7 @@ from .endpoints import (
     missing_fields_router,
     oauth_router,
     whatsapp_router,
+    volunteer_router,
 )
 
 APP_ROUTERS = [
@@ -30,6 +31,7 @@ APP_ROUTERS = [
     missing_fields_router,
     oauth_router,
     iam_router,
+    volunteer_router,
 ]
 
 all_routers = APIRouter()

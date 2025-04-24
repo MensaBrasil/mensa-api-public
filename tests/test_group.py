@@ -2,6 +2,10 @@
 
 from typing import Any
 
+from people_api.app import app
+from people_api.auth import verify_firebase_token
+from people_api.schemas import UserToken
+
 
 def test_get_can_participate_valid_token(test_client: Any, mock_valid_token: Any) -> None:
     """Test retrieving groups that the member can participate in with a valid token"""
@@ -9,6 +13,8 @@ def test_get_can_participate_valid_token(test_client: Any, mock_valid_token: Any
     response = test_client.get("/get_can_participate", headers=headers)
     assert response.status_code == 200
     response_data = response.json()
+    assert len(response_data) > 2
+    assert "MB | Mulheres" not in response_data
     assert isinstance(response_data, list)
 
 
@@ -236,3 +242,30 @@ def test_request_join_group_new_request(test_client: Any, mock_valid_token: Any)
     response = test_client.post("/request_join_group", json={"group_id": "abc"}, headers=headers)
     assert response.status_code == 200
     assert response.json() == {"message": "Request to join group sent successfully"}
+
+
+def test_get_can_participate_include_mulheres_for_female(test_client: Any) -> None:
+    """Test that the 'MB | Mulheres' group is included for female members."""
+
+    def mock_verify_firebase_token_female():
+        return UserToken(
+            iss="https://securetoken.google.com/carteirinhasmensa",
+            aud="carteirinhasmensa",
+            auth_time=1709996057,
+            sub="female-sub",
+            iat=1722977514,
+            exp=1722981114,
+            email="carla.ferreira@mensa.org.br",
+            registration_id=10,
+        )
+
+    app.dependency_overrides[verify_firebase_token] = mock_verify_firebase_token_female
+    try:
+        headers = {"Authorization": "Bearer female-token"}
+        response = test_client.get("/get_can_participate", headers=headers)
+        assert response.status_code == 200
+        response_data = response.json()
+        print(response_data)
+        assert any(item.get("group_name") == "MB | Mulheres" for item in response_data)
+    finally:
+        app.dependency_overrides.pop(verify_firebase_token, None)

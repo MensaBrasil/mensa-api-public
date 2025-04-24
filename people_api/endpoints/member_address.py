@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
-from people_api.schemas import FirebaseToken
+from people_api.schemas import UserToken
 from people_api.database.models.models import Addresses
 
 from ..auth import verify_firebase_token
@@ -17,7 +17,7 @@ member_address_router = APIRouter()
 async def _add_address(
     mb: int,
     address: Addresses,
-    token_data: FirebaseToken = Depends(verify_firebase_token),
+    token_data: UserToken = Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
     """Add address to member."""
@@ -29,7 +29,7 @@ async def update_address(
     mb: int,
     address_id: int,
     updated_address: Addresses,
-    token_data: FirebaseToken = Depends(verify_firebase_token),
+    token_data: UserToken = Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
     """Update address for member."""
@@ -44,7 +44,7 @@ async def update_address(
 async def delete_address(
     mb: int,
     address_id: int,
-    token_data: FirebaseToken = Depends(verify_firebase_token),
+    token_data: UserToken = Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
     """Delete address from member."""

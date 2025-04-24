@@ -71,7 +71,8 @@ VALUES
     ('Mensa DF Regional', '556184020538-1393452040@g.us'),
     ('Mensa Rio Grande do Sul Regional', '120363044979103954@g.us'),
     ('Mensa Rio de Janeiro Regional', '120363045725875023@g.us'),
-    ('Mensampa Regional', '120363025301625133@g.us');
+    ('Mensampa Regional', '120363025301625133@g.us'),
+    ('MB | Mulheres', '120363025301625134@g.us');
 
 -- Membership payments table
 INSERT INTO membership_payments (created_at, updated_at, payment_id, registration_id, payment_date, expiration_date, amount_paid, observation, payment_method, transaction_id, payment_status)
@@ -84,7 +85,7 @@ VALUES
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 6, 10, '2023-04-15', '2023-10-15', 100.00, 'Semi-annual membership', 'PIX', 'PIX234567', 'CONFIRMED'),
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 7, 11, '2023-08-01', '2024-08-01', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS678901', 'CONFIRMED');
 
--- Additional data for IAM tests, 
+-- Additional data for IAM tests,
 -- Roles table
 INSERT INTO iam_roles (role_name, role_description)
 VALUES
@@ -134,3 +135,72 @@ VALUES
 INSERT INTO iam_group_permissions_map (group_id, permission_id)
 VALUES
     ((SELECT id FROM iam_groups WHERE group_name = 'BETA.TESTER'), (SELECT id FROM iam_permissions WHERE permission_name = 'WHATSAPP.BOT'));
+
+----- Volunteer activity data
+INSERT INTO volunteer_activity_category (name, description, points, id)
+VALUES
+  ('TEST.CATEGORY', 'A test category for volunteer activities', 1, 10);
+
+INSERT INTO volunteer_activity_log
+    (id, registration_id, category_id, title, description, activity_date)
+VALUES
+    (10, 6, 10, 'Pre-Populated Test Activity', 'This activity log is used for evaluation tests', '2024-10-10'),
+    (11, 6, 10, 'Activity 1' , 'This activity log is used for evaluation tests', '2024-10-10');
+
+INSERT INTO iam_permissions (permission_name, permission_description)
+VALUES
+  ('VOLUNTEER.CATEGORY.CREATE', 'Permission to create volunteer categories'),
+  ('VOLUNTEER.CATEGORY.UPDATE', 'Permission to update volunteer categories'),
+  ('VOLUNTEER.CATEGORY.DELETE', 'Permission to delete volunteer categories'),
+  ('VOLUNTEER.EVALUATION.CREATE', 'Permission to create volunteer evaluations'),
+  ('VOLUNTEER.EVALUATION.UPDATE', 'Permission to update volunteer evaluations');
+
+INSERT INTO iam_roles (role_name, role_description)
+VALUES ('VOLUNTEER.ADMIN', 'Volunteer administrator with category and evaluation management permissions');
+
+INSERT INTO iam_role_permissions_map (role_id, permission_id)
+VALUES
+  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
+   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.CATEGORY.CREATE'));
+
+INSERT INTO iam_role_permissions_map (role_id, permission_id)
+VALUES
+  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
+   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.CATEGORY.UPDATE'));
+
+INSERT INTO iam_role_permissions_map (role_id, permission_id)
+VALUES
+  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
+   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.CATEGORY.DELETE'));
+
+INSERT INTO iam_role_permissions_map (role_id, permission_id)
+VALUES
+  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
+   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.EVALUATION.CREATE'));
+
+INSERT INTO iam_role_permissions_map (role_id, permission_id)
+VALUES
+  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
+   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.EVALUATION.UPDATE'));
+
+INSERT INTO registration
+  (registration_id, name, expelled, deceased, transferred, cpf, birth_date, profession, gender, join_date, facebook, created_at, updated_at)
+
+VALUES 
+  (1805, 'Jessica Diniz Sousa de Santanna', false, false, false, NULL, NULL, NULL, NULL, CURRENT_DATE, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO emails (registration_id, email_address, created_at, updated_at)
+VALUES (1805, 'jessica.santanna@mensa.org.br', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO iam_user_roles_map (role_id, registration_id)
+VALUES ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'), 1805);
+
+INSERT INTO iam_groups (group_name, group_description)
+VALUES ('VOLUNTEER.MEMBER', 'Group for volunteer members');
+
+INSERT INTO iam_user_groups_map (registration_id, group_id)
+SELECT 1805, id
+FROM iam_groups
+WHERE group_name = 'VOLUNTEER.MEMBER';
+        
+

@@ -26,15 +26,36 @@ from sqlmodel import (
     text,
     update,
 )
-
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
 
 
 class BaseSQLModel(SQLModel):
     """Base class for SQLModel classes, providing common fields and methods."""
+    created_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()})  # type: ignore
+    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()})  # type: ignore
 
-    created_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
+    @classmethod
+    def select_all(cls, **filters):
+        """Select all instances of the model that match the provided filters."""
+        query = select(cls)
+        for field_name, value in filters.items():
+            query = query.where(getattr(cls, field_name) == value)
+        return query
+
+    @classmethod
+    def select_one(cls, **filters):
+        """Select a single instance of the model that matches the provided filters."""
+        query = select(cls)
+        for field_name, value in filters.items():
+            query = query.where(getattr(cls, field_name) == value)
+        return query
+
+    @classmethod
+    def update_instance(cls, instance: "BaseSQLModel", update_data: dict) -> "BaseSQLModel":
+        """Update the provided instance with the provided data."""  
+        for key, value in update_data.items():
+            setattr(instance, key, value)
+        return instance
 
 
 class BaseAuditModel(BaseSQLModel):
@@ -718,7 +739,7 @@ class IAMUserRolesMap(SQLModel, table=True):
         return (
             select(IAMRoles.role_name)
             .select_from(cls)
-            .join(IAMRoles, cls.role_id == IAMRoles.id) # type: ignore[arg-type]
+            .join(IAMRoles, col(cls.role_id) == col(IAMRoles.id))
             .where(cls.registration_id == registration_id)
         )
 
@@ -729,8 +750,8 @@ class IAMUserRolesMap(SQLModel, table=True):
         """
         return (
             select(Registration.name, cls.registration_id)
-            .join(IAMRoles, cls.role_id == IAMRoles.id) # type: ignore[arg-type]
-            .join(Registration, cls.registration_id == Registration.registration_id) # type: ignore[arg-type]
+            .join(IAMRoles, col(cls.role_id) == col(IAMRoles.id))
+            .join(Registration, col(cls.registration_id) == col(Registration.registration_id))
             .where(IAMRoles.role_name == role_name)
         )
 
@@ -763,7 +784,7 @@ class IAMUserGroupsMap(SQLModel, table=True):
         return (
             select(IAMGroups.group_name)
             .select_from(cls)
-            .join(IAMGroups, cls.group_id == IAMGroups.id)  # type: ignore[arg-type]
+            .join(IAMGroups, col(cls.group_id) == col(IAMGroups.id))
             .where(cls.registration_id == registration_id)
         )
 
@@ -774,8 +795,8 @@ class IAMUserGroupsMap(SQLModel, table=True):
         """
         return (
             select(Registration.name, cls.registration_id)
-            .join(IAMGroups, cls.group_id == IAMGroups.id) # type: ignore[arg-type]
-            .join(Registration, cls.registration_id == Registration.registration_id) # type: ignore[arg-type]
+            .join(IAMGroups, col(cls.group_id) == col(IAMGroups.id))
+            .join(Registration, col(cls.registration_id) == col(Registration.registration_id))
             .where(IAMGroups.group_name == group_name)
         )
 

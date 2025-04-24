@@ -2631,8 +2631,8 @@ def test_get_roles_no_roles_found(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/iam/roles/", headers=headers)
-    assert response.status_code == 404
-    assert response.json() == {"detail": "No roles found for member with id 5."}
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 # 09/24 /iam/groups/
@@ -2690,8 +2690,8 @@ def test_get_groups_no_groups_found(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.get("/iam/groups/", headers=headers)
-    assert response.status_code == 404
-    assert response.json() == {"detail": "No groups found for member with id 5."}
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 # 10/24 /iam/permissions/
@@ -2818,8 +2818,8 @@ def test_get_members_by_role_name_should_return_no_members_found(
     response = test_client.get(
         "/iam/members/role/", params={"role_name": "TESOUREIRO"}, headers=headers
     )
-    assert response.status_code == 404
-    assert response.json() == {"detail": "No members found with role TESOUREIRO."}
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_get_members_by_role_name_role_dont_exist(
@@ -2888,8 +2888,8 @@ def test_get_members_by_group_name_should_return_no_members_found(
     response = test_client.get(
         "/iam/members/group/", params={"group_name": "SIG.MATEMATICA"}, headers=headers
     )
-    assert response.status_code == 404
-    assert response.json() == {"detail": "No members found in group SIG.MATEMATICA."}
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_get_members_by_group_name_group_dont_exist(
@@ -2975,8 +2975,8 @@ def test_get_role_permissions_by_role_name_no_permissions_found(
     response = test_client.get(
         "/iam/role_permissions/", params={"role_name": "SECRETARIO"}, headers=headers
     )
-    assert response.status_code == 404
-    assert response.json() == {"detail": "No permissions found for role: SECRETARIO."}
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_get_role_permissions_by_role_name_role_does_not_exist(
@@ -3062,10 +3062,8 @@ def test_get_group_permissions_by_group_name_no_permissions_found(
         params={"group_name": "SIG.MATEMATICA"},
         headers=headers,
     )
-    assert response.status_code == 404
-    assert response.json() == {
-        "detail": "No permissions found for group SIG.MATEMATICA."
-    }
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_get_group_permissions_by_group_name_group_does_not_exist(

@@ -5,7 +5,7 @@ import secrets
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import HTMLResponse
 
-from people_api.schemas import FirebaseToken
+from people_api.schemas import UserToken
 from ..auth import verify_firebase_token
 from ..dbs import AsyncSessionsTuple, get_async_sessions, get_redis_client
 from ..schemas import OAuthStateResponse
@@ -22,7 +22,7 @@ oauth_router = APIRouter(prefix="/oauth", tags=["oauth"])
     response_model=OAuthStateResponse,
 )
 async def get_state(
-    token_data: FirebaseToken = Depends(verify_firebase_token),
+    token_data: UserToken = Depends(verify_firebase_token),
     redis_client=Depends(get_redis_client),
 ) -> OAuthStateResponse:
     """Get state for OAuth"""

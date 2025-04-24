@@ -70,10 +70,16 @@ jobs:
           discord_redirect_uri: state
           POSTGRES_RO_USER: mensa_ro
           POSTGRES_RO_PASSWORD: postgres
+          region_name: ${{ secrets.region_name }}
+          aws_access_key_id: ${{ secrets.aws_access_key_id }}
+          aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
           SERVICE_ACCOUNT_FILE: credential_file.json
           GOOGLE_API_SCOPES: https://www.googleapis.com/auth/admin.directory.group
           GOOGLE_SERVICE_ACCOUNT: example@example.iam.gserviceaccount.com
           GOOGLE_WORKSPACE_CRONJOB_UPTIME_URL: testurl
+          SITE_RO_USER: mensa_ro
+          SITE_RO_PASSWORD: postgres
+          SITE_DATABASE: mensa_site
         run: |
           uv run coverage run -m pytest -sv .
           uv run coverage report

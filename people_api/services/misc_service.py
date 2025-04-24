@@ -7,8 +7,7 @@ import json
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from people_api.schemas import FirebaseToken
-
+from people_api.schemas import UserToken
 from ..models.member import PostgresMemberRead, PronounsCreate
 from ..models.member_data import MemberProfessionFacebookUpdate
 from ..repositories import MemberRepository
@@ -18,7 +17,7 @@ class MiscService:
     """Service for miscellaneous member operations."""
 
     @staticmethod
-    def get_member(mb: int, token_data: FirebaseToken, session: Session) -> PostgresMemberRead:
+    def get_member(mb: int, token_data: UserToken, session: Session) -> PostgresMemberRead:
         MB = MemberRepository.getMBByEmail(token_data.email, session)
         member_data = MemberRepository.getAllMemberDataFromPostgres(MB, session)
 
@@ -28,7 +27,7 @@ class MiscService:
         return validated_data
 
     @staticmethod
-    def set_pronouns(pronouns: PronounsCreate, token_data: FirebaseToken, session: Session):
+    def set_pronouns(pronouns: PronounsCreate, token_data: UserToken, session: Session):
         """Set pronouns for a member."""
         MB = MemberRepository.getMBByEmail(token_data.email, session)
         if pronouns.pronouns not in [
@@ -48,7 +47,7 @@ class MiscService:
     def update_fb_profession(
         mb: int,
         updated_member: MemberProfessionFacebookUpdate,
-        token_data: FirebaseToken,
+        token_data: UserToken,
         session: Session,
     ):
         """Update profession and facebook for a member."""

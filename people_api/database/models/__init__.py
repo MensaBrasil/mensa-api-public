@@ -1,3 +1,6 @@
+"""
+This module is used to import all the models from the database package."""
+
 from .data import QueryRequest, QueryResponse
 from .models import (
     Addresses,
@@ -25,7 +28,13 @@ from .models import (
     RegistrationAudit,
     WhatsappComms,
     WhatsappMessages,
+)
 
+from .volunteer import (   
+    VolunteerActivityCategory,
+    VolunteerActivityLog,
+    VolunteerActivityEvaluation,
+    VolunteerPointTransaction,
 )
 from .whatsapp import UpdateInput
 
@@ -59,4 +68,8 @@ __all__ = [
     "IAMGroupPermissionsMap",
     "IAMUserRolesMap",
     "IAMUserGroupsMap",
+    "VolunteerActivityCategory",
+    "VolunteerActivityLog",
+    "VolunteerActivityEvaluation",
+    "VolunteerPointTransaction",
 ]

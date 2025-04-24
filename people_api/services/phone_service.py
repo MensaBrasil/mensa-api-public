@@ -3,13 +3,13 @@
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from people_api.schemas import FirebaseToken
+from people_api.schemas import UserToken
 from people_api.database.models.models import PhoneInput, Phones, Registration
 
 
 class PhoneService:
     @staticmethod
-    def add_phone(mb: int, phone_input: PhoneInput, token_data: FirebaseToken, session: Session):
+    def add_phone(mb: int, phone_input: PhoneInput, token_data: UserToken, session: Session):
         """Add phone to member."""
         phone = phone_input.phone
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
@@ -26,7 +26,7 @@ class PhoneService:
 
     @staticmethod
     def update_phone(
-        mb: int, phone_id: int, phone_input: PhoneInput, token_data: FirebaseToken, session: Session
+        mb: int, phone_id: int, phone_input: PhoneInput, token_data: UserToken, session: Session
     ):
         """Update phone for member."""
         phone = phone_input.phone
@@ -41,7 +41,7 @@ class PhoneService:
         return {"message": "Phone updated successfully"}
 
     @staticmethod
-    def delete_phone(mb: int, phone_id: int, token_data: FirebaseToken, session: Session):
+    def delete_phone(mb: int, phone_id: int, token_data: UserToken, session: Session):
         """Delete phone from member."""
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()

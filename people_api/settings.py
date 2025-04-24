@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     postgres_password: str
     postgres_database: str
 
+    site_ro_user: str
+    site_ro_password: str
+    site_database: str
+
     postgres_ro_user: str
     postgres_ro_password: str
 
@@ -45,6 +49,10 @@ class Settings(BaseSettings):
     google_workspace_cronjob_uptime_url: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    region_name: str
+    aws_access_key_id: str
+    aws_secret_access_key: str
 
 
 @lru_cache

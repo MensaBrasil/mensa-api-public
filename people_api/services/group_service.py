@@ -6,7 +6,11 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from sqlmodel import Session
-from people_api.schemas import FirebaseToken
+
+from people_api.schemas import UserToken
+
+from ..database.models import Registration
+from ..enums import Gender
 from ..models.member import GroupJoinRequest
 from ..repositories import MemberRepository
 
@@ -15,15 +19,20 @@ class GroupService:
     """Service for handling requests from group endpoints."""
 
     @staticmethod
-    def get_can_participate(token_data: FirebaseToken, session: Session):
+    def get_can_participate(token_data: UserToken, session: Session) -> list:
         """Determines if a member can participate based on their email."""
-
         MB = MemberRepository.getMBByEmail(token_data.email, session)
         can_participate = MemberRepository.getCanParticipate(MB, session)
+        stmt = Registration.select_stmt_by_id(registration_id=MB)
+        member_reg = session.execute(stmt).scalar_one_or_none()
+        if member_reg and member_reg.gender == Gender.MALE:
+            can_participate = [
+                g for g in can_participate if g.get("group_name") != "MB | Mulheres"
+            ]
         return can_participate
 
     @staticmethod
-    def get_participate_in(token_data: FirebaseToken, session: Session):
+    def get_participate_in(token_data: UserToken, session: Session):
         """Retrieves the groups that a member is participating in."""
 
         MB = MemberRepository.getMBByEmail(token_data.email, session)
@@ -31,7 +40,7 @@ class GroupService:
         return participate_in
 
     @staticmethod
-    def get_pending_requests(token_data: FirebaseToken, session: Session):
+    def get_pending_requests(token_data: UserToken, session: Session):
         """Retrieves the pending group join requests for a member."""
 
         MB = MemberRepository.getMBByEmail(token_data.email, session)
@@ -39,7 +48,7 @@ class GroupService:
         return pending_requests
 
     @staticmethod
-    def get_failed_requests(token_data: FirebaseToken, session: Session):
+    def get_failed_requests(token_data: UserToken, session: Session):
         """Retrieves the failed group join requests for a member."""
 
         MB = MemberRepository.getMBByEmail(token_data.email, session)

@@ -11,6 +11,7 @@ from .member_phone import member_phone_router
 from .missing_fields import missing_fields_router
 from .oauth import oauth_router
 from .whatsapp import whatsapp_router
+from .volunteer import volunteer_router
 
 __all__ = [
     "certificate_router",
@@ -26,4 +27,5 @@ __all__ = [
     "whatsapp_router",
     "oauth_router",
     "iam_router",
+    "volunteer_router",
 ]

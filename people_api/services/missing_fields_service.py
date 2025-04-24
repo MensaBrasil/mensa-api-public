@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from pycpfcnpj.cpf import validate as validate_cpf
 from sqlmodel import Session
 
-from people_api.schemas import FirebaseToken
 
+from people_api.schemas import UserToken
 from ..models.member_data import MissingFieldsCreate
 from ..repositories import MemberRepository
 
@@ -16,7 +16,7 @@ class MissingFieldsService:
     """Service for managing missing fields of members."""
 
     @staticmethod
-    def get_missing_fields(token_data: FirebaseToken, session: Session):
+    def get_missing_fields(token_data: UserToken, session: Session):
         """Get missing fields for a member."""
         MB = MemberRepository.getMBByEmail(token_data.email, session)
         missing_fields = MemberRepository.getMissingFieldsFromPostgres(MB, session)
@@ -24,7 +24,7 @@ class MissingFieldsService:
 
     @staticmethod
     def set_missing_fields(
-        token_data: FirebaseToken, missing_fields: MissingFieldsCreate, session: Session
+        token_data: UserToken, missing_fields: MissingFieldsCreate, session: Session
     ):
         """Set missing fields for a member."""
         MB = MemberRepository.getMBByEmail(token_data.email, session)

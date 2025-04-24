@@ -23,6 +23,9 @@ API_KEY = SETTINGS.data_route_api_key
 
 
 def get_api_key(api_key: str = Security(api_key_header)):
+    """
+    Get the API key from the request header and validate it.
+    """
     if API_KEY is None:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="API Key is not set")
 

@@ -7,7 +7,10 @@ test: ## run tests
 	uv run pytest -sv .
 
 run: ## python run app
-	uv run main.py
+	docker compose up test-db -d
+	make migrate-upgrade
+	python utils/reset_db.py 
+	uvicorn main:app --reload
 
 down:
 	docker compose down

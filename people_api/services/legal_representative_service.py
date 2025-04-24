@@ -8,8 +8,9 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session
 
+from people_api.schemas import UserToken
 from people_api.database.models.models import LegalRepresentatives, Registration
-from people_api.schemas import FirebaseToken
+
 
 from ..settings import Settings
 
@@ -49,7 +50,7 @@ class LegalRepresentativeService:
         if member_data.birth_date is None:
             raise HTTPException(
                 status_code=400,
-                detail="User must have birth date to add legal representative",
+                detail="must have birth date to add legal representative",
             )
 
         stmt = LegalRepresentatives.insert_stmt_for_legal_representative(
@@ -62,7 +63,7 @@ class LegalRepresentativeService:
     def add_legal_representative(
         mb: int,
         legal_representative: LegalRepresentatives,
-        token_data: FirebaseToken,
+        token_data: UserToken,
         session: Session,
     ):
         """Add legal representative to member."""
@@ -106,7 +107,7 @@ class LegalRepresentativeService:
         mb: int,
         legal_rep_id: int,
         updated_legal_rep: LegalRepresentatives,
-        token_data: FirebaseToken,
+        token_data: UserToken,
         session: Session,
     ):
         """Update legal representative for member."""
@@ -125,7 +126,7 @@ class LegalRepresentativeService:
 
     @staticmethod
     def delete_legal_representative(
-        mb: int, legal_rep_id: int, token_data: FirebaseToken, session: Session
+        mb: int, legal_rep_id: int, token_data: UserToken, session: Session
     ):
         """Delete legal representative from member."""
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
