@@ -3,8 +3,8 @@
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from people_api.schemas import UserToken
 from people_api.database.models.models import PhoneInput, Phones, Registration
+from people_api.schemas import UserToken
 
 
 class PhoneService:
@@ -12,6 +12,8 @@ class PhoneService:
     def add_phone(mb: int, phone_input: PhoneInput, token_data: UserToken, session: Session):
         """Add phone to member."""
         phone = phone_input.phone
+        if not token_data.email:
+            raise HTTPException(status_code=401, detail="Unauthorized")
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()
         if not reg or reg.registration_id != mb:
@@ -26,10 +28,16 @@ class PhoneService:
 
     @staticmethod
     def update_phone(
-        mb: int, phone_id: int, phone_input: PhoneInput, token_data: UserToken, session: Session
+        mb: int,
+        phone_id: int,
+        phone_input: PhoneInput,
+        token_data: UserToken,
+        session: Session,
     ):
         """Update phone for member."""
         phone = phone_input.phone
+        if not token_data.email:
+            raise HTTPException(status_code=401, detail="Unauthorized")
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()
         if not reg or reg.registration_id != mb:
@@ -43,6 +51,8 @@ class PhoneService:
     @staticmethod
     def delete_phone(mb: int, phone_id: int, token_data: UserToken, session: Session):
         """Delete phone from member."""
+        if not token_data.email:
+            raise HTTPException(status_code=401, detail="Unauthorized")
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
         reg = session.exec(reg_stmt).first()
         if not reg or reg.registration_id != mb:

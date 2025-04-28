@@ -19,7 +19,12 @@ from .member_data import (
     PostgresMemberRegistration,
 )
 
-__all__ = ("FirebaseMemberRead", "PostgresMemberRead", "GroupJoinRequest", "PronounsCreate")
+__all__ = (
+    "FirebaseMemberRead",
+    "PostgresMemberRead",
+    "GroupJoinRequest",
+    "PronounsCreate",
+)
 
 
 class FirebaseMemberRead(BaseModel):

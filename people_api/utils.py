@@ -6,18 +6,19 @@ Misc helpers/utils functions
 
 # # Native # #
 import io
+import json
 import logging
 import os
-import json
-import boto3
-from botocore.exceptions import ClientError
 from datetime import date, datetime
 from time import time
 from uuid import uuid4
-from .settings import get_settings
 
+import boto3
 from babel.dates import Locale, format_date
+from botocore.exceptions import ClientError
 from PIL import Image, ImageDraw, ImageFont
+
+from .settings import get_settings
 
 __all__ = ("get_time", "get_uuid")
 
@@ -67,14 +68,16 @@ class CustomJSONEncoder(json.JSONEncoder):
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
         return super().default(obj)
-        
+
+
 def get_s3_client():
     return boto3.client(
         "s3",
         region_name=get_settings().region_name,
         aws_access_key_id=get_settings().aws_access_key_id,
-        aws_secret_access_key= get_settings().aws_secret_access_key,
+        aws_secret_access_key=get_settings().aws_secret_access_key,
     )
+
 
 def upload_media_to_s3(bucket: str, key: str, content: bytes, content_type: str) -> str:
     """
@@ -90,23 +93,23 @@ def generate_presigned_media_url(media_path: str | None) -> str | None:
     """Generate a presigned URL for a media path stored in S3."""
     if not media_path:
         return None
-    
+
     bucket_name = os.environ.get("MY_BUCKET_NAME", "volunteer-platform-staging")
     s3_client = get_s3_client()
-    
+
     try:
         if media_path.startswith("s3://"):
             prefix = f"s3://{bucket_name}/"
             if media_path.startswith(prefix):
-                key = media_path[len(prefix):]
+                key = media_path[len(prefix) :]
             else:
                 key = media_path.split("s3://")[-1].split("/", 1)[-1]
         else:
             key = media_path
-        
+
         return s3_client.generate_presigned_url(
-            ClientMethod='get_object',
-            Params={'Bucket': bucket_name, 'Key': key},
+            ClientMethod="get_object",
+            Params={"Bucket": bucket_name, "Key": key},
             ExpiresIn=3600,
         )
     except ClientError as e:

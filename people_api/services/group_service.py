@@ -26,9 +26,7 @@ class GroupService:
         stmt = Registration.select_stmt_by_id(registration_id=MB)
         member_reg = session.execute(stmt).scalar_one_or_none()
         if member_reg and member_reg.gender == Gender.MALE:
-            can_participate = [
-                g for g in can_participate if g.get("group_name") != "MB | Mulheres"
-            ]
+            can_participate = [g for g in can_participate if g.get("group_name") != "MB | Mulheres"]
         return can_participate
 
     @staticmethod
@@ -76,7 +74,8 @@ class GroupService:
 
         if join_request.group_id in pending_group_requests:
             raise HTTPException(
-                status_code=409, detail="Já existe uma solicitação pendente para este grupo."
+                status_code=409,
+                detail="Já existe uma solicitação pendente para este grupo.",
             )
 
         if join_request.group_id in failed_group_requests:

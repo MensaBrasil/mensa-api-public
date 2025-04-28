@@ -32,7 +32,12 @@ async def run_update() -> None:
         service = get_service()
         logging.log(logging.INFO, "Google service returned successfully")
 
-        groups_ids = ["02et92p040v7t2i", "03znysh72dw4xp8", "0279ka653mesfkc", "00pkwqa10wow8wq"]
+        groups_ids = [
+            "02et92p040v7t2i",
+            "03znysh72dw4xp8",
+            "0279ka653mesfkc",
+            "00pkwqa10wow8wq",
+        ]
         functions = [
             get_active_adult_emails,
             get_inactive_adult_emails,

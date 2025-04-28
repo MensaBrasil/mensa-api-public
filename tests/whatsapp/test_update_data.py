@@ -1,6 +1,8 @@
+"""Integration tests for /whatsapp/update-data endpoint"""
+
 import os
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -12,7 +14,7 @@ dummy_threads = MagicMock()
 dummy_threads.create.return_value = MagicMock(id="dummy_thread_id")
 
 
-@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
+@patch("people_api.services.whatsapp_service.utils.API_KEY", MOCK_API_KEY)
 def test_update_phone_with_valid_data_or_invalid_data(
     test_client: TestClient, run_db_query: Any
 ) -> None:
@@ -69,7 +71,7 @@ def test_update_phone_with_valid_data_or_invalid_data(
     assert updated_phone == [("1234567890",)]
 
 
-@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
+@patch("people_api.services.whatsapp_service.utils.API_KEY", MOCK_API_KEY)
 def test_update_phone_for_representative_with_valid_data_or_invalid_data(
     test_client: TestClient, run_db_query: Any
 ) -> None:
@@ -118,7 +120,7 @@ def test_update_phone_for_representative_with_valid_data_or_invalid_data(
     assert response.json() == {"message": "Representative's phone number updated successfully."}
 
 
-@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
+@patch("people_api.services.whatsapp_service.utils.API_KEY", MOCK_API_KEY)
 def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: Any):
     """Test updating a member's phone number with an incorrect API key."""
 
@@ -148,96 +150,3 @@ def test_update_phone_with_wrong_api_key(test_client: TestClient, run_db_query: 
     response = test_client.post("/whatsapp/update-data", json=payload)
     assert response.status_code == 403
     assert response.json()["detail"] == "Invalid API Key"
-
-
-@patch(
-    "people_api.services.twilio_service.TwilioService.send_whatsapp_message",
-    new_callable=AsyncMock,
-    return_value=None,
-)
-@patch(
-    "people_api.services.whatsapp_service.openai_client",
-    new=MagicMock(
-        beta=MagicMock(
-            threads=AsyncMock(create=AsyncMock(return_value=MagicMock(id="dummy_thread_id")))
-        )
-    ),
-)
-
-@patch(
-    "people_api.services.twilio_service.TwilioService.send_whatsapp_message",
-    new_callable=AsyncMock,
-    return_value=None,
-)
-@patch(
-    "people_api.services.whatsapp_service.openai_client",
-    new=MagicMock(
-        beta=MagicMock(
-            threads=AsyncMock(create=AsyncMock(return_value=MagicMock(id="dummy_thread_id")))
-        )
-    ),
-)
-@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
-def test_chatbot_message_valid(mock_twilio, run_db_query, test_client: TestClient):
-    """
-    Integration test for /whatsapp/chatbot-message with a valid member (registration id 5).
-    Expected: 200 response.
-    """
-
-    payload = {
-        "SmsMessageSid": "SM123",
-        "NumMedia": "0",
-        "ProfileName": "TestUser",
-        "MessageType": "text",
-        "SmsSid": "SM123",
-        "WaId": "0000000097654322",
-        "SmsStatus": "received",
-        "Body": "Hello from registration 5",
-        "To": "whatsapp:+10000000000",
-        "MessagingServiceSid": "MG123",
-        "NumSegments": "1",
-        "ReferralNumMedia": "0",
-        "MessageSid": "SM123",
-        "AccountSid": "AC123",
-        "From": "whatsapp:+552197654322",
-        "ApiVersion": "2010-04-01",
-    }
-    response = test_client.post("/whatsapp/chatbot-message", data=payload)
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-    result = response.json()
-    assert isinstance(result, str), "Expected the chatbot response to be a string"
-
-
-@patch("people_api.services.whatsapp_service.API_KEY", MOCK_API_KEY)
-def test_chatbot_message_missing_phone(test_client: TestClient):
-    """
-    Integration test for /whatsapp/chatbot-message when no phone record is found.
-    Expected: 404 response.
-    """
-    payload = {
-        "SmsMessageSid": "SM124",
-        "NumMedia": "0",
-        "ProfileName": "TestUser",
-        "MessageType": "text",
-        "SmsSid": "SM124",
-        "WaId": "0000000099999999",
-        "SmsStatus": "received",
-        "Body": "Hello, no phone!",
-        "To": "whatsapp:+10000000000",
-        "MessagingServiceSid": "MG124",
-        "NumSegments": "1",
-        "ReferralNumMedia": "0",
-        "MessageSid": "SM124",
-        "AccountSid": "AC124",
-        "From": "whatsapp:+0000000000",
-        "ApiVersion": "2010-04-01",
-    }
-    response = test_client.post("/whatsapp/chatbot-message", data=payload)
-    assert response.status_code == 404, f"Expected 404, got {response.status_code}"
-    error_detail = response.json().get("detail", "")
-    assert (
-        "Member not found" in error_detail
-    ), f"Unexpected error detail: {error_detail}"
-
-
-

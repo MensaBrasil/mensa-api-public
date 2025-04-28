@@ -16,9 +16,9 @@ def test_add_address_invalid_token(test_client, mock_valid_token):
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post("/address/2623", json=payload, headers=headers)
     assert response.status_code == 401, f"Expected status code 401 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "Unauthorized"
-    }, f"Expected {{'detail': 'Unauthorized'}} but got {response.json()}"
+    assert response.json() == {"detail": "Unauthorized"}, (
+        f"Expected {{'detail': 'Unauthorized'}} but got {response.json()}"
+    )
 
 
 def test_add_address_should_return_already_has_address(test_client, mock_valid_token, run_db_query):
@@ -41,9 +41,9 @@ def test_add_address_should_return_already_has_address(test_client, mock_valid_t
 
     response = test_client.post("/address/5", json=payload, headers=headers)
     assert response.status_code == 400, f"Expected status code 400 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "User already has an address"
-    }, f"Expected {{'detail': 'User already has an address'}} but got {response.json()}"
+    assert response.json() == {"detail": "User already has an address"}, (
+        f"Expected {{'detail': 'User already has an address'}} but got {response.json()}"
+    )
 
 
 def test_add_address_should_return_success(test_client, mock_valid_token, run_db_query):
@@ -62,9 +62,9 @@ def test_add_address_should_return_success(test_client, mock_valid_token, run_db
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post("/address/5", json=payload, headers=headers)
     assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
-    assert response.json() == {
-        "message": "Address added successfully"
-    }, f"Expected success message but got {response.json()}"
+    assert response.json() == {"message": "Address added successfully"}, (
+        f"Expected success message but got {response.json()}"
+    )
 
 
 # Endpoint PUT
@@ -82,9 +82,9 @@ def test_update_address_invalid_token(test_client, mock_valid_token):
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.put("/address/2623/1234567", json=payload, headers=headers)
     assert response.status_code == 401, f"Expected status code 401 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "Unauthorized"
-    }, f"Expected {{'detail': 'Unauthorized'}} but got {response.json()}"
+    assert response.json() == {"detail": "Unauthorized"}, (
+        f"Expected {{'detail': 'Unauthorized'}} but got {response.json()}"
+    )
 
 
 def test_update_address_should_return_success(test_client, mock_valid_token, run_db_query):
@@ -108,9 +108,9 @@ def test_update_address_should_return_success(test_client, mock_valid_token, run
 
     response = test_client.put("/address/5/1234567", json=payload, headers=headers)
     assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
-    assert response.json() == {
-        "message": "Address updated successfully"
-    }, f"Expected success message but got {response.json()}"
+    assert response.json() == {"message": "Address updated successfully"}, (
+        f"Expected success message but got {response.json()}"
+    )
 
 
 # Endpoint DELETE
@@ -119,9 +119,9 @@ def test_delete_address_invalid_token(test_client, mock_valid_token):
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.delete("/address/2623/1234567", headers=headers)
     assert response.status_code == 401, f"Expected status code 401 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "Unauthorized"
-    }, f"Expected {{'detail': 'Unauthorized'}} but got {response.json()}"
+    assert response.json() == {"detail": "Unauthorized"}, (
+        f"Expected {{'detail': 'Unauthorized'}} but got {response.json()}"
+    )
 
 
 def test_delete_address_should_return_success(test_client, mock_valid_token, run_db_query):
@@ -136,6 +136,6 @@ def test_delete_address_should_return_success(test_client, mock_valid_token, run
 
     response = test_client.delete("/address/5/1234567", headers=headers)
     assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
-    assert response.json() == {
-        "message": "Address deleted successfully"
-    }, f"Expected success message but got {response.json()}"
+    assert response.json() == {"message": "Address deleted successfully"}, (
+        f"Expected success message but got {response.json()}"
+    )

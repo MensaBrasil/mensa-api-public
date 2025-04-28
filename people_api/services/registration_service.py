@@ -1,14 +1,14 @@
 """Service for handling Registration database operations."""
 
-from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database.models.models import Registration
-from sqlalchemy import text
 
 
 class RegistrationService:
     """Service for handling Registration database operations."""
+
     @staticmethod
     async def get_registration_by_id(registration_id: int, session: AsyncSession) -> Registration:
         """Return a registration record by ID asynchronously."""
@@ -36,7 +36,7 @@ class RegistrationService:
         raise HTTPException(status_code=404, detail="Registration name not found")
 
     @staticmethod
-    async def get_by_email(email: str, session: AsyncSession) -> Registration | None: 
+    async def get_by_email(email: str, session: AsyncSession) -> Registration | None:
         """
         Return the registration record associated with the given email.
         This uses a join with the Emails table.
@@ -47,11 +47,14 @@ class RegistrationService:
         return row[0] if row else None
 
     @staticmethod
-    async def update_discord_id(registration_id: int, discord_id: str, session: AsyncSession) -> None:
+    async def update_discord_id(
+        registration_id: int, discord_id: str, session: AsyncSession
+    ) -> None:
         """
         Update the discord_id for the given registration asynchronously.
         """
         statement = Registration.update_stmt_discord_id(registration_id, discord_id)
         await session.exec(
-            statement, params={"discord_id": discord_id, "registration_id": registration_id}
+            statement,
+            params={"discord_id": discord_id, "registration_id": registration_id},
         )

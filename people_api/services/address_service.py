@@ -25,7 +25,11 @@ class AddressService:
 
     @staticmethod
     def update_address(
-        mb: int, address_id: int, updated_address: Addresses, token_email: str, session: Session
+        mb: int,
+        address_id: int,
+        updated_address: Addresses,
+        token_email: str,
+        session: Session,
     ):
         reg_stmt = Registration.select_stmt_by_email(token_email)
         reg = session.exec(reg_stmt).first()
@@ -48,7 +52,7 @@ class AddressService:
         delete_stmt = Addresses.delete_stmt_for_address(mb, address_id)
         result = session.exec(delete_stmt)
 
-        if result.rowcount == 0:  
+        if result.rowcount == 0:
             raise HTTPException(status_code=404, detail="Address not found")
 
         return {"message": "Address deleted successfully"}

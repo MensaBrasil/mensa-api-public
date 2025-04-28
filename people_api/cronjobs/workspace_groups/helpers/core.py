@@ -48,9 +48,7 @@ def update_workspace_group(
     for email in db_emails:
         if email not in [member.get("email") for member in workspace_emails]:
             try:
-                service.members().insert(
-                    groupKey=group_key, body={"email": email}
-                ).execute()
+                service.members().insert(groupKey=group_key, body={"email": email}).execute()
             except HttpError as error:
                 print(f"HTTPERROR: Failed to add {email}: {error}")
             except googleapiclient.errors.Error as error:

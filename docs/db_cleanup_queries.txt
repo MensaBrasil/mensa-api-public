@@ -290,14 +290,14 @@ WHERE (phone NOT LIKE '+%'
 
 -- Update Query: Prepend '+55' to phone and alternative_phone if they meet the criteria
 UPDATE legal_representatives
-SET phone = CASE 
+SET phone = CASE
               WHEN phone NOT LIKE '+%'
                    AND LENGTH(phone) BETWEEN 10 AND 11
                    AND phone ~ '^\d{10,11}$'
               THEN CONCAT('+55', phone)
               ELSE phone
             END,
-    alternative_phone = CASE 
+    alternative_phone = CASE
                           WHEN alternative_phone NOT LIKE '+%'
                                AND LENGTH(alternative_phone) BETWEEN 10 AND 11
                                AND alternative_phone ~ '^\d{10,11}$'

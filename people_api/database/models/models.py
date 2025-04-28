@@ -3,6 +3,7 @@ SQLmodels
 """
 
 from datetime import date, datetime, timezone
+
 from pydantic import EmailStr, condecimal
 from sqlmodel import (
     JSON,
@@ -18,21 +19,31 @@ from sqlmodel import (
     Text,
     UniqueConstraint,
     and_,
+    col,
     delete,
     func,
     insert,
     select,
-    col,
     text,
     update,
 )
+
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
 
 
 class BaseSQLModel(SQLModel):
     """Base class for SQLModel classes, providing common fields and methods."""
-    created_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()})  # type: ignore
-    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()})  # type: ignore
+
+    created_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"server_default": func.now()},
+    )  # type: ignore
+    updated_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()},
+    )  # type: ignore
 
     @classmethod
     def select_all(cls, **filters):
@@ -52,7 +63,7 @@ class BaseSQLModel(SQLModel):
 
     @classmethod
     def update_instance(cls, instance: "BaseSQLModel", update_data: dict) -> "BaseSQLModel":
-        """Update the provided instance with the provided data."""  
+        """Update the provided instance with the provided data."""
         for key, value in update_data.items():
             setattr(instance, key, value)
         return instance
@@ -124,7 +135,7 @@ class Registration(BaseSQLModel, table=True):
 
     __tablename__ = "registration"
 
-    registration_id: int | None = Field(default=None, primary_key=True)
+    registration_id: int = Field(default=None, primary_key=True)
     expelled: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
     deceased: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
     transferred: bool = Field(sa_column=Column(Boolean, server_default=text("false")))
@@ -169,7 +180,25 @@ class Registration(BaseSQLModel, table=True):
         Return an update statement for the discord_id for the given registration.
         """
         return (
-            update(cls).where(cls.registration_id == registration_id).values(discord_id=discord_id)  # type: ignore[arg-type]
+            update(cls)
+            .where(cls.registration_id == registration_id)  # type: ignore[arg-type]
+            .values(discord_id=discord_id)
+        )
+
+    @classmethod
+    def get_registration_by_last_8_phone_digits(cls, phone_number: str):
+        """
+        Return a select statement for a registration record by the last 8 digits of the phone number.
+        """
+        phone_pattern = f"%{phone_number[-8:]}"
+        return (
+            select(cls)
+            .join(Phones)
+            .where(
+                func.lower(
+                    func.cast(func.regexp_replace(Phones.phone_number, r"\D", "", "g"), String)
+                ).like(phone_pattern)
+            )
         )
 
 
@@ -245,7 +274,8 @@ class Addresses(BaseSQLModel, table=True):
         and address ID.
         """
         return delete(Addresses).where(
-            and_(Addresses.registration_id == mb, Addresses.address_id == address_id))
+            and_(Addresses.registration_id == mb, Addresses.address_id == address_id)
+        )
 
 
 class CertsAntecCriminais(BaseSQLModel, table=True):
@@ -386,7 +416,10 @@ class LegalRepresentatives(BaseSQLModel, table=True):
         Return a delete statement for a legal representative record based on the given member (mb)
         and legal representative id.
         """
-        return delete(cls).where(and_(cls.registration_id == mb, cls.representative_id == legal_rep_id))
+        return delete(cls).where(
+            and_(cls.registration_id == mb, cls.representative_id == legal_rep_id)
+        )
+
 
 class MemberGroups(BaseSQLModel, table=True):
     """Model representing group memberships for members, including entry and exit data."""
@@ -545,6 +578,7 @@ class WhatsappMessages(SQLModel, table=True):
     message_type: str = Field(max_length=50)
     device_type: str = Field(max_length=50)
     content: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+
 
 class PhoneInput(SQLModel):
     """Model for phone input data."""
@@ -751,7 +785,10 @@ class IAMUserRolesMap(SQLModel, table=True):
         return (
             select(Registration.name, cls.registration_id)
             .join(IAMRoles, col(cls.role_id) == col(IAMRoles.id))
-            .join(Registration, col(cls.registration_id) == col(Registration.registration_id))
+            .join(
+                Registration,
+                col(cls.registration_id) == col(Registration.registration_id),
+            )
             .where(IAMRoles.role_name == role_name)
         )
 
@@ -796,7 +833,10 @@ class IAMUserGroupsMap(SQLModel, table=True):
         return (
             select(Registration.name, cls.registration_id)
             .join(IAMGroups, col(cls.group_id) == col(IAMGroups.id))
-            .join(Registration, col(cls.registration_id) == col(Registration.registration_id))
+            .join(
+                Registration,
+                col(cls.registration_id) == col(Registration.registration_id),
+            )
             .where(IAMGroups.group_name == group_name)
         )
 

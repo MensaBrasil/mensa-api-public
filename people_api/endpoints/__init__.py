@@ -10,8 +10,8 @@ from .member_misc import member_misc_router
 from .member_phone import member_phone_router
 from .missing_fields import missing_fields_router
 from .oauth import oauth_router
-from .whatsapp import whatsapp_router
 from .volunteer import volunteer_router
+from .whatsapp import whatsapp_router
 
 __all__ = [
     "certificate_router",

@@ -13,8 +13,8 @@ from .endpoints import (
     member_phone_router,
     missing_fields_router,
     oauth_router,
-    whatsapp_router,
     volunteer_router,
+    whatsapp_router,
 )
 
 APP_ROUTERS = [

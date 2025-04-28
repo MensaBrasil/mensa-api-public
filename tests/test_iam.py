@@ -81,9 +81,7 @@ def test_create_permission_valid_token(
     }
     response = test_client.post("/iam/create_permission/", json=data, headers=headers)
     assert response.status_code == 201
-    assert response.json() == {
-        "detail": "Permission: SEE.DASHBOARD created successfully."
-    }
+    assert response.json() == {"detail": "Permission: SEE.DASHBOARD created successfully."}
 
     result = run_db_query(
         """
@@ -186,9 +184,7 @@ def test_add_permission_to_role_valid_token(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 201
     assert response.json() == {
         "detail": "Permission: EDIT.EVENT added to role: TESOUREIRO successfully."
@@ -212,9 +208,7 @@ def test_add_permission_to_role_invalid_token(test_client: Any) -> None:
 
     headers = {"Authorization": "Bearer invalid-token"}
     data = {"role_name": "DIRETOR.REGIONAL", "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid Token"}
 
@@ -226,9 +220,7 @@ def test_add_permission_to_group_valid_token(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 201
     assert response.json() == {
         "detail": "Permission: EDIT.EVENT added to group: BETA.TESTER successfully."
@@ -252,9 +244,7 @@ def test_add_permission_to_group_invalid_token(test_client: Any) -> None:
 
     headers = {"Authorization": "Bearer invalid-token"}
     data = {"group_name": "TEST.GROUP", "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid Token"}
 
@@ -293,9 +283,7 @@ def test_get_groups_invalid_token(test_client: Any) -> None:
     assert response.json() == {"detail": "Invalid Token"}
 
 
-def test_get_members_by_role_name_valid_token(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_get_members_by_role_name_valid_token(test_client: Any, mock_valid_token: Any) -> None:
     """Test getting members by"Field: \\ role_name\" with a valid token."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -316,9 +304,7 @@ def test_get_members_by_role_name_invalid_token(test_client: Any) -> None:
     assert response.json() == {"detail": "Invalid Token"}
 
 
-def test_get_members_by_group_name_valid_token(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_get_members_by_group_name_valid_token(test_client: Any, mock_valid_token: Any) -> None:
     """Test getting members by"Field: \\ group_name\" with a valid token."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -339,9 +325,7 @@ def test_get_members_by_group_name_invalid_token(test_client: Any) -> None:
     assert response.json() == {"detail": "Invalid Token"}
 
 
-def test_get_role_permissions_valid_token(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_get_role_permissions_valid_token(test_client: Any, mock_valid_token: Any) -> None:
     """Test getting role permissions with a valid token."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -366,9 +350,7 @@ def test_get_role_permissions_invalid_token(test_client: Any) -> None:
     assert response.json() == {"detail": "Invalid Token"}
 
 
-def test_get_group_permissions_valid_token(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_get_group_permissions_valid_token(test_client: Any, mock_valid_token: Any) -> None:
     """Test getting group permissions with a valid token."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -482,9 +464,7 @@ def test_update_permission_valid_token(
     }
     response = test_client.patch("/iam/update_permission/", json=json, headers=headers)
     assert response.status_code == 200
-    assert response.json() == {
-        "detail": "Permission: WHATSAPP.BOT updated successfully."
-    }
+    assert response.json() == {"detail": "Permission: WHATSAPP.BOT updated successfully."}
 
     result = run_db_query(
         """
@@ -768,9 +748,7 @@ def test_delete_permission_valid_token(
         headers=headers,
     )
     assert response.status_code == 200
-    assert response.json() == {
-        "detail": "Permission: WHATSAPP.BOT deleted successfully."
-    }
+    assert response.json() == {"detail": "Permission: WHATSAPP.BOT deleted successfully."}
 
     result = run_db_query(
         """
@@ -1240,9 +1218,7 @@ def test_create_group_numeric_group_description(
     data = {"group_name": "TEST.GROUP", "group_description": "123"}
     response = test_client.post("/iam/create_group/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "group_description" cannot be numeric.'
-    }
+    assert response.json() == {"detail": 'Field: "group_description" cannot be numeric.'}
 
     result = run_db_query(
         """
@@ -1372,9 +1348,7 @@ def test_create_permission_invalid_permission_description_type(
     data = {"permission_name": "SEE.DASHBOARD", "permission_description": 123}
     response = test_client.post("/iam/create_permission/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "permission_description" must be a string.'
-    }
+    assert response.json() == {"detail": 'Field: "permission_description" must be a string.'}
 
     result = run_db_query(
         """
@@ -1419,9 +1393,7 @@ def create_permission_name_contain_spaces(
     }
     response = test_client.post("/iam/create_permission/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "permission_name" cannot contain spaces.'
-    }
+    assert response.json() == {"detail": 'Field: "permission_name" cannot contain spaces.'}
 
     result = run_db_query(
         """
@@ -1463,9 +1435,7 @@ def test_create_permission_empty_permission_description(
     data = {"permission_name": "SEE.DASHBOARD", "permission_description": ""}
     response = test_client.post("/iam/create_permission/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "permission_description" cannot be empty.'
-    }
+    assert response.json() == {"detail": 'Field: "permission_description" cannot be empty.'}
 
     result = run_db_query(
         """
@@ -1486,9 +1456,7 @@ def test_create_permission_numeric_permission_description(
     data = {"permission_name": "SEE.DASHBOARD", "permission_description": "123"}
     response = test_client.post("/iam/create_permission/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "permission_description" cannot be numeric.'
-    }
+    assert response.json() == {"detail": 'Field: "permission_description" cannot be numeric.'}
 
     result = run_db_query(
         """
@@ -1528,9 +1496,7 @@ def test_create_permission_already_exists(
 # 04/24 /iam/add_role_to_member/
 
 
-def test_add_role_to_member_missing_role_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_missing_role_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with missing role_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1549,9 +1515,7 @@ def test_add_role_to_member_missing_role_name(
     }
 
 
-def test_add_role_to_member_missing_member_id(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_missing_member_id(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with missing member_id."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1570,9 +1534,7 @@ def test_add_role_to_member_missing_member_id(
     }
 
 
-def test_add_role_to_member_invalid_role_name_type(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_invalid_role_name_type(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with invalid role_name type."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1582,9 +1544,7 @@ def test_add_role_to_member_invalid_role_name_type(
     assert response.json() == {"detail": 'Field: "role_name" must be a string.'}
 
 
-def test_add_role_to_member_invalid_member_id_type(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_invalid_member_id_type(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with invalid member_id type."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1594,9 +1554,7 @@ def test_add_role_to_member_invalid_member_id_type(
     assert response.json() == {"detail": 'Field: "member_id" must be an integer.'}
 
 
-def test_add_role_to_member_empty_role_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_empty_role_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with empty role_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1606,9 +1564,7 @@ def test_add_role_to_member_empty_role_name(
     assert response.json() == {"detail": 'Field: "role_name" cannot be empty.'}
 
 
-def test_add_role_to_member_numeric_role_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_numeric_role_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with numeric role_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1618,18 +1574,14 @@ def test_add_role_to_member_numeric_role_name(
     assert response.json() == {"detail": 'Field: "role_name" cannot be numeric.'}
 
 
-def test_add_role_to_member_member_id_zero(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_role_to_member_member_id_zero(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a role to a member with member_id zero."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "DIRETOR.REGIONAL", "member_id": 0}
     response = test_client.post("/iam/add_role_to_member/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "member_id" must be positive. (greater than 0)'
-    }
+    assert response.json() == {"detail": 'Field: "member_id" must be positive. (greater than 0)'}
 
 
 def test_add_role_to_member_role_already_assigned(
@@ -1707,9 +1659,7 @@ def test_add_role_to_member_valid_data(
 # 05/24 /iam/add_group_to_member/
 
 
-def test_add_group_to_member_missing_group_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_group_to_member_missing_group_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a group to a member with missing group_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1728,9 +1678,7 @@ def test_add_group_to_member_missing_group_name(
     }
 
 
-def test_add_group_to_member_missing_member_id(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_group_to_member_missing_member_id(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a group to a member with missing member_id."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1773,9 +1721,7 @@ def test_add_group_to_member_invalid_member_id_type(
     assert response.json() == {"detail": 'Field: "member_id" must be an integer.'}
 
 
-def test_add_group_to_member_empty_group_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_group_to_member_empty_group_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a group to a member with empty group_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1785,9 +1731,7 @@ def test_add_group_to_member_empty_group_name(
     assert response.json() == {"detail": 'Field: "group_name" cannot be empty.'}
 
 
-def test_add_group_to_member_numeric_group_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_group_to_member_numeric_group_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a group to a member with numeric group_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -1797,18 +1741,14 @@ def test_add_group_to_member_numeric_group_name(
     assert response.json() == {"detail": 'Field: "group_name" cannot be numeric.'}
 
 
-def test_add_group_to_member_member_id_zero(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_add_group_to_member_member_id_zero(test_client: Any, mock_valid_token: Any) -> None:
     """Test adding a group to a member with member_id zero."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "member_id": 0}
     response = test_client.post("/iam/add_group_to_member/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "member_id" must be positive. (greater than 0)'
-    }
+    assert response.json() == {"detail": 'Field: "member_id" must be positive. (greater than 0)'}
 
 
 def test_add_group_to_member_group_already_assigned(
@@ -1893,9 +1833,7 @@ def test_add_permission_to_role_missing_role_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 422
     assert response.json() == {
         "detail": [
@@ -1928,9 +1866,7 @@ def test_add_permission_to_role_missing_permission_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 422
     assert response.json() == {
         "detail": [
@@ -1962,9 +1898,7 @@ def test_add_permission_to_role_invalid_role_name_type(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": 123, "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "role_name" must be a string.'}
 
@@ -1987,9 +1921,7 @@ def test_add_permission_to_role_invalid_permission_name_type(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO", "permission_name": 123}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "permission_name" must be a string.'}
 
@@ -2012,9 +1944,7 @@ def test_add_permission_to_role_empty_role_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "role_name" cannot be empty.'}
 
@@ -2037,9 +1967,7 @@ def test_add_permission_to_role_numeric_role_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "123", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "role_name" cannot be numeric.'}
 
@@ -2062,9 +1990,7 @@ def test_add_permission_to_role_empty_permission_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO", "permission_name": ""}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "permission_name" cannot be empty.'}
 
@@ -2087,9 +2013,7 @@ def test_add_permission_to_role_numeric_permission_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO", "permission_name": "123"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "permission_name" cannot be numeric.'}
 
@@ -2124,9 +2048,7 @@ def test_add_permission_to_role_permission_already_assigned(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "DIRETOR.REGIONAL", "permission_name": "CREATE.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {
         "detail": "Role: DIRETOR.REGIONAL already has permission: CREATE.EVENT."
@@ -2152,9 +2074,7 @@ def test_add_permission_to_role_role_does_not_exist(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "NON.EXISTENT.ROLE", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "Role: NON.EXISTENT.ROLE does not exist."}
 
@@ -2177,13 +2097,9 @@ def test_add_permission_to_role_permission_does_not_exist(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO", "permission_name": "NON.EXISTENT.PERMISSION"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Permission: NON.EXISTENT.PERMISSION does not exist."
-    }
+    assert response.json() == {"detail": "Permission: NON.EXISTENT.PERMISSION does not exist."}
 
     result = run_db_query(
         """
@@ -2204,9 +2120,7 @@ def test_add_permission_to_role_valid_data(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"role_name": "TESOUREIRO", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_role/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_role/", json=data, headers=headers)
     assert response.status_code == 201
     assert response.json() == {
         "detail": "Permission: EDIT.EVENT added to role: TESOUREIRO successfully."
@@ -2235,9 +2149,7 @@ def test_add_permission_to_group_missing_group_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 422
     assert response.json() == {
         "detail": [
@@ -2270,9 +2182,7 @@ def test_add_permission_to_group_missing_permission_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 422
     assert response.json() == {
         "detail": [
@@ -2305,9 +2215,7 @@ def test_add_permission_to_group_invalid_group_name_type(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": 123, "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "group_name" must be a string.'}
 
@@ -2331,9 +2239,7 @@ def test_add_permission_to_group_invalid_permission_name_type(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": 123}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "permission_name" must be a string.'}
 
@@ -2357,9 +2263,7 @@ def test_add_permission_to_group_empty_group_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "", "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "group_name" cannot be empty.'}
 
@@ -2383,9 +2287,7 @@ def test_add_permission_to_group_numeric_group_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "123", "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "group_name" cannot be numeric.'}
 
@@ -2409,9 +2311,7 @@ def test_add_permission_to_group_empty_permission_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": ""}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "permission_name" cannot be empty.'}
 
@@ -2435,9 +2335,7 @@ def test_add_permission_to_group_numeric_permission_name(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": "123"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": 'Field: "permission_name" cannot be numeric.'}
 
@@ -2473,13 +2371,9 @@ def test_add_permission_to_group_permission_already_assigned(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": "Group: BETA.TESTER already has permission: WHATSAPP.BOT."
-    }
+    assert response.json() == {"detail": "Group: BETA.TESTER already has permission: WHATSAPP.BOT."}
 
     result = run_db_query(
         """
@@ -2501,9 +2395,7 @@ def test_add_permission_to_group_group_does_not_exist(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "NON.EXISTENT.GROUP", "permission_name": "WHATSAPP.BOT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "Group: NON.EXISTENT.GROUP does not exist."}
 
@@ -2526,13 +2418,9 @@ def test_add_permission_to_group_permission_does_not_exist(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": "NON.EXISTENT.PERMISSION"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Permission: NON.EXISTENT.PERMISSION does not exist."
-    }
+    assert response.json() == {"detail": "Permission: NON.EXISTENT.PERMISSION does not exist."}
 
     result = run_db_query(
         """
@@ -2553,9 +2441,7 @@ def test_add_permission_to_group_valid_data(
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     data = {"group_name": "BETA.TESTER", "permission_name": "EDIT.EVENT"}
-    response = test_client.post(
-        "/iam/add_permission_to_group/", json=data, headers=headers
-    )
+    response = test_client.post("/iam/add_permission_to_group/", json=data, headers=headers)
     assert response.status_code == 201
     assert response.json() == {
         "detail": "Permission: EDIT.EVENT added to group: BETA.TESTER successfully."
@@ -2696,6 +2582,7 @@ def test_get_groups_no_groups_found(
 
 # 10/24 /iam/permissions/
 
+
 def test_get_permissions_check_response_data(
     test_client: Any, mock_valid_token: Any, run_db_query: Any
 ) -> None:
@@ -2773,6 +2660,7 @@ def test_get_permissions_no_permissions_found(
     response = test_client.get("/iam/permissions/", headers=headers)
     assert response.status_code == 200
     assert response.json() == []
+
 
 # 11/24 /iam/members/role/
 
@@ -3073,7 +2961,7 @@ def test_get_group_permissions_by_group_name_group_does_not_exist(
 
     result = run_db_query(
         """
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM iam_groups
         WHERE group_name = 'NON.EXISTENT.GROUP'
         """
@@ -3124,7 +3012,7 @@ def test_update_role_missing_role_name(
     result = run_db_query(
         """
         SELECT role_name, role_description
-        FROM iam_roles 
+        FROM iam_roles
         WHERE role_name = 'UPDATED.ROLE'
         """
     )
@@ -3169,7 +3057,7 @@ def test_update_role_missing_new_role_name(
     result = run_db_query(
         """
         SELECT role_name, role_description
-        FROM iam_roles 
+        FROM iam_roles
         WHERE role_name = 'DIRETOR.REGIONAL'
         """
     )
@@ -3193,7 +3081,7 @@ def test_update_role_invalid_role_name_type(
 
     result = run_db_query(
         """
-        SELECT role_name, role_description 
+        SELECT role_name, role_description
         FROM iam_roles
         WHERE role_name = 'UPDATED.ROLE'
         """
@@ -3209,7 +3097,7 @@ def test_update_role_invalid_new_role_name_type(
     result = run_db_query(
         """
         SELECT role_name, role_description
-        FROM iam_roles 
+        FROM iam_roles
         WHERE role_name = 'DIRETOR.REGIONAL'
         """
     )
@@ -3228,7 +3116,7 @@ def test_update_role_invalid_new_role_name_type(
     result = run_db_query(
         """
         SELECT role_name, role_description
-        FROM iam_roles 
+        FROM iam_roles
         WHERE role_name = 'DIRETOR.REGIONAL'
         """
     )
@@ -3278,7 +3166,7 @@ def test_update_role_valid_data_inserted(
         """
         SELECT role_name, role_description
         FROM iam_roles
-        WHERE role_name = 'DIRETOR.REGIONAL' 
+        WHERE role_name = 'DIRETOR.REGIONAL'
         """
     )
     assert len(result) == 1
@@ -3295,7 +3183,7 @@ def test_update_role_valid_data_inserted(
 
     result = run_db_query(
         """
-        SELECT role_name, role_description  
+        SELECT role_name, role_description
         FROM iam_roles
         WHERE role_name = 'UPDATED.ROLE'
         """
@@ -3306,7 +3194,7 @@ def test_update_role_valid_data_inserted(
     result = run_db_query(
         """
         SELECT COUNT(*)
-        FROM iam_roles 
+        FROM iam_roles
         WHERE role_name = 'DIRETOR.REGIONAL'
         """
     )
@@ -3345,7 +3233,7 @@ def test_update_group_missing_group_name(
     result = run_db_query(
         """
         SELECT group_name, group_description
-        FROM iam_groups 
+        FROM iam_groups
         WHERE group_name = 'UPDATED.GROUP'
         """
     )
@@ -3387,7 +3275,7 @@ def test_update_group_missing_new_group_name(
     result = run_db_query(
         """
         SELECT group_name, group_description
-        FROM iam_groups 
+        FROM iam_groups
         WHERE group_name = 'BETA.TESTER'
         """
     )
@@ -3461,7 +3349,7 @@ def test_update_group_group_does_not_exist(
     result = run_db_query(
         """
         SELECT COUNT(*)
-        FROM iam_groups 
+        FROM iam_groups
         WHERE group_name = 'NON.EXISTENT.GROUP'
         """
     )
@@ -3662,9 +3550,7 @@ def test_update_permission_invalid_new_permission_name_type(
     }
     response = test_client.patch("/iam/update_permission/", json=json, headers=headers)
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "new_permission_name" must be a string.'
-    }
+    assert response.json() == {"detail": 'Field: "new_permission_name" must be a string.'}
 
     result = run_db_query(
         """
@@ -3732,9 +3618,7 @@ def test_update_permission_valid_data_inserted(
     }
     response = test_client.patch("/iam/update_permission/", json=json, headers=headers)
     assert response.status_code == 200
-    assert response.json() == {
-        "detail": "Permission: WHATSAPP.BOT updated successfully."
-    }
+    assert response.json() == {"detail": "Permission: WHATSAPP.BOT updated successfully."}
 
     result = run_db_query(
         """
@@ -3761,9 +3645,7 @@ def test_update_permission_valid_data_inserted(
 # 18/24 /iam/remove_role_from_member/
 
 
-def test_remove_role_from_member_missing_role_name(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_remove_role_from_member_missing_role_name(test_client: Any, mock_valid_token: Any) -> None:
     """Test removing a role from a member with missing role_name."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -3784,9 +3666,7 @@ def test_remove_role_from_member_missing_role_name(
     }
 
 
-def test_remove_role_from_member_missing_member_id(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_remove_role_from_member_missing_member_id(test_client: Any, mock_valid_token: Any) -> None:
     """Test removing a role from a member with missing member_id."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -3832,7 +3712,7 @@ def test_remove_role_from_member_invalid_role_name_type(
 
     result = run_db_query(
         """
-        SELECT registration_id, r.role_name  
+        SELECT registration_id, r.role_name
         FROM iam_user_roles_map urm
         JOIN iam_roles r ON r.id = urm.role_id
         WHERE registration_id = 5 AND r.role_name = 'DIRETOR.REGIONAL'
@@ -3943,9 +3823,7 @@ def test_remove_role_from_member_numeric_role_name(
     assert result[0] == initial_state
 
 
-def test_remove_role_from_member_member_id_zero(
-    test_client: Any, mock_valid_token: Any
-) -> None:
+def test_remove_role_from_member_member_id_zero(test_client: Any, mock_valid_token: Any) -> None:
     """Test removing a role from a member with member_id zero."""
 
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
@@ -3954,9 +3832,7 @@ def test_remove_role_from_member_member_id_zero(
         method="delete", url="/iam/remove_role_from_member/", json=json, headers=headers
     )
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "member_id" must be positive. (greater than 0)'
-    }
+    assert response.json() == {"detail": 'Field: "member_id" must be positive. (greater than 0)'}
 
 
 def test_remove_role_from_member_role_not_assigned(
@@ -3980,9 +3856,7 @@ def test_remove_role_from_member_role_not_assigned(
         method="delete", url="/iam/remove_role_from_member/", json=json, headers=headers
     )
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Role: TESOUREIRO not assigned to member with id: 5."
-    }
+    assert response.json() == {"detail": "Role: TESOUREIRO not assigned to member with id: 5."}
 
     result = run_db_query(
         """
@@ -4291,9 +4165,7 @@ def test_remove_group_from_member_member_id_zero(
         headers=headers,
     )
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": 'Field: "member_id" must be positive. (greater than 0)'
-    }
+    assert response.json() == {"detail": 'Field: "member_id" must be positive. (greater than 0)'}
 
     result = run_db_query(
         """
@@ -4330,9 +4202,7 @@ def test_remove_group_from_member_group_not_assigned(
         headers=headers,
     )
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Group: SIG.MATEMATICA not assigned to member with id: 5."
-    }
+    assert response.json() == {"detail": "Group: SIG.MATEMATICA not assigned to member with id: 5."}
 
     result = run_db_query(
         """
@@ -4565,7 +4435,7 @@ def test_remove_permission_from_role_invalid_permission_name_type(
 
     result = run_db_query(
         """
-        SELECT r.role_name, p.permission_name 
+        SELECT r.role_name, p.permission_name
         FROM iam_role_permissions_map rpm
         JOIN iam_roles r ON r.id = rpm.role_id
         JOIN iam_permissions p ON p.id = rpm.permission_id
@@ -4584,7 +4454,7 @@ def test_remove_permission_from_role_empty_role_name(
         """
         SELECT r.role_name, p.permission_name
         FROM iam_role_permissions_map rpm
-        JOIN iam_roles r ON r.id = rpm.role_id 
+        JOIN iam_roles r ON r.id = rpm.role_id
         JOIN iam_permissions p ON p.id = rpm.permission_id
         WHERE p.permission_name = 'CREATE.EVENT'
         """
@@ -5287,7 +5157,7 @@ def test_remove_permission_from_group_group_does_not_exist(
     result = run_db_query(
         """
         SELECT COUNT(*)
-        FROM iam_groups 
+        FROM iam_groups
         WHERE group_name = 'NON.EXISTENT.GROUP'
         """
     )
@@ -5317,15 +5187,13 @@ def test_remove_permission_from_group_permission_does_not_exist(
         headers=headers,
     )
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Permission: NON.EXISTENT.PERMISSION does not exist."
-    }
+    assert response.json() == {"detail": "Permission: NON.EXISTENT.PERMISSION does not exist."}
 
     result = run_db_query(
         """
         SELECT COUNT(*)
         FROM iam_permissions
-        WHERE permission_name = 'NON.EXISTENT.PERMISSION' 
+        WHERE permission_name = 'NON.EXISTENT.PERMISSION'
         """
     )
     assert result[0][0] == 0
@@ -5536,9 +5404,7 @@ def test_delete_role_role_does_not_exist(
     assert result[0][0] == 0
 
 
-def test_delete_role_valid_data(
-    test_client: Any, mock_valid_token: Any, run_db_query: Any
-) -> None:
+def test_delete_role_valid_data(test_client: Any, mock_valid_token: Any, run_db_query: Any) -> None:
     """Test deleting a role with valid data."""
 
     result = run_db_query(
@@ -5707,7 +5573,7 @@ def test_delete_group_group_does_not_exist(
 
     result = run_db_query(
         """
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM iam_groups
         WHERE group_name = 'NON.EXISTENT.GROUP'
         """
@@ -5949,9 +5815,7 @@ def test_delete_permission_valid_data(
         method="delete", url="/iam/delete_permission/", json=json, headers=headers
     )
     assert response.status_code == 200
-    assert response.json() == {
-        "detail": "Permission: WHATSAPP.BOT deleted successfully."
-    }
+    assert response.json() == {"detail": "Permission: WHATSAPP.BOT deleted successfully."}
 
     result = run_db_query(
         """

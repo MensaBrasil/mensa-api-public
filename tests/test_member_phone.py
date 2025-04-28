@@ -8,9 +8,9 @@ def test_add_phone_number_invalid_token(test_client, mock_valid_token):
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post("/phone/2623", json=payload, headers=headers)
     assert response.status_code == 401, f"Expected status code 401 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "Unauthorized"
-    }, f"Expected JSON {{'detail': 'Unauthorized'}} but got {response.json()}"
+    assert response.json() == {"detail": "Unauthorized"}, (
+        f"Expected JSON {{'detail': 'Unauthorized'}} but got {response.json()}"
+    )
 
 
 def test_add_phone_number_should_return_already_has_phone(test_client, mock_valid_token):
@@ -28,9 +28,9 @@ def test_add_phone_number_should_return_already_has_phone(test_client, mock_vali
     print("DEBUG: Response JSON:", response.json())
 
     assert response.status_code == 400, f"Expected status code 400 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "User already has a phone"
-    }, f"Expected JSON {{'detail': 'User already has a phone'}} but got {response.json()}"
+    assert response.json() == {"detail": "User already has a phone"}, (
+        f"Expected JSON {{'detail': 'User already has a phone'}} but got {response.json()}"
+    )
 
 
 def test_add_phone_number_should_return_success(test_client, mock_valid_token, run_db_query):
@@ -40,9 +40,9 @@ def test_add_phone_number_should_return_success(test_client, mock_valid_token, r
     run_db_query("DELETE FROM phones WHERE registration_id = 5")
     response = test_client.post("/phone/5", json=payload, headers=headers)
     assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
-    assert response.json() == {
-        "message": "Phone added successfully"
-    }, f"Expected JSON {{'message': 'Phone added successfully'}} but got {response.json()}"
+    assert response.json() == {"message": "Phone added successfully"}, (
+        f"Expected JSON {{'message': 'Phone added successfully'}} but got {response.json()}"
+    )
 
 
 def test_add_phone_number_e164_format_valid(test_client, mock_valid_token, run_db_query):
@@ -88,9 +88,9 @@ def test_update_phone_number_invalid_token(test_client, mock_valid_token):
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.put("/phone/2623/11771", json=payload, headers=headers)
     assert response.status_code == 401, f"Expected status code 401 but got {response.status_code}"
-    assert response.json() == {
-        "detail": "Unauthorized"
-    }, f"Expected JSON {{'detail': 'Unauthorized'}} but got {response.json()}"
+    assert response.json() == {"detail": "Unauthorized"}, (
+        f"Expected JSON {{'detail': 'Unauthorized'}} but got {response.json()}"
+    )
 
 
 def test_update_phone_number_should_return_success(test_client, mock_valid_token, run_db_query):

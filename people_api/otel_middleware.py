@@ -48,7 +48,9 @@ async def otel_logging_middleware(
             async for chunk in response.body_iterator:
                 resp_body += chunk
             response = Response(
-                content=resp_body, status_code=response.status_code, headers=dict(response.headers)
+                content=resp_body,
+                status_code=response.status_code,
+                headers=dict(response.headers),
             )
         elif hasattr(response, "body"):
             if isinstance(response.body, bytes):

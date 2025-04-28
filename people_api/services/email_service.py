@@ -2,16 +2,20 @@
 
 """Service for managing members email addresses."""
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
+from people_api.dbs import AsyncSessionsTuple
 from people_api.schemas import UserToken
-from people_api.database.models.models import EmailInput, Emails, Registration
 
+from ..database.models.models import EmailInput, Emails, Registration
+from ..services.workspace_service import WorkspaceService
 
 
 class EmailService:
     """Service for managing members email addresses."""
+
     @staticmethod
     def add_email(mb: int, email: EmailInput, token_data: UserToken, session: Session):
         """Add email to member."""
@@ -78,3 +82,53 @@ class EmailService:
             raise HTTPException(status_code=404, detail="Email not found")
 
         return {"message": "Email deleted successfully"}
+
+    @staticmethod
+    async def request_email_creation(registration_id: int, sessions: AsyncSessionsTuple):
+        """Request email creation for a member."""
+
+        return await WorkspaceService.create_mensa_email(
+            registration_id=registration_id, sessions=sessions
+        )
+
+    @staticmethod
+    async def request_password_reset(email: str, registration_id: int, session: AsyncSession):
+        """Request password reset for a member."""
+        try:
+            if not email.endswith("@mensa.org.br"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email must be a Mensa email",
+                )
+
+            db_emails = (await session.exec(Emails.get_emails_for_member(registration_id))).all()
+            for e in db_emails:
+                if e.email_address.endswith("@mensa.org.br"):
+                    email = str(e.email_address)
+                    break
+            else:
+                email = None
+
+            if not email:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No matching Mensa email found for this member",
+                )
+        except Exception as e:
+            raise HTTPException(
+                status_code=getattr(e, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR),
+                detail=getattr(
+                    e,
+                    "detail",
+                    {
+                        "message": "Failed to fetch member information",
+                        "error": str(e),
+                    },
+                ),
+            ) from e
+
+        return await WorkspaceService.reset_email_password(
+            registration_id=registration_id,
+            mensa_email=email,
+            session=session,
+        )

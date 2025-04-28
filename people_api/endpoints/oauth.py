@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import HTMLResponse
 
 from people_api.schemas import UserToken
+
 from ..auth import verify_firebase_token
 from ..dbs import AsyncSessionsTuple, get_async_sessions, get_redis_client
 from ..schemas import OAuthStateResponse

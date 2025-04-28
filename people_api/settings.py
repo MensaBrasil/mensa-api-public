@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     google_api_key: str
 
     openai_api_key: str
+    chatgpt_assistant_id: str
 
     twilio_account_sid: str
     twilio_auth_token: str
@@ -53,6 +54,10 @@ class Settings(BaseSettings):
     region_name: str
     aws_access_key_id: str
     aws_secret_access_key: str
+
+    private_jwt_key_file_name: str
+    private_jwt_key_file_password: str
+    public_jwt_key_file_name: str
 
 
 @lru_cache

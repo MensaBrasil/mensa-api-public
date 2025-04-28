@@ -34,7 +34,9 @@ async def _get_participate_in(
 
 
 @group_router.get(
-    "/get_pending_requests", description="Get pending group join requests", tags=["member"]
+    "/get_pending_requests",
+    description="Get pending group join requests",
+    tags=["member"],
 )
 async def _get_pending_requests(
     token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
@@ -43,7 +45,9 @@ async def _get_pending_requests(
 
 
 @group_router.get(
-    "/get_failed_requests", description="Get failed group join requests", tags=["member"]
+    "/get_failed_requests",
+    description="Get failed group join requests",
+    tags=["member"],
 )
 async def _get_failed_requests(
     token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)

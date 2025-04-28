@@ -1,10 +1,10 @@
 """Endpoints for managing members addresses."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from people_api.schemas import UserToken
 from people_api.database.models.models import Addresses
+from people_api.schemas import UserToken
 
 from ..auth import verify_firebase_token
 from ..dbs import get_session
@@ -21,10 +21,16 @@ async def _add_address(
     session: Session = Depends(get_session),
 ):
     """Add address to member."""
+    if not token_data.email:
+        return {"message": "Unauthorized"}
     return AddressService.add_address(mb, address, token_data.email, session)
 
 
-@member_address_router.put("/address/{mb}/{address_id}", description="Update address for member", tags=["address"])
+@member_address_router.put(
+    "/address/{mb}/{address_id}",
+    description="Update address for member",
+    tags=["address"],
+)
 async def update_address(
     mb: int,
     address_id: int,
@@ -33,6 +39,8 @@ async def update_address(
     session: Session = Depends(get_session),
 ):
     """Update address for member."""
+    if not token_data.email:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return AddressService.update_address(mb, address_id, updated_address, token_data.email, session)
 
 
@@ -48,4 +56,6 @@ async def delete_address(
     session: Session = Depends(get_session),
 ):
     """Delete address from member."""
+    if not token_data.email:
+        return {"message": "Unauthorized"}
     return AddressService.delete_address(mb, address_id, token_data.email, session)

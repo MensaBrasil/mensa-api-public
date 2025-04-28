@@ -10,15 +10,15 @@ VALUES
     (11, 'Carla Ferreira', false, false, false, '67890123456', '1990-04-15', 'Lawyer', 'Mulher', '2020-10-10', NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
 
 -- Emails table
-INSERT INTO emails (registration_id, email_address, created_at, updated_at)
+INSERT INTO emails (registration_id, email_address, email_type, created_at, updated_at)
 VALUES
-    (5, 'fernando.filho@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (6, 'calvin@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (7, 'ana.junior@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (8, 'pedro.santos@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (9, 'maria.oliveira@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (10, 'lucas.costa@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (11, 'carla.ferreira@mensa.org.br', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
+    (5, 'fernando.filho@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (6, 'calvin@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (7, 'ana.junior@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (8, 'pedro.santos@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (9, 'maria.oliveira@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (10, 'lucas.costa@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (11, 'carla.ferreira@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
 
 -- Phones table
 INSERT INTO phones (registration_id, phone_number, created_at, updated_at)
@@ -186,7 +186,7 @@ VALUES
 INSERT INTO registration
   (registration_id, name, expelled, deceased, transferred, cpf, birth_date, profession, gender, join_date, facebook, created_at, updated_at)
 
-VALUES 
+VALUES
   (1805, 'Jessica Diniz Sousa de Santanna', false, false, false, NULL, NULL, NULL, NULL, CURRENT_DATE, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO emails (registration_id, email_address, created_at, updated_at)
@@ -202,5 +202,3 @@ INSERT INTO iam_user_groups_map (registration_id, group_id)
 SELECT 1805, id
 FROM iam_groups
 WHERE group_name = 'VOLUNTEER.MEMBER';
-        
-

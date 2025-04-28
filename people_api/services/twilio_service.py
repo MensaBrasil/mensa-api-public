@@ -1,8 +1,9 @@
 """Service for sending WhatsApp messages using Twilio's API."""
 
+import asyncio
+
 from twilio.rest import Client
 
-import asyncio
 from ..settings import get_settings
 
 SETTINGS = get_settings()
@@ -31,5 +32,5 @@ class TwilioService:
                 body=message,
                 from_=from_,
                 to=to_,
-            )
+            ),
         )

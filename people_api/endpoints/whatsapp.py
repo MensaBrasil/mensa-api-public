@@ -2,10 +2,15 @@
 
 from fastapi import APIRouter, Depends, Request
 
+from people_api.services.whatsapp_service.chatbot.client import WhatsappChatBot
+
 from ..database.models import UpdateInput
 from ..database.models.whatsapp import ReceivedWhatsappMessage
 from ..dbs import AsyncSessionsTuple, get_async_sessions
-from ..services import WhatsappChatBot, WhatsAppService
+from ..services.whatsapp_service.chatbot.validation import (
+    validate_member_and_permissions,
+)
+from ..services.whatsapp_service.utils import WhatsAppService
 
 whatsapp_router = APIRouter(tags=["Whatsapp"], prefix="/whatsapp")
 
@@ -33,6 +38,8 @@ async def chatbot_message(
     data_dict = {key: str(value) for key, value in form_data.items()}
     received_message = ReceivedWhatsappMessage(**data_dict)
 
-    await WhatsappChatBot.validate_member_and_permissions(received_message, sessions.ro)
+    registration_id = await validate_member_and_permissions(received_message, sessions.ro)
 
-    return await WhatsappChatBot.chatbot_message(received_message, session=sessions.ro)
+    return await WhatsappChatBot.chatbot_message(
+        message=received_message, session=sessions.ro, registration_id=registration_id
+    )

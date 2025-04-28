@@ -47,6 +47,10 @@ jobs:
         version: "latest"
     - name: Install dependencies
       run: uv sync -p 3.12
+    - name: Creating ECDSA key files
+      run: |
+        echo "${{ secrets.ecdsa_private_key }}" | base64 --decode > ecdsa_private_key.pem
+        echo "${{ secrets.ecdsa_public_key }}" | base64 --decode > ecdsa_public_key.pem
     - name: Run tests with coverage
       env:
         api_title: Mensa API

@@ -2,7 +2,7 @@
 
 from openai import AsyncOpenAI
 
-from ..settings import get_settings
+from ....settings import get_settings
 
 SETTINGS = get_settings()
 

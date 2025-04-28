@@ -52,7 +52,7 @@ def validate_permission_name(data, field_name: str):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'Field: "{field_name}" cannot contain spaces.',
-    )
+        )
 
     processed_data = data.upper()
     return processed_data
@@ -280,15 +280,11 @@ class AddPermissionToGroup(BaseValidateGroupName, BaseValidatePermissionName):
     """Model for adding a permission to a group."""
 
 
-class UpdateRole(
-    BaseValidateRoleName, BaseValidateNewRoleName, BaseValidateNewRoleDescription
-):
+class UpdateRole(BaseValidateRoleName, BaseValidateNewRoleName, BaseValidateNewRoleDescription):
     """Model for updating a role."""
 
 
-class UpdateGroup(
-    BaseValidateGroupName, BaseValidateNewGroupName, BaseValidateNewGroupDescription
-):
+class UpdateGroup(BaseValidateGroupName, BaseValidateNewGroupName, BaseValidateNewGroupDescription):
     """Model for updating a group."""
 
 

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlmodel import Session
 
 from people_api.schemas import UserToken
+
 from ..models.member import PostgresMemberRead, PronounsCreate
 from ..models.member_data import MemberProfessionFacebookUpdate
 from ..repositories import MemberRepository

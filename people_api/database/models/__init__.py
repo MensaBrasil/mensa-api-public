@@ -29,11 +29,10 @@ from .models import (
     WhatsappComms,
     WhatsappMessages,
 )
-
-from .volunteer import (   
+from .volunteer import (
     VolunteerActivityCategory,
-    VolunteerActivityLog,
     VolunteerActivityEvaluation,
+    VolunteerActivityLog,
     VolunteerPointTransaction,
 )
 from .whatsapp import UpdateInput

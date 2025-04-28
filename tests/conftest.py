@@ -1,22 +1,24 @@
 """Fixtures for the test suite."""
 
+import os
 import subprocess
 import time
-import os
+from collections.abc import Generator
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
-from moto import mock_aws
-import boto3   
 
+import boto3
 import psycopg2
 import pytest
 from fastapi.testclient import TestClient
-
-from collections.abc import Generator
+from moto import mock_aws
 from moto.server import ThreadedMotoServer
+from sqlmodel import Session
 
 from people_api.app import app  # type: ignore
 from people_api.auth import verify_firebase_token
+from people_api.dbs import engine
 from people_api.schemas import UserToken
 from tests.router_config import test_router
 
@@ -39,9 +41,9 @@ def wait_for_db(timeout=60):
             conn = psycopg2.connect(DATABASE_URL)
             conn.close()
             break
-        except psycopg2.OperationalError:
+        except psycopg2.OperationalError as e:
             if time.time() - start_time > timeout:
-                raise Exception("Timeout while waiting for the database to be ready.")
+                raise Exception("Timeout while waiting for the database to be ready.") from e
             time.sleep(2)
 
 
@@ -158,10 +160,36 @@ def mock_valid_token():
             registration_id=5,
         )
 
-    # Override the dependency in the FastAPI app
     app.dependency_overrides[verify_firebase_token] = mock_verify_firebase_token
     yield
-    # Clean up after test
+    app.dependency_overrides.pop(verify_firebase_token, None)
+
+
+@pytest.fixture(scope="function")
+def mock_valid_internal_token():
+    """Mock the verify_internal_token function to return a valid token"""
+
+    def mock_verify_internal_token():
+        return UserToken(
+            iss="mensa_api",
+            sub="5",
+            exp=int((datetime.now(tz=timezone.utc) + timedelta(hours=1)).timestamp()),
+            iat=int(datetime.now(tz=timezone.utc).timestamp()),
+            registration_id=5,
+            email="fernando.filho@mensa.org.br",
+            permissions=[
+                "CREATE.EVENT",
+                "WHATSAPP.BOT",
+                "VOLUNTEER.CATEGORY.CREATE",
+                "VOLUNTEER.CATEGORY.UPDATE",
+                "VOLUNTEER.CATEGORY.DELETE",
+                "VOLUNTEER.EVALUATION.UPDATE",
+                "VOLUNTEER.EVALUATION.CREATE",
+            ],
+        )
+
+    app.dependency_overrides[verify_firebase_token] = mock_verify_internal_token
+    yield
     app.dependency_overrides.pop(verify_firebase_token, None)
 
 
@@ -203,7 +231,15 @@ def mock_valid_token_auth():
     def override_verify_firebase_token():
         return UserToken(
             email="fernando.filho@mensa.org.br",
-            permissions=["CREATE.EVENT", "WHATSAPP.BOT", "VOLUNTEER.CATEGORY.CREATE", "VOLUNTEER.CATEGORY.UPDATE", "VOLUNTEER.CATEGORY.DELETE", "VOLUNTEER.EVALUATION.UPDATE", "VOLUNTEER.EVALUATION.CREATE"],
+            permissions=[
+                "CREATE.EVENT",
+                "WHATSAPP.BOT",
+                "VOLUNTEER.CATEGORY.CREATE",
+                "VOLUNTEER.CATEGORY.UPDATE",
+                "VOLUNTEER.CATEGORY.DELETE",
+                "VOLUNTEER.EVALUATION.UPDATE",
+                "VOLUNTEER.EVALUATION.CREATE",
+            ],
             exp=1722981114,
             iat=1722977514,
             aud="carteirinhasmensa",
@@ -231,7 +267,7 @@ def aws_resource():
     """
     Fixture to start the generic AWS mock (mock_aws) and create the test bucket.
     """
-    bucket_name = os.environ.get("MY_BUCKET_NAME", "mybucket") 
+    bucket_name = os.environ.get("MY_BUCKET_NAME", "mybucket")
     with mock_aws():
         s3 = boto3.resource(
             "s3",
@@ -240,3 +276,27 @@ def aws_resource():
         )
         s3.create_bucket(Bucket=bucket_name)
         yield s3
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_otel_middleware():
+    """Disable OpenTelemetry logging middleware during tests."""
+    original_middleware = app.user_middleware.copy()
+
+    app.user_middleware = [
+        middleware
+        for middleware in app.user_middleware
+        if "otel_logging_middleware" not in str(middleware)
+    ]
+
+    yield
+
+    app.user_middleware = original_middleware
+
+
+@pytest.fixture
+def sync_rw_session():
+    """Yield a valid sync SQLModel session for tests."""
+
+    with Session(engine) as session:
+        yield session

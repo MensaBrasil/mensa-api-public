@@ -8,9 +8,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from people_api.schemas import UserToken
 from people_api.database.models.models import LegalRepresentatives, Registration
-
+from people_api.schemas import UserToken
 
 from ..settings import Settings
 

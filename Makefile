@@ -9,7 +9,7 @@ test: ## run tests
 run: ## python run app
 	docker compose up test-db -d
 	make migrate-upgrade
-	python utils/reset_db.py 
+	python utils/reset_db.py
 	uvicorn main:app --reload
 
 down:

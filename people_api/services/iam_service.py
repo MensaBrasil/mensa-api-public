@@ -1,7 +1,9 @@
 """This module contains the service class for IAM."""
 
 from fastapi import HTTPException, status
+from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
+
 from people_api.schemas import UserToken
 
 from ..database.models import (
@@ -72,10 +74,9 @@ class IamService:
     @staticmethod
     async def get_member_roles(token_data: UserToken, session: AsyncSession):
         """Get roles for a member by member id."""
-        registration_id = await IamService.get_member_id_by_email(token_data.email, session)
         roles = (
             await session.exec(
-                IAMUserRolesMap.select_role_names_by_registration_id(registration_id)
+                IAMUserRolesMap.select_role_names_by_registration_id(token_data.registration_id)
             )
         ).all()
         return roles or []
@@ -83,10 +84,9 @@ class IamService:
     @staticmethod
     async def get_member_groups(token_data: UserToken, session: AsyncSession):
         """Get groups for a member by member id."""
-        registration_id = await IamService.get_member_id_by_email(token_data.email, session)
         groups = (
             await session.exec(
-                IAMUserGroupsMap.select_group_names_by_registration_id(registration_id)
+                IAMUserGroupsMap.select_group_names_by_registration_id(token_data.registration_id)
             )
         ).all()
         return groups or []
@@ -94,13 +94,11 @@ class IamService:
     @staticmethod
     async def get_member_permissions(token_data: UserToken, session: AsyncSession) -> list[str]:
         """Get permissions for a member by member id."""
-        registration_id = await IamService.get_member_id_by_email(token_data.email, session)
-
         role_permissions_stmt = IAMPermissions.select_role_permissions_by_registration_id(
-            registration_id
+            token_data.registration_id
         )
         group_permissions_stmt = IAMPermissions.select_group_permissions_by_registration_id(
-            registration_id
+            token_data.registration_id
         )
 
         role_permissions = (await session.exec(role_permissions_stmt)).all()
@@ -113,6 +111,26 @@ class IamService:
             return sorted_permissions
         else:
             return []
+
+    @staticmethod
+    def get_all_permissions_for_member(registration_id: int, session: Session) -> list[str]:
+        """Get all permissions for a member by member id."""
+        role_permissions_stmt = IAMPermissions.select_role_permissions_by_registration_id(
+            registration_id
+        )
+        group_permissions_stmt = IAMPermissions.select_group_permissions_by_registration_id(
+            registration_id
+        )
+
+        role_permissions = session.exec(role_permissions_stmt).all()
+        group_permissions = session.exec(group_permissions_stmt).all()
+
+        all_permissions = set(role_permissions + group_permissions)
+        sorted_permissions = sorted(all_permissions)
+
+        if sorted_permissions:
+            return sorted_permissions
+        return []
 
     @staticmethod
     async def get_role_permissions_by_role_name(role_name: str, session: AsyncSession):

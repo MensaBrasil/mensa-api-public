@@ -1,6 +1,5 @@
 """Endpoints for generating and downloading certificates."""
 
-import asyncio
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 

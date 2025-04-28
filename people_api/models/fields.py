@@ -92,7 +92,8 @@ class PersonFields:
         description=f"{address.description}. When updating, the whole Address object is required, as it gets replaced"
     )
     birth = Field(
-        description="Date of birth, in format YYYY-MM-DD, or Unix timestamp", example="1999-12-31"
+        description="Date of birth, in format YYYY-MM-DD, or Unix timestamp",
+        example="1999-12-31",
     )
     age = Field(description="Age of this person, if date of birth is specified", example=20)
     person_id = Field(
@@ -104,7 +105,9 @@ class PersonFields:
     """The person_id is the _id field of Mongo documents, and is set on PeopleRepository.create"""
 
     created = Field(
-        alias="created", description="When the person was registered (Unix timestamp)", **_unix_ts
+        alias="created",
+        description="When the person was registered (Unix timestamp)",
+        **_unix_ts,
     )
     """Created is set on PeopleRepository.create"""
     updated = Field(
@@ -156,6 +159,8 @@ class LegalRepresentativeFields:
     email = Field(None, description="Email address of the legal representative", max_length=255)
     phone = Field(None, description="Phone number of the legal representative", max_length=15)
     alternative_phone = Field(
-        None, description="Alternative phone number of the legal representative", max_length=15
+        None,
+        description="Alternative phone number of the legal representative",
+        max_length=15,
     )
     observations = Field(None, description="Additional observations")

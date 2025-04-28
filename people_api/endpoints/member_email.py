@@ -6,7 +6,7 @@ from sqlmodel import Session
 from people_api.database.models.models import EmailInput
 
 from ..auth import verify_firebase_token
-from ..dbs import get_session
+from ..dbs import AsyncSessionsTuple, get_async_sessions, get_session
 from ..services import EmailService
 
 member_email_router = APIRouter()
@@ -48,3 +48,27 @@ async def delete_email(
     session: Session = Depends(get_session),
 ):
     return EmailService.delete_email(mb, email_id, token_data, session)
+
+
+# request email creation
+@member_email_router.post("/emailrequest/", description="Request email creation", tags=["email"])
+async def request_email_creation(
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
+    token_data=Depends(verify_firebase_token),
+):
+    return await EmailService.request_email_creation(
+        registration_id=token_data.registration_id, sessions=session
+    )
+
+
+# request password reset
+@member_email_router.post("/emailreset/", description="Request password reset", tags=["email"])
+async def request_password_reset(
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
+    token_data=Depends(verify_firebase_token),
+):
+    email = token_data.email
+    registration_id = token_data.registration_id
+    return await EmailService.request_password_reset(
+        email=email, registration_id=registration_id, session=session.ro
+    )

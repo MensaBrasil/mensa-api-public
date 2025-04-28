@@ -7,7 +7,6 @@ import logging
 import os
 from datetime import datetime
 
-from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
 
@@ -35,7 +34,7 @@ from people_api.database.models.volunteer import (
     VolunteerPointTransaction,
 )
 from people_api.permissions import Volunteer as P
-from people_api.utils import get_s3_client, upload_media_to_s3, generate_presigned_media_url
+from people_api.utils import generate_presigned_media_url, upload_media_to_s3
 
 from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..schemas import UserToken
@@ -192,7 +191,6 @@ async def create_activity_evaluation(
         activity_log = result.one_or_none()
         if not activity_log:
             raise HTTPException(status_code=404, detail="Activity log not found")
-
         category_query = select(VolunteerActivityCategory).where(
             VolunteerActivityCategory.id == activity_log.category_id
         )
@@ -267,7 +265,9 @@ async def get_leaderboard(
     "/activities/",
     response_model=list[VolunteerActivityLogPublic],
 )
-async def get_public_activity_feed(sessions: AsyncSessionsTuple = Depends(get_async_sessions)):
+async def get_public_activity_feed(
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
+):
     """
     Retrieve all volunteer activity logs for the public feed.
     """
@@ -323,6 +323,7 @@ async def get_combined_names(
     lr_result = await sessions.ro.exec(lr_query)
     legal_reps = lr_result.all()
     return CombinedNamesResponse.from_data(registration_obj, list(legal_reps))
+
 
 @volunteer_router.get(
     "/admin/evaluate-with-category/",
@@ -405,7 +406,7 @@ async def get_activity_with_category(
 )
 async def get_total_points(
     token_data: UserToken = Depends(verify_firebase_token),
-    sessions: AsyncSessionsTuple = Depends(get_async_sessions)
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """
     Retrieve the total number of points for the authenticated registration.
@@ -443,11 +444,12 @@ async def get_user_full_activities_approved(
     for activity_log, evaluation in rows:
         activity_public = VolunteerActivityLogPublic.model_validate(activity_log)
         evaluation_public = (
-            VolunteerActivityEvaluationPublic.model_validate(evaluation)
-            if evaluation else None
+            VolunteerActivityEvaluationPublic.model_validate(evaluation) if evaluation else None
         )
         activity_public.media_path = generate_presigned_media_url(activity_log.media_path)
-        activities.append(UserActivityFullResponse(activity=activity_public, evaluation=evaluation_public))
+        activities.append(
+            UserActivityFullResponse(activity=activity_public, evaluation=evaluation_public)
+        )
     return activities
 
 
@@ -473,8 +475,7 @@ async def get_user_full_activities_rejected(
     for activity_log, evaluation in rows:
         activity_public = VolunteerActivityLogPublic.model_validate(activity_log)
         evaluation_public = (
-            VolunteerActivityEvaluationPublic.model_validate(evaluation)
-            if evaluation else None
+            VolunteerActivityEvaluationPublic.model_validate(evaluation) if evaluation else None
         )
 
         activity_public.media_path = generate_presigned_media_url(activity_log.media_path)
@@ -509,7 +510,5 @@ async def get_user_full_activities_unevaluated(
 
         activity_public.media_path = generate_presigned_media_url(activity_log.media_path)
 
-        activities.append(
-            UserActivityFullResponse(activity=activity_public, evaluation=None)
-        )
+        activities.append(UserActivityFullResponse(activity=activity_public, evaluation=None))
     return activities
