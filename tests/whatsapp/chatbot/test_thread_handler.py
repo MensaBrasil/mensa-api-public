@@ -74,7 +74,7 @@ async def test_chatbot_create_new_thread_when_no_thread_exists(test_client):
         mock_openai_create_message.assert_awaited_once()
         mock_process_message.assert_awaited_once()
         mock_send.assert_awaited_once_with(
-            to_=new_thread_payload["WaId"],
+            to_=new_thread_payload["From"],
             message="Hello, user! I'm the mensa chatbot. How can I assist you today?",
         )
 
@@ -111,7 +111,7 @@ async def test_chatbot_resume_already_existent_thread(test_client):
         assert response.json() == "Hello, user! I'm the mensa chatbot. How can I assist you today?"
         mock_process_message.assert_awaited_once()
         mock_send.assert_awaited_once_with(
-            to_=existing_thread_payload["WaId"],
+            to_=existing_thread_payload["From"],
             message="Hello, user! I'm the mensa chatbot. How can I assist you today?",
         )
 

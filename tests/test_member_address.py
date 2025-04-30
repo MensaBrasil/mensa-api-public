@@ -1,6 +1,60 @@
 """Tests for member_address router endpoints."""
 
 
+# Endpoint get
+def test_get_addresses_should_return_addresses_for_valid_token(
+    test_client, mock_valid_internal_token
+):
+    """Test getting addresses for a valid token and registration_id."""
+    headers = {"Authorization": f"Bearer {mock_valid_internal_token}"}
+    response = test_client.get("/address/", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len([addr for addr in data if addr["registration_id"] == 5]) >= 2
+
+    expected_addresses = [
+        {
+            "registration_id": 5,
+            "state": "RJ",
+            "city": "Rio de Janeiro",
+            "address": "Rua das Laranjeiras, 123",
+            "neighborhood": "Laranjeiras",
+            "zip": "22240003",
+            "country": "Brasil",
+            "latlong": "-22.9361,-43.1782",
+        },
+        {
+            "registration_id": 5,
+            "state": "SP",
+            "city": "São Paulo",
+            "address": "Av. Brigadeiro Faria Lima, 2000",
+            "neighborhood": "Itaim Bibi",
+            "zip": "04538-132",
+            "country": "Brasil",
+            "latlong": "-23.5869,-46.6753",
+        },
+    ]
+
+    for expected in expected_addresses:
+        assert any(all(addr.get(k) == v for k, v in expected.items()) for addr in data), (
+            f"Expected address not found: {expected}"
+        )
+
+
+def test_get_addresses_should_return_empty_list_if_no_address(
+    test_client, mock_valid_token, run_db_query
+):
+    """Test getting addresses returns empty list if user has no addresses."""
+    run_db_query("DELETE FROM addresses WHERE registration_id = 5")
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    response = test_client.get("/address/", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 0
+
+
 # Endpoint POST
 def test_add_address_invalid_token(test_client, mock_valid_token):
     """Test adding an address with an invalid token (unauthorized)."""

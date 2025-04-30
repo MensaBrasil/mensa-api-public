@@ -4,13 +4,28 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from people_api.database.models.models import Addresses
-from people_api.schemas import UserToken
+from people_api.schemas import InternalToken, UserToken
 
 from ..auth import verify_firebase_token
 from ..dbs import get_session
 from ..services import AddressService
 
 member_address_router = APIRouter()
+
+
+@member_address_router.get(
+    "/address/",
+    description="Get addresses for member",
+    tags=["address"],
+)
+async def get_addresses(
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: Session = Depends(get_session),
+):
+    """Get addresses for member."""
+    if not token_data.email or not token_data.registration_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return AddressService.get_addresses(token_data, session)
 
 
 @member_address_router.post("/address/{mb}", description="Add address to member", tags=["address"])
@@ -35,7 +50,7 @@ async def update_address(
     mb: int,
     address_id: int,
     updated_address: Addresses,
-    token_data: UserToken = Depends(verify_firebase_token),
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
     session: Session = Depends(get_session),
 ):
     """Update address for member."""

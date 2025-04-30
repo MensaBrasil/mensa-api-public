@@ -12,6 +12,23 @@ run: ## python run app
 	python utils/reset_db.py
 	uvicorn main:app --reload
 
+token:
+	uv run utils/generate_token.py
+
+fresh-run:
+	docker compose down test-db people_api --remove-orphans
+	docker compose up test-db -d
+	@echo "Waiting for test-db to be ready..."
+	@until docker exec mensa-api-test-db-1 pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
+	@echo "Making migrations..."
+	make migrate-upgrade
+	@echo "Resetting database..."
+	python utils/reset_db.py
+	@echo "Killing any process using port 5000..."
+	- fuser -k 5000/tcp || true
+	@echo "Starting Api"
+	uv run uvicorn people_api.app:app --reload --host 0.0.0.0 --port 5000
+
 down:
 	docker compose down
 

@@ -1,5 +1,6 @@
 """Thread handler for managing threads and messages."""
 
+import logging
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -51,6 +52,9 @@ class ThreadService:
         otherwise, create a new thread if within the daily limit.
         """
 
+        logging.info(
+            "[CHATBOT-MENSA] Retrieving or creating thread for phone number: %s", phone_number
+        )
         existing_thread_id = ThreadService.threads_by_phone.get(phone_number)
         if existing_thread_id:
             count = ThreadService.message_counts.get(phone_number, {}).get(existing_thread_id, 0)

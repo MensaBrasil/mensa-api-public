@@ -3,7 +3,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
-from cryptography.hazmat.primitives import serialization
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
@@ -17,6 +16,8 @@ from people_api.services import IamService
 from people_api.settings import get_settings
 
 http_bearer = HTTPBearer()
+
+ro_session = next(get_read_only_session())
 
 
 async def verify_firebase_token(
@@ -50,7 +51,7 @@ async def verify_firebase_token(
                     status_code=400,
                     detail="Multiple registration IDs found for the provided email",
                 )
-            registration_id = rows[0][0]
+            registration_id = rows[0]
             decoded_token["registration_id"] = registration_id
 
             token_data = UserToken(**decoded_token)
@@ -91,20 +92,18 @@ def get_registration_id(token_data: UserToken = Depends(verify_firebase_token)) 
     return token_data.registration_id
 
 
-ALGORITHM = "ES256"
+ALGORITHM = "RS256"
 
-with open(f"{get_settings().private_jwt_key_file_name}.pem", "rb") as key_file:
-    PRIVATE_SECRET_KEY = serialization.load_pem_private_key(
-        key_file.read(), password=get_settings().private_jwt_key_file_password.encode()
-    )
-with open(f"{get_settings().public_jwt_key_file_name}.pem", "rb") as key_file:
-    PUBLIC_SECRET_KEY = serialization.load_pem_public_key(key_file.read())
+with open(f"{get_settings().private_internal_token_key}.pem", "rb") as key_file:
+    PRIVATE_SECRET_KEY = key_file.read()
+with open(f"{get_settings().public_internal_token_key}.pem", "rb") as key_file:
+    PUBLIC_SECRET_KEY = key_file.read()
 
 
 def create_token(
     registration_id: int | None,
     ttl: int = 30,
-    session: Session = Depends(get_read_only_session),
+    session: Session = ro_session,
 ) -> str:
     """
     Generates a JSON Web Token (JWT) with specified claims and expiration time.

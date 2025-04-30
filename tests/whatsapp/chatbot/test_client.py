@@ -37,5 +37,5 @@ def test_chatbot_reset_command_success(test_client):
         assert response.status_code == 200
         assert response.json() == "Thread reset successfully!"
         mock_send.assert_awaited_once_with(
-            to_=reset_payload["WaId"], message="Thread reset successfully!"
+            to_=reset_payload["From"], message="Thread reset successfully!"
         )

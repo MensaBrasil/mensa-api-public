@@ -13,6 +13,8 @@ class MessageHandler:
     @staticmethod
     async def process_message(thread_id: str, message: str, registration_id: int) -> str:
         """Handle incoming WhatsApp messages and forward them to the assistant."""
+
+        logging.info("[CHATBOT-MENSA] Processing message: %s", message)
         try:
             await openai_client.beta.threads.messages.create(
                 thread_id=thread_id,
@@ -20,6 +22,7 @@ class MessageHandler:
                 content=message,
             )
 
+            logging.info("[CHATBOT-MENSA] Message sent to assistant. Waiting for response...")
             run = await openai_client.beta.threads.runs.create_and_poll(
                 thread_id=thread_id,
                 assistant_id=get_settings().chatgpt_assistant_id,
@@ -27,10 +30,14 @@ class MessageHandler:
                 tool_choice="required",
             )
 
+            logging.info(run.model_dump_json(indent=2))
+            logging.info("[CHATBOT-MENSA] Assistant response received. Checking status...")
             while run.status == "requires_action" and run.required_action:
+                logging.info("[CHATBOT-MENSA] Tool call detected... Handling tool calls...")
                 run = await ToolCallService.handle_tool_calls(run, registration_id)
 
             if run.status == "completed":
+                logging.info("[CHATBOT-MENSA] Assistant response completed.")
                 messages_response = await openai_client.beta.threads.messages.list(
                     thread_id=thread_id
                 )
@@ -44,8 +51,9 @@ class MessageHandler:
 
                     return last_response
 
+            logging.error("[CHATBOT-MENSA] No valid response from the assistant.")
             raise ValueError("No valid response from the assistant.")
 
         except Exception as e:
-            logging.error("Error processing message: %s", e)
+            logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             return "Erro ao processar mensagem, tente novamente mais tarde..."

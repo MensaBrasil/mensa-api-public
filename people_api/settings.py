@@ -55,9 +55,8 @@ class Settings(BaseSettings):
     aws_access_key_id: str
     aws_secret_access_key: str
 
-    private_jwt_key_file_name: str
-    private_jwt_key_file_password: str
-    public_jwt_key_file_name: str
+    private_internal_token_key: str
+    public_internal_token_key: str
 
 
 @lru_cache

@@ -35,7 +35,15 @@ jobs:
         echo "StrictHostKeyChecking no" >> ~/.ssh/config
         # Forward local port 5432 to remote localhost:5432
         ssh -f -o ExitOnForwardFailure=yes -N -L 5432:localhost:5432 ${{ secrets.SSH_USERNAME }}@${{ secrets.EC2_DATABASE_ADDRESS }}
-
+    - name: Creating RSA key files
+      run: |
+        if ! command -v openssl &> /dev/null; then
+          sudo apt-get update && sudo apt-get install -y openssl
+        fi
+        openssl genrsa -out private_key.pem 4096
+        openssl rsa -in private_key.pem -pubout -out public_key.pem
+        chmod 600 private_key.pem
+        chmod 644 public_key.pem
     - name: Run update workspace groups
       env:
         api_title: Mensa API
@@ -78,9 +86,8 @@ jobs:
         aws_access_key_id: testing
         aws_secret_access_key: testing
 
-        private_jwt_key_file_name: ecdsa_private_key
-        private_jwt_key_file_password: testpw
-        public_jwt_key_file_name: ecdsa_public_key
+        private_internal_token_key: private_key
+        public_internal_token_key: public_key
 
         service_account_file: client_secret.json
         google_api_scopes: https://www.googleapis.com/auth/admin.directory.group

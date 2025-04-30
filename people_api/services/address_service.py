@@ -6,9 +6,19 @@ from fastapi import HTTPException
 from sqlmodel import Session
 
 from people_api.database.models.models import Addresses, Registration
+from people_api.schemas import InternalToken, UserToken
 
 
 class AddressService:
+    @staticmethod
+    def get_addresses(token_data: UserToken | InternalToken, session: Session):
+        reg = session.exec(Registration.select_stmt_by_id(token_data.registration_id)).first()
+        if not reg or not reg.registration_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        addr_stmt = Addresses.get_address_for_member(reg.registration_id)
+        addresses = session.exec(addr_stmt).all()
+        return addresses
+
     @staticmethod
     def add_address(mb: int, address: Addresses, token_email: str, session: Session):
         reg_stmt = Registration.select_stmt_by_email(token_email)

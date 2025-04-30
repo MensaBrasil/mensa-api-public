@@ -48,7 +48,7 @@ dependencies = [
     "moto[s3]>=5.1.1",
     "flask>=3.1.0",
     "flask-cors>=5.0.1",
-    "python-jose[ecdsa]>=3.4.0",
+    "python-jose>=3.4.0",
 ]
 
 [dependency-groups]

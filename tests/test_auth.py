@@ -54,7 +54,6 @@ def test_create_valid_internal_token_and_verify(sync_rw_session):
     compatible_token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
     assert token is not None
     assert isinstance(token, str)
-    assert "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9" in token
 
     decoded_token = asyncio.run(verify_firebase_token(compatible_token))
     assert decoded_token.iss == "mensa_api"

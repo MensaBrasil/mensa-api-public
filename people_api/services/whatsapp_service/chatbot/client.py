@@ -1,5 +1,7 @@
 """Service for updating WhatsApp-related data for members and their representatives."""
 
+import logging
+
 from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -8,8 +10,6 @@ from people_api.services.twilio_service import TwilioService
 from ....database.models.whatsapp import ReceivedWhatsappMessage
 from .message_handler import MessageHandler
 from .thread_handler import ThreadService
-
-# from .tool_calls_handler import ToolCallService
 
 
 class WhatsappChatBot:
@@ -32,13 +32,14 @@ class WhatsappChatBot:
                 if thread_key in ThreadService.threads_by_phone:
                     del ThreadService.threads_by_phone[thread_key]
                 await TwilioService().send_whatsapp_message(
-                    to_=phone_number, message="Thread reset successfully!"
+                    to_=message.From, message="Thread reset successfully!"
                 )
                 return "Thread reset successfully!"
         except Exception as e:
+            logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             print(f"Error processing reset command: {e}")
             await TwilioService().send_whatsapp_message(
-                to_=phone_number,
+                to_=message.From,
                 message="Erro ao processar o comando de reset. Por favor, tente novamente.",
             )
             return "Error reseting thread."
@@ -51,20 +52,22 @@ class WhatsappChatBot:
             if str(phone_number) in WhatsappChatBot.error_notifications:
                 del WhatsappChatBot.error_notifications[str(phone_number)]
         except ValueError as e:
+            logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             error_msg = str(e)
             if str(phone_number) not in WhatsappChatBot.error_notifications:
                 WhatsappChatBot.error_notifications[str(phone_number)] = error_msg
                 await TwilioService().send_whatsapp_message(
-                    to_=phone_number,
+                    to_=message.From,
                     message="Algo deu errado ao processar sua mensagem. Por favor, tente novamente mais tarde.",
                 )
             return error_msg
         except HTTPException as e:
+            logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             error_msg = e.detail
             if str(phone_number) not in WhatsappChatBot.error_notifications:
                 WhatsappChatBot.error_notifications[str(phone_number)] = error_msg
                 await TwilioService().send_whatsapp_message(
-                    to_=phone_number,
+                    to_=message.From,
                     message="Algo deu errado ao processar sua mensagem. Por favor, tente novamente mais tarde.",
                 )
             return error_msg
@@ -77,15 +80,16 @@ class WhatsappChatBot:
             )
 
             await TwilioService().send_whatsapp_message(
-                to_=phone_number,
+                to_=message.From,
                 message=assistant_response,
             )
         except Exception as e:
+            logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             error_msg = str(e)
             if str(phone_number) not in WhatsappChatBot.error_notifications:
                 WhatsappChatBot.error_notifications[str(phone_number)] = error_msg
                 await TwilioService().send_whatsapp_message(
-                    to_=phone_number,
+                    to_=message.From,
                     message="Erro ao processar mensagem, tente novamente mais tarde...",
                 )
             return error_msg
