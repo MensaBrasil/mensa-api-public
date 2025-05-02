@@ -4,8 +4,7 @@ Endpoints for managing the Volunteer Recognition platform.
 
 import base64
 import logging
-import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
@@ -38,6 +37,7 @@ from people_api.utils import generate_presigned_media_url, upload_media_to_s3
 
 from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..schemas import UserToken
+from ..settings import get_settings
 
 volunteer_router = APIRouter(
     tags=["VolunteerRecognition"],
@@ -136,7 +136,6 @@ async def create_activity_log(
 ):
     """
     Create a new volunteer activity log.
-    This endpoint ignores any registration_id from the payload and uses the one from the token.
     """
     data = log.model_dump(exclude={"registration_id"})
     data["registration_id"] = registration_id
@@ -147,9 +146,9 @@ async def create_activity_log(
         except Exception as e:
             raise HTTPException(status_code=400, detail="Invalid media_file encoding") from e
 
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
         s3_key = f"activity_media/{timestamp}_uploaded_image.jpg"
-        bucket = os.environ.get("MY_BUCKET_NAME", "volunteer-platform-staging")
+        bucket = get_settings().volunteer_s3_bucket
         try:
             media_url = upload_media_to_s3(bucket, s3_key, file_content, "image/jpeg")
         except Exception as e:
@@ -199,11 +198,13 @@ async def create_activity_evaluation(
         if not category:
             raise HTTPException(status_code=404, detail="Activity category not found")
 
+        if activity_log.registration_id is None:
+            raise HTTPException(status_code=400, detail="No registration found")
+
         point_transaction = VolunteerPointTransaction.prepare_transaction(
-            registration_id=activity_log.registration_id,  # type: ignore
+            registration_id=activity_log.registration_id,
             activity_id=activity_log.id,
             points=category.points,
-            title=activity_log.title,
         )
         sessions.rw.add(point_transaction)
 
@@ -431,24 +432,24 @@ async def get_user_full_activities_approved(
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """
-    Retrieve all volunteer activity logs for the authenticated user that have been approved.
-    """
+    Retrieve all volunteer activity logs for the authenticated user that have been approved."""
     registration_id = token_data.registration_id
-    query = VolunteerActivityLog.select_full_user_activities(registration_id).where(
-        VolunteerActivityEvaluation.status == "approved"
+    result = await sessions.ro.exec(
+        VolunteerActivityLog.select_full_user_activities_approved(registration_id)
     )
-    result = await sessions.ro.exec(query)
     rows = result.all()
 
-    activities = []
-    for activity_log, evaluation in rows:
-        activity_public = VolunteerActivityLogPublic.model_validate(activity_log)
-        evaluation_public = (
-            VolunteerActivityEvaluationPublic.model_validate(evaluation) if evaluation else None
-        )
-        activity_public.media_path = generate_presigned_media_url(activity_log.media_path)
+    activities: list[UserActivityFullResponse] = []
+    for log, evaluation, points in rows:
+        activity = VolunteerActivityLogPublic.model_validate(log)
+        evaluation_public = VolunteerActivityEvaluationPublic.model_validate(evaluation)
+        activity.media_path = generate_presigned_media_url(log.media_path)
         activities.append(
-            UserActivityFullResponse(activity=activity_public, evaluation=evaluation_public)
+            UserActivityFullResponse(
+                activity=activity,
+                evaluation=evaluation_public,
+                points=points,
+            )
         )
     return activities
 
@@ -465,23 +466,21 @@ async def get_user_full_activities_rejected(
     """
     Retrieve all volunteer activity logs for the authenticated user that have been rejected."""
     registration_id = token_data.registration_id
-    query = VolunteerActivityLog.select_full_user_activities(registration_id).where(
-        VolunteerActivityEvaluation.status == "rejected"
+    result = await sessions.ro.exec(
+        VolunteerActivityLog.select_full_user_activities_rejected(registration_id)
     )
-    result = await sessions.ro.exec(query)
     rows = result.all()
 
-    activities = []
-    for activity_log, evaluation in rows:
-        activity_public = VolunteerActivityLogPublic.model_validate(activity_log)
-        evaluation_public = (
-            VolunteerActivityEvaluationPublic.model_validate(evaluation) if evaluation else None
-        )
-
-        activity_public.media_path = generate_presigned_media_url(activity_log.media_path)
-
+    activities: list[UserActivityFullResponse] = []
+    for log, evaluation in rows:
+        activity = VolunteerActivityLogPublic.model_validate(log)
+        evaluation_public = VolunteerActivityEvaluationPublic.model_validate(evaluation)
+        activity.media_path = generate_presigned_media_url(log.media_path)
         activities.append(
-            UserActivityFullResponse(activity=activity_public, evaluation=evaluation_public)
+            UserActivityFullResponse(
+                activity=activity,
+                evaluation=evaluation_public,
+            )
         )
     return activities
 
@@ -498,17 +497,14 @@ async def get_user_full_activities_unevaluated(
     """
     Retrieve all volunteer activity logs for the authenticated user that have not yet been evaluated."""
     registration_id = token_data.registration_id
-    query = VolunteerActivityLog.select_unevaluated().where(
-        VolunteerActivityLog.registration_id == registration_id
+    result = await sessions.ro.exec(
+        VolunteerActivityLog.select_full_user_activities_unevaluated(registration_id)
     )
-    result = await sessions.ro.exec(query)
-    rows = result.all()
+    logs = result.all()
 
-    activities = []
-    for activity_log in rows:
-        activity_public = VolunteerActivityLogPublic.model_validate(activity_log)
-
-        activity_public.media_path = generate_presigned_media_url(activity_log.media_path)
-
-        activities.append(UserActivityFullResponse(activity=activity_public, evaluation=None))
+    activities: list[UserActivityFullResponse] = []
+    for log in logs:
+        activity = VolunteerActivityLogPublic.model_validate(log)
+        activity.media_path = generate_presigned_media_url(log.media_path)
+        activities.append(UserActivityFullResponse(activity=activity, evaluation=None))
     return activities

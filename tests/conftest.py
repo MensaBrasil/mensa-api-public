@@ -1,6 +1,5 @@
 """Fixtures for the test suite."""
 
-import os
 import subprocess
 import time
 from collections.abc import Generator
@@ -262,19 +261,11 @@ def moto_server() -> Generator[str, None, None]:
     server.stop()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def aws_resource():
-    """
-    Fixture to start the generic AWS mock (mock_aws) and create the test bucket.
-    """
-    bucket_name = os.environ.get("MY_BUCKET_NAME", "mybucket")
+    """Fixture to mock AWS S3 resource."""
     with mock_aws():
-        s3 = boto3.resource(
-            "s3",
-            region_name="us-east-1",
-            endpoint_url=os.environ.get("AWS_S3_ENDPOINT_URL"),
-        )
-        s3.create_bucket(Bucket=bucket_name)
+        s3 = boto3.resource("s3", region_name="us-east-1")
         yield s3
 
 

@@ -1,8 +1,8 @@
-"""update evaluator_id column
+"""volunteer recognition platform
 
-Revision ID: 280e7b2d8757
+Revision ID: 04447ce1b06b
 Revises: bb9eb342be3d
-Create Date: 2025-04-16 17:57:22.324919
+Create Date: 2025-05-01 15:40:43.819486
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '280e7b2d8757'
+revision: str = '04447ce1b06b'
 down_revision: Union[str, None] = 'bb9eb342be3d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -57,6 +57,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['activity_id'], ['volunteer_activity_log.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_activity_evaluation_status'), 'activity_evaluation', ['status'], unique=False)
     op.create_table('volunteer_point_transactions',
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
@@ -72,7 +73,7 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=True,
-               existing_server_default=sa.text('now()'))
+               existing_server_default='now()')
     op.alter_column('addresses', 'updated_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -378,6 +379,7 @@ def downgrade() -> None:
                existing_nullable=True,
                existing_server_default=sa.text('now()'))
     op.drop_table('volunteer_point_transactions')
+    op.drop_index(op.f('ix_activity_evaluation_status'), table_name='activity_evaluation')
     op.drop_table('activity_evaluation')
     op.drop_table('volunteer_activity_log')
     op.drop_table('volunteer_activity_category')

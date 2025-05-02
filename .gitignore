@@ -24,3 +24,4 @@ hte_temp
 hte_temp/*
 docs/conversations.txt
 *.pem
+settings.json

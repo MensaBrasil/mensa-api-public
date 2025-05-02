@@ -69,7 +69,7 @@ async def verify_firebase_token(
 def permission_required(required_permissions: str | list[str]):
     """
     Dependency factory that verifies if the authenticated user has at least one
-    of the required permissions..
+    of the required permissions.
     """
 
     async def dependency(token_data: UserToken = Depends(verify_firebase_token)):

@@ -99,12 +99,14 @@ jobs:
         google_service_account: google_service_account
         google_workspace_cronjob_uptime_url: google_workspace_cronjob_uptime_url
 
+        aws_access_key_id: secret-removed
+        aws_secret_access_key: secret-removed
         region_name: us-east-1
-        aws_access_key_id: testing
-        aws_secret_access_key: testing
+        volunteer_s3_bucket: volunteer-platform-staging
 
         private_internal_token_key: private_key
         public_internal_token_key: public_key
+
       run: |
         uv run coverage run -m pytest -sv .
         uv run coverage report

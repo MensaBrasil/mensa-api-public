@@ -42,7 +42,7 @@ def create_google_workspace_user(primary_email, given_name, family_name, seconda
     password = generate_password()
 
     creds = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES
+        get_settings().service_account_file, scopes=SCOPES
     )
     service = build("admin", "directory_v1", credentials=creds)
 

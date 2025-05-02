@@ -1,11 +1,9 @@
 """Tests for the volunteer API endpoints."""
 
 import base64
-import os
+import urllib.parse
 
 import pytest
-
-MY_BUCKET_NAME = "mybucket"
 
 ###############################
 # Authentication / Authorization Tests
@@ -516,38 +514,47 @@ def test_get_combined_names(test_client, mock_valid_token_auth, run_db_query):
 
 
 def test_create_activity_log_with_media(test_client, aws_resource, mock_valid_token_auth):
-    """
-    Test creating an activity log with media upload via JSON.
-    The test sends a JSON payload including a base64-encoded 'media_file'.
-    """
-    os.environ["MY_BUCKET_NAME"] = "mybucket"
-
-    file_content = b"Test image content"
-    media_file_encoded = base64.b64encode(file_content).decode("utf-8")
-
-    payload = {
-        "registration_id": 5,
-        "title": "Test Activity Log",
-        "description": "Activity with media upload",
-        "category_id": 10,
-        "activity_date": "2024-11-11",
-        "media_file": media_file_encoded,
-    }
+    """Test creating a new activity log with a media file."""
     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
 
-    response = test_client.post("/volunteer/activity/logs/", json=payload, headers=headers)
-    assert response.status_code == 201, f"Response: {response.text}"
+    bucket = "volunteer-platform-staging"
+    aws_resource.create_bucket(Bucket=bucket)
 
-    result = response.json()
-    media_path = result.get("media_path")
-    assert media_path is not None, "media_path should be set"
-    assert media_path.startswith("s3://"), "media_path should be an S3 URL"
+    dummy = b"hello, moto!"
+    media_file_b64 = base64.b64encode(dummy).decode()
 
-    bucket = "mybucket"
-    key = media_path.split(f"s3://{bucket}/")[-1]
-    obj = aws_resource.Object(bucket, key)
-    uploaded_content = obj.get()["Body"].read()
-    assert uploaded_content == file_content
+    log_payload = {
+        "registration_id": 6,
+        "title": "Test Activity Log Media",
+        "description": "Log with media",
+        "category_id": 10,
+        "media_file": media_file_b64,
+    }
+
+    resp = test_client.post(
+        "/volunteer/activity/logs/",
+        json=log_payload,
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+
+    log = resp.json()
+    assert log["title"] == log_payload["title"]
+
+    media_url = log["media_path"]
+    assert media_url.startswith("s3://") or media_url.startswith("https://"), (
+        f"Expected s3:// or https:// URL, got {media_url}"
+    )
+
+    if media_url.startswith("s3://"):
+        prefix = f"s3://{bucket}/"
+        key = media_url[len(prefix) :]
+    else:
+        parsed = urllib.parse.urlparse(media_url)
+        key = parsed.path.lstrip("/")
+
+    stored = aws_resource.Object(bucket, key).get()["Body"].read()
+    assert stored == dummy
 
 
 def test_get_all_activity_categories(test_client, mock_valid_token_auth):
@@ -633,14 +640,15 @@ def test_get_user_full_activities_unevaluated_empty(test_client, mock_valid_toke
     Test retrieving full unevaluated activities for a registration when there are none.
     """
     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    registration_id = 5
+
     get_resp = test_client.get(
-        f"/volunteer/activities/full/unevaluated/?registration_id={registration_id}",
+        "/volunteer/activities/full/unevaluated/",
         headers=headers,
     )
     assert get_resp.status_code == 200, (
         f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
     )
+
     activities = get_resp.json()
     assert isinstance(activities, list), "Expected a list of unevaluated activities"
 
@@ -650,7 +658,6 @@ def test_get_user_full_activities_unevaluated_with_logs(test_client, mock_valid_
     Test retrieving full unevaluated activities for a registration when at least one exists.
     """
     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    registration_id = 5
 
     category_payload = {
         "name": "FULL.UNEVALUATED.CATEGORY",
@@ -658,121 +665,165 @@ def test_get_user_full_activities_unevaluated_with_logs(test_client, mock_valid_
         "points": 20,
     }
     cat_resp = test_client.post(
-        "/volunteer/admin/categories/", json=category_payload, headers=headers
+        "/volunteer/admin/categories/",
+        json=category_payload,
+        headers=headers,
     )
     assert cat_resp.status_code == 201, f"Category creation failed: {cat_resp.text}"
-    category = cat_resp.json()
-    category_id = category["id"]
+    category_id = cat_resp.json()["id"]
 
     activity_payload = {
-        "registration_id": registration_id,
         "category_id": category_id,
         "title": "Unevaluated Activity",
         "description": "Activity for unevaluated test",
         "activity_date": "2025-03-21",
     }
-    act_resp = test_client.post("/volunteer/activity/logs/", json=activity_payload, headers=headers)
+    act_resp = test_client.post(
+        "/volunteer/activity/logs/",
+        json=activity_payload,
+        headers=headers,
+    )
     assert act_resp.status_code == 201, f"Activity creation failed: {act_resp.text}"
-    activity = act_resp.json()
-    activity_id = activity["id"]
+    activity_id = act_resp.json()["id"]
 
     get_resp = test_client.get(
-        f"/volunteer/activities/full/unevaluated/?registration_id={registration_id}",
+        "/volunteer/activities/full/unevaluated/",
+        headers=headers,
+    )
+    assert get_resp.status_code == 200, (
+        f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
+    )
+
+    activities = get_resp.json()
+    assert isinstance(activities, list), "Expected a list of unevaluated activities"
+    assert activities, "Expected at least one unevaluated activity in the list"
+
+    assert any(act["activity"]["id"] == activity_id for act in activities), (
+        f"Expected to find activity {activity_id} in unevaluated activities, got {activities}"
+    )
+
+
+def test_get_user_full_activities_approved(test_client, mock_valid_token_auth):
+    """
+    Test retrieving full approved activities for a registration.
+    """
+    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
+
+    cat_payload = {
+        "name": "APPROVED.CATEGORY",
+        "description": "Category for approved activities test",
+        "points": 30,
+    }
+    cat_resp = test_client.post(
+        "/volunteer/admin/categories/",
+        json=cat_payload,
+        headers=headers,
+    )
+    assert cat_resp.status_code == 201, f"Category creation failed: {cat_resp.text}"
+    category_id = cat_resp.json()["id"]
+
+    act_payload = {
+        "category_id": category_id,
+        "title": "Approved Activity",
+        "description": "Test approved activity",
+        "activity_date": "2025-03-22",
+    }
+    act_resp = test_client.post(
+        "/volunteer/activity/logs/",
+        json=act_payload,
+        headers=headers,
+    )
+    assert act_resp.status_code == 201, f"Activity log creation failed: {act_resp.text}"
+    activity_id = act_resp.json()["id"]
+
+    eval_payload = {
+        "activity_id": activity_id,
+        "evaluator": "Approver",
+        "status": "approved",
+    }
+    eval_resp = test_client.post(
+        "/volunteer/admin/evaluations/",
+        json=eval_payload,
+        headers=headers,
+    )
+    assert eval_resp.status_code == 201, f"Evaluation creation failed: {eval_resp.text}"
+
+    get_resp = test_client.get(
+        "/volunteer/activities/full/approved/",
         headers=headers,
     )
     assert get_resp.status_code == 200, (
         f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
     )
     activities = get_resp.json()
-    assert isinstance(activities, list), "Expected a list of unevaluated activities"
-    assert any(act["activity"]["id"] == activity_id for act in activities), (
-        "Unevaluated activity not found"
+    assert isinstance(activities, list), "Response should be a list"
+
+    matching = [act for act in activities if act.get("activity", {}).get("id") == activity_id]
+    assert matching, "Approved activity not found in response"
+    evaluation_data = matching[0].get("evaluation")
+    assert evaluation_data and evaluation_data.get("status").lower() == "approved", (
+        "Evaluation status is not 'approved'"
     )
 
 
-# def test_get_user_full_activities_approved(test_client, mock_valid_token_auth):
-#     """
-#     Test retrieving full approved activities for a registration.
-#     This involves creating an activity log, then an evaluation with status "approved".
-#     """
-#     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-
-#     activity_payload = {
-#         "category_id": 10,
-#         "title": "Approved Activity",
-#         "description": "Test approved activity",
-#         "activity_date": "2025-03-22",
-#         "volunteer_name": "Test User"
-#     }
-#     act_resp = test_client.post("/volunteer/activity/logs/", json=activity_payload, headers=headers)
-#     assert act_resp.status_code == 201, f"Activity log creation failed: {act_resp.text}"
-#     activity = act_resp.json()
-#     activity_id = activity["id"]
-
-#     evaluation_payload = {
-#         "activity_id": activity_id,
-#         "evaluator": "Approver",
-#         "status": "approved",
-#     }
-#     eval_resp = test_client.post("/volunteer/admin/evaluations/", json=evaluation_payload, headers=headers)
-#     assert eval_resp.status_code == 201, f"Evaluation creation failed: {eval_resp.text}"
-
-#     get_resp = test_client.get("/volunteer/activities/full/approved/", headers=headers)
-#     assert get_resp.status_code == 200, f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
-#     activities = get_resp.json()
-#     assert isinstance(activities, list), "Response should be a list"
-
-#     matching = [act for act in activities if act.get("activity", {}).get("id") == activity_id]
-#     assert matching, "Approved activity not found in response"
-#     evaluation_data = matching[0].get("evaluation")
-#     assert evaluation_data and evaluation_data.get("status").lower() == "approved", "Evaluation status is not 'approved'"
-
-# def test_get_user_full_activities_rejected(test_client, mock_valid_token_auth):
-#     """
-#     Test retrieving full rejected activities for a registration.
-#     This involves creating an activity log, then an evaluation with status "rejected".
-#     """
-#     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-
-#     activity_payload = {
-#         "category_id": 10,
-#         "title": "Rejected Activity",
-#         "description": "Test rejected activity",
-#         "activity_date": "2025-03-22",
-#         "volunteer_name": "Test User"
-#     }
-#     act_resp = test_client.post("/volunteer/activity/logs/", json=activity_payload, headers=headers)
-#     assert act_resp.status_code == 201, f"Activity log creation failed: {act_resp.text}"
-#     activity = act_resp.json()
-#     activity_id = activity["id"]
-
-#     evaluation_payload = {
-#         "activity_id": activity_id,
-#         "evaluator": "Rejector",
-#         "status": "rejected",
-#     }
-#     eval_resp = test_client.post("/volunteer/admin/evaluations/", json=evaluation_payload, headers=headers)
-#     assert eval_resp.status_code == 201, f"Evaluation creation failed: {eval_resp.text}"
-
-#     get_resp = test_client.get("/volunteer/activities/full/rejected/", headers=headers)
-#     assert get_resp.status_code == 200, f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
-#     activities = get_resp.json()
-#     assert isinstance(activities, list), "Response should be a list"
-
-#     matching = [act for act in activities if act.get("activity", {}).get("id") == activity_id]
-#     assert matching, "Rejected activity not found in response"
-#     evaluation_data = matching[0].get("evaluation")
-#     assert evaluation_data and evaluation_data.get("status").lower() == "rejected", "Evaluation status is not 'rejected'"
-
-
-def test_get_unevaluated_activities_for_evaluation(test_client, mock_valid_token_auth):
+def test_get_user_full_activities_rejected(test_client, mock_valid_token_auth):
     """
-    Test retrieving unevaluated activities via the evaluate-with-category endpoint.
+    Test retrieving full rejected activities for a registration.
     """
     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    get_resp = test_client.get("/volunteer/admin/evaluate-with-category/", headers=headers)
+
+    cat_payload = {
+        "name": "REJECTED.CATEGORY",
+        "description": "Category for rejected activities test",
+        "points": 10,
+    }
+    cat_resp = test_client.post(
+        "/volunteer/admin/categories/",
+        json=cat_payload,
+        headers=headers,
+    )
+    assert cat_resp.status_code == 201, f"Category creation failed: {cat_resp.text}"
+    category_id = cat_resp.json()["id"]
+
+    act_payload = {
+        "category_id": category_id,
+        "title": "Rejected Activity",
+        "description": "Test rejected activity",
+        "activity_date": "2025-03-22",
+    }
+    act_resp = test_client.post(
+        "/volunteer/activity/logs/",
+        json=act_payload,
+        headers=headers,
+    )
+    assert act_resp.status_code == 201, f"Activity log creation failed: {act_resp.text}"
+    activity_id = act_resp.json()["id"]
+
+    eval_payload = {
+        "activity_id": activity_id,
+        "evaluator": "Rejector",
+        "status": "rejected",
+    }
+    eval_resp = test_client.post(
+        "/volunteer/admin/evaluations/",
+        json=eval_payload,
+        headers=headers,
+    )
+    assert eval_resp.status_code == 201, f"Evaluation creation failed: {eval_resp.text}"
+
+    get_resp = test_client.get(
+        "/volunteer/activities/full/rejected/",
+        headers=headers,
+    )
     assert get_resp.status_code == 200, (
         f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
     )
-    results = get_resp.json()
-    assert isinstance(results, list), "Response should be a list"
+    activities = get_resp.json()
+    assert isinstance(activities, list), "Response should be a list"
+
+    matching = [act for act in activities if act.get("activity", {}).get("id") == activity_id]
+    assert matching, "Rejected activity not found in response"
+    evaluation_data = matching[0].get("evaluation")
+    assert evaluation_data and evaluation_data.get("status").lower() == "rejected", (
+        "Evaluation status is not 'rejected'"
+    )

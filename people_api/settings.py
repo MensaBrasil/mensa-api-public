@@ -46,14 +46,15 @@ class Settings(BaseSettings):
     discord_client_secret: str
     discord_redirect_uri: str
 
-    service_account_file: str
     google_api_scopes: str
     google_service_account: str
     google_workspace_cronjob_uptime_url: str
+    service_account_file: str
 
     region_name: str
     aws_access_key_id: str
     aws_secret_access_key: str
+    volunteer_s3_bucket: str
 
     private_internal_token_key: str
     public_internal_token_key: str

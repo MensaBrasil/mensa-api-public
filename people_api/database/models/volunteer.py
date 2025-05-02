@@ -74,6 +74,8 @@ class VolunteerActivityLog(BaseVolunteerActivityLog, table=True):
 
     @classmethod
     def select_unevaluated(cls):
+        """
+        Build a query that retrieves all unevaluated activities."""
         return (
             select(cls)
             .outerjoin(
@@ -84,27 +86,57 @@ class VolunteerActivityLog(BaseVolunteerActivityLog, table=True):
         )
 
     @classmethod
+    def select_full_user_activities_approved(cls, registration_id: int):
+        """
+        Build a query that retrieves all approved activities for a member."""
+        return (
+            select(cls, VolunteerActivityEvaluation, col(VolunteerActivityCategory.points))
+            .join(
+                VolunteerActivityEvaluation, col(VolunteerActivityEvaluation.activity_id) == cls.id
+            )
+            .join(VolunteerActivityCategory, col(VolunteerActivityCategory.id) == cls.category_id)
+            .where(
+                cls.registration_id == registration_id,
+                func.lower(VolunteerActivityEvaluation.status) == "approved",
+            )
+        )
+
+    @classmethod
+    def select_full_user_activities_rejected(cls, registration_id: int):
+        """
+        Build a query that retrieves all rejected activities for a member."""
+        return (
+            select(cls, VolunteerActivityEvaluation)
+            .join(
+                VolunteerActivityEvaluation, col(VolunteerActivityEvaluation.activity_id) == cls.id
+            )
+            .where(
+                cls.registration_id == registration_id,
+                func.lower(VolunteerActivityEvaluation.status) == "rejected",
+            )
+        )
+
+    @classmethod
+    def select_full_user_activities_unevaluated(cls, registration_id: int):
+        """
+        Build a query that retrieves all unevaluated activities for a member."""
+        return (
+            select(cls)
+            .outerjoin(
+                VolunteerActivityEvaluation, col(VolunteerActivityEvaluation.activity_id) == cls.id
+            )
+            .where(
+                cls.registration_id == registration_id,
+                col(VolunteerActivityEvaluation.id) == None,  # noqa: E711
+            )
+        )
+
+    @classmethod
     def select_by_member(cls, registration_id: int):
         """
         Returns a SQLModel Select query for all activity logs for a specific member.
         """
         return select(cls).where(cls.registration_id == registration_id)
-
-    @classmethod
-    def select_full_user_activities(cls, registration_id: int):
-        """
-        Build a query that retrieves full activity details for a user,
-        including the activity log, evaluation (if any), and category.
-        """
-        stmt = (
-            select(cls, VolunteerActivityEvaluation, VolunteerActivityCategory)
-            .outerjoin(
-                VolunteerActivityEvaluation,
-                col(VolunteerActivityEvaluation.activity_id) == col(cls.id),
-            )
-            .where(cls.registration_id == registration_id)
-        )
-        return stmt
 
     @classmethod
     def select_by_member_and_id(cls, activity_id: int, registration_id: int):
@@ -131,7 +163,7 @@ class BaseVolunteerActivityEvaluation(BaseSQLModel):
 
     activity_id: int = Field(foreign_key="volunteer_activity_log.id")
     evaluator_id: int | None = Field(default=None)
-    status: str = Field(max_length=50)
+    status: str = Field(max_length=50, index=True)
     observation: str | None = Field(default=None, sa_column=Column(Text))
 
 
@@ -194,7 +226,7 @@ class VolunteerPointTransaction(BaseVolunteerPointTransaction, table=True):
 
     @classmethod
     def prepare_transaction(
-        cls, registration_id: int, activity_id: int, points: int, title: str
+        cls, registration_id: int, activity_id: int, points: int
     ) -> "VolunteerPointTransaction":
         """Prepare a new point transaction for a volunteer activity."""
         return cls(
@@ -309,5 +341,6 @@ class UserActivityFullResponse(BaseModel):
 
     activity: VolunteerActivityLogPublic
     evaluation: VolunteerActivityEvaluationPublic | None = None
+    points: int | None = None
 
     model_config = ConfigDict(from_attributes=True)

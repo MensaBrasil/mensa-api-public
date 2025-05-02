@@ -8,7 +8,6 @@ Misc helpers/utils functions
 import io
 import json
 import logging
-import os
 from datetime import date, datetime
 from time import time
 from uuid import uuid4
@@ -94,7 +93,7 @@ def generate_presigned_media_url(media_path: str | None) -> str | None:
     if not media_path:
         return None
 
-    bucket_name = os.environ.get("MY_BUCKET_NAME", "volunteer-platform-staging")
+    bucket_name = get_settings().volunteer_s3_bucket
     s3_client = get_s3_client()
 
     try:

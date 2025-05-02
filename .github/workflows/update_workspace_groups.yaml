@@ -82,9 +82,10 @@ jobs:
         discord_client_secret: discord_client_secret
         discord_redirect_uri: discord_redirect_uri
 
+        aws_access_key_id: secret-removed
+        aws_secret_access_key: secret-removed
         region_name: us-east-1
-        aws_access_key_id: testing
-        aws_secret_access_key: testing
+        volunteer_s3_bucket: volunteer-platform-staging
 
         private_internal_token_key: private_key
         public_internal_token_key: public_key
