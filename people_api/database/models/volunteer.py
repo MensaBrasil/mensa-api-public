@@ -7,7 +7,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import Column, Field, SQLModel, Text, col, desc, func, select
 from sqlmodel.sql.expression import Select
 
-from people_api.database.models.models import BaseSQLModel
+from people_api.database.models.models import BaseSQLModel, Registration
 
 
 class LeaderboardEntry(BaseModel):
@@ -241,38 +241,34 @@ class VolunteerPointTransaction(BaseVolunteerPointTransaction, table=True):
         start_date: datetime,
         end_date: datetime,
     ) -> Select:
-        """
-        Select the leaderboard for a specific period,
-        using volunteer_name from the activity log.
-        """
-        total_points_expr: ColumnElement = func.sum(cls.points).label("total_points")
-        rank_expr = func.row_number().over(order_by=desc(total_points_expr)).label("rank")
+        total_points: ColumnElement = func.sum(cls.points).label("total_points")
+        rank = func.row_number().over(order_by=desc(total_points)).label("rank")
 
         return (
             select(
-                col(cls.registration_id),
-                VolunteerActivityLog.volunteer_name,
-                total_points_expr,
-                rank_expr,
+                cls.registration_id,
+                col(Registration.name).label("full_name"),
+                total_points,
+                rank,
             )
             .select_from(cls)
             .join(
                 VolunteerActivityEvaluation,
                 col(VolunteerActivityEvaluation.activity_id) == cls.activity_id,
             )
-            .join(
-                VolunteerActivityLog,
-                col(VolunteerActivityLog.id) == cls.activity_id,
-            )
             .where(
                 VolunteerActivityEvaluation.created_at >= start_date,  # type: ignore
                 VolunteerActivityEvaluation.created_at <= end_date,  # type: ignore
             )
+            .join(
+                Registration,
+                col(Registration.registration_id) == cls.registration_id,
+            )
             .group_by(
                 col(cls.registration_id),
-                col(VolunteerActivityLog.volunteer_name),
+                col(Registration.name),
             )
-            .order_by(desc(total_points_expr))
+            .order_by(desc(total_points))
         )
 
     @classmethod

@@ -244,21 +244,27 @@ async def get_leaderboard(
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """
-    Retrieve volunteer point totals and ranking between start_date and end_date.
+    Retrieve volunteer point totals and ranking between start_date and end_date,
+    showing only first + last name.
     """
     query = VolunteerPointTransaction.select_leaderboard_period(start_date, end_date)
     result = await sessions.ro.exec(query)
     rows = result.all()
 
-    leaderboard = [
-        LeaderboardEntry(
-            registration_id=row[0],
-            volunteer_name=row[1] or "Unknown",
-            total_points=row[2],
-            rank=row[3],
+    leaderboard: list[LeaderboardEntry] = []
+    for registration_id, full_name, total_points, rank in rows:
+        first, last = CombinedNamesResponse.split_name(full_name or "")
+        display_name = f"{first} {last}".strip() or "Unknown"
+
+        leaderboard.append(
+            LeaderboardEntry(
+                registration_id=registration_id,
+                volunteer_name=display_name,
+                total_points=total_points,
+                rank=rank,
+            )
         )
-        for row in rows
-    ]
+
     return leaderboard
 
 
