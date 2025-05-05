@@ -1,5 +1,6 @@
 """Handle incoming WhatsApp messages and forward them to the assistant."""
 
+import asyncio
 import logging
 
 from ....settings import get_settings
@@ -26,33 +27,64 @@ class MessageHandler:
             run = await openai_client.beta.threads.runs.create_and_poll(
                 thread_id=thread_id,
                 assistant_id=get_settings().chatgpt_assistant_id,
-                tools=[{"type": "file_search"}],
-                tool_choice="required",
             )
 
-            logging.info(run.model_dump_json(indent=2))
-            logging.info("[CHATBOT-MENSA] Assistant response received. Checking status...")
-            while run.status == "requires_action" and run.required_action:
-                logging.info("[CHATBOT-MENSA] Tool call detected... Handling tool calls...")
-                run = await ToolCallService.handle_tool_calls(run, registration_id)
+            logging.info(
+                "[CHATBOT-MENSA] Assistant response received. Initial status: %s", run.status
+            )
+
+            timeout = 240
+            elapsed = 0
+
+            while (
+                run.status not in ("completed", "failed", "cancelled", "expired")
+                and elapsed < timeout
+            ):
+                if run.status == "queued":
+                    logging.info("[CHATBOT-MENSA] Assistant run is queued. Waiting to start...")
+                elif run.status == "in_progress":
+                    logging.info("[CHATBOT-MENSA] Assistant run is in progress...")
+                elif run.status == "requires_action" and run.required_action:
+                    logging.info("[CHATBOT-MENSA] Tool call detected... Handling tool calls...")
+                    run = await ToolCallService.handle_tool_calls(run, registration_id)
+                else:
+                    logging.info("[CHATBOT-MENSA] Assistant run status: %s", run.status)
+
+                if run.status not in ("completed", "failed", "cancelled", "expired"):
+                    await asyncio.sleep(1)
+                    elapsed += 1
+                    run = await openai_client.beta.threads.runs.retrieve(
+                        thread_id=thread_id, run_id=run.id
+                    )
 
             if run.status == "completed":
                 logging.info("[CHATBOT-MENSA] Assistant response completed.")
                 messages_response = await openai_client.beta.threads.messages.list(
                     thread_id=thread_id
                 )
-                last_message = next(
+                assistant_messages = [
                     msg for msg in messages_response.data if msg.role == "assistant"
-                )
-                if hasattr(last_message.content[0], "text") and hasattr(
-                    last_message.content[0].text, "value"
-                ):
-                    last_response = last_message.content[0].text.value
+                ]
+                if not assistant_messages:
+                    logging.error("[CHATBOT-MENSA] No assistant messages found after completion.")
+                    raise ValueError("No valid response from the assistant.")
 
-                    return last_response
+                latest_timestamp = max(msg.created_at for msg in assistant_messages)
+                latest_messages = [
+                    msg for msg in assistant_messages if msg.created_at == latest_timestamp
+                ]
+                responses = []
+                for msg in latest_messages:
+                    if hasattr(msg.content[0], "text") and hasattr(msg.content[0].text, "value"):
+                        responses.append(msg.content[0].text.value)
+                return "\n".join(responses)
 
-            logging.error("[CHATBOT-MENSA] No valid response from the assistant.")
-            raise ValueError("No valid response from the assistant.")
+            if run.status in ("failed", "cancelled", "expired"):
+                logging.error("[CHATBOT-MENSA] Assistant run ended with status: %s", run.status)
+                raise ValueError(f"Assistant run ended with status: {run.status}")
+
+            logging.error("[CHATBOT-MENSA] Assistant run did not complete in time.")
+            raise TimeoutError("Assistant run did not complete in time.")
 
         except Exception as e:
             logging.error("[CHATBOT-MENSA] Error processing message: %s", e)

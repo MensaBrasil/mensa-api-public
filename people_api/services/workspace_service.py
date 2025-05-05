@@ -142,7 +142,8 @@ class WorkspaceService:
             creds = service_account.Credentials.from_service_account_file(
                 SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES
             )
-            service = build("admin", "directory_v1", credentials=creds)
+            delegated_creds = creds.with_subject(get_settings().google_service_account)
+            service = build("admin", "directory_v1", credentials=delegated_creds)
 
             try:
                 existing_user = service.users().get(userKey=primary_email).execute()
@@ -214,7 +215,8 @@ class WorkspaceService:
         creds = service_account.Credentials.from_service_account_file(
             SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES
         )
-        service = build("admin", "directory_v1", credentials=creds)
+        delegated_creds = creds.with_subject(get_settings().google_workspace_admin_account)
+        service = build("admin", "directory_v1", credentials=delegated_creds)
 
         try:
             # Check if the user exists in Google Workspace

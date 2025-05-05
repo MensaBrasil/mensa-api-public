@@ -10,10 +10,14 @@ from openai.types.beta.threads.run_submit_tool_outputs_params import ToolOutput
 from people_api.services.whatsapp_service.chatbot.openai_service import openai_client
 
 from .wpp_client_helpers import (
+    add_member_legal_reps,
     create_email_request,
+    delete_member_legal_reps,
     get_member_addresses_request,
+    get_member_legal_reps,
     recover_email_password_request,
     update_address_request,
+    update_member_legal_reps,
 )
 
 
@@ -24,6 +28,10 @@ class FunctionCall(StrEnum):
     RECOVER_EMAIL_PASSWORD = "recover_email_password"
     GET_MEMBER_ADDRESSES = "get_member_addresses"
     UPDATE_ADDRESS = "update_member_address"
+    GET_MEMBER_LEGAL_REPS = "get_member_legal_representatives"
+    ADD_MEMBER_LEGAL_REPS = "add_member_legal_representatives"
+    UPDATE_MEMBER_LEGAL_REPS = "update_member_legal_representatives"
+    DELETE_MEMBER_LEGAL_REPS = "delete_member_legal_representatives"
 
 
 class ToolCallService:
@@ -49,36 +57,91 @@ class ToolCallService:
             for tool_call in tool_calls:
                 if tool_call.function.name == FunctionCall.CREATE_EMAIL:
                     logging.info(
-                        f"Tool call detected: {tool_call.function.name} with arguments: {tool_call.function.arguments}"
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
                     )
-                    call_responses[f"{tool_call.id}"] = create_email_request(
+                    call_responses[f"{tool_call.id}"] = await create_email_request(
                         registration_id=registration_id
                     )
                 if tool_call.function.name == FunctionCall.RECOVER_EMAIL_PASSWORD:
                     logging.info(
-                        f"Tool call detected: {tool_call.function.name} with arguments: {tool_call.function.arguments}"
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
                     )
-                    call_responses[f"{tool_call.id}"] = recover_email_password_request(
+                    call_responses[f"{tool_call.id}"] = await recover_email_password_request(
                         registration_id=registration_id
                     )
                 if tool_call.function.name == FunctionCall.GET_MEMBER_ADDRESSES:
                     logging.info(
-                        f"Tool call detected: {tool_call.function.name} with arguments: {tool_call.function.arguments}"
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
                     )
-                    call_responses[f"{tool_call.id}"] = get_member_addresses_request(
+                    call_responses[f"{tool_call.id}"] = await get_member_addresses_request(
                         registration_id=registration_id
                     )
                 if tool_call.function.name == FunctionCall.UPDATE_ADDRESS:
                     logging.info(
-                        f"Tool call detected: {tool_call.function.name} with arguments: {tool_call.function.arguments}"
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
                     )
                     args = json.loads(tool_call.function.arguments)
                     address_id = args.get("address_id")
                     updated_address = args.get("updated_address", {})
-                    call_responses[f"{tool_call.id}"] = update_address_request(
+                    call_responses[f"{tool_call.id}"] = await update_address_request(
                         registration_id=registration_id,
                         address=updated_address,
                         address_id=address_id,
+                    )
+                if tool_call.function.name == FunctionCall.GET_MEMBER_LEGAL_REPS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    call_responses[f"{tool_call.id}"] = await get_member_legal_reps(
+                        registration_id=registration_id
+                    )
+                if tool_call.function.name == FunctionCall.ADD_MEMBER_LEGAL_REPS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    args = json.loads(tool_call.function.arguments)
+                    legal_representative = args.get("legal_representative", {})
+                    call_responses[f"{tool_call.id}"] = await add_member_legal_reps(
+                        registration_id=registration_id,
+                        legal_representative=legal_representative,
+                    )
+                if tool_call.function.name == FunctionCall.UPDATE_MEMBER_LEGAL_REPS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    args = json.loads(tool_call.function.arguments)
+                    legal_representative_id = args.get("legal_representative_id")
+                    legal_representative = args.get("legal_representative", {})
+                    call_responses[f"{tool_call.id}"] = await update_member_legal_reps(
+                        registration_id=registration_id,
+                        legal_representative_id=legal_representative_id,
+                        legal_representative=legal_representative,
+                    )
+                if tool_call.function.name == FunctionCall.DELETE_MEMBER_LEGAL_REPS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    args = json.loads(tool_call.function.arguments)
+                    legal_representative_id = args.get("legal_representative_id")
+                    call_responses[f"{tool_call.id}"] = await delete_member_legal_reps(
+                        registration_id=registration_id,
+                        legal_representative_id=legal_representative_id,
                     )
 
             tool_outputs = [
@@ -95,5 +158,7 @@ class ToolCallService:
                 run_id=run.id,
                 tool_outputs=tool_outputs,
             )
+
+            return run
 
         return run

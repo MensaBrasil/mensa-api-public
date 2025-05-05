@@ -16,7 +16,7 @@ from moto.server import ThreadedMotoServer
 from sqlmodel import Session
 
 from people_api.app import app  # type: ignore
-from people_api.auth import verify_firebase_token
+from people_api.auth import create_token, verify_firebase_token
 from people_api.dbs import engine
 from people_api.schemas import UserToken
 from tests.router_config import test_router
@@ -162,6 +162,20 @@ def mock_valid_token():
     app.dependency_overrides[verify_firebase_token] = mock_verify_firebase_token
     yield
     app.dependency_overrides.pop(verify_firebase_token, None)
+
+
+@pytest.fixture
+def get_valid_internal_token(sync_rw_session):
+    """
+    Return a function that generates a valid JWT token for a given registration_id.
+    Usage:
+        token = get_valid_internal_token(registration_id)
+    """
+
+    def _get_token(registration_id):
+        return create_token(registration_id=registration_id, ttl=3600, session=sync_rw_session)
+
+    return _get_token
 
 
 @pytest.fixture(scope="function")

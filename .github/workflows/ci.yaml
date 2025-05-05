@@ -97,6 +97,7 @@ jobs:
         service_account_file: service_account_file
         google_api_scopes: google_api_scopes
         google_service_account: google_service_account
+        google_workspace_admin_account: google_workspace_admin_account
         google_workspace_cronjob_uptime_url: google_workspace_cronjob_uptime_url
 
         aws_access_key_id: secret-removed

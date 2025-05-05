@@ -3,6 +3,51 @@
 # --- API Key Endpoint Tests ---
 
 
+def test_get_legal_representatives_unauthorized(test_client):
+    """
+    Test getting legal representatives with an invalid token.
+    """
+    response = test_client.get(
+        "/legal_representative/", headers={"Authorization": "Bearer invalidtoken"}
+    )
+    assert response.status_code in (401, 403), f"Expected 401/403 but got {response.status_code}"
+
+
+def test_get_legal_representatives_member_not_found(
+    test_client, get_valid_internal_token, run_db_query
+):
+    """
+    Test getting legal representatives when the member is not found.
+    """
+    token = get_valid_internal_token(5)
+
+    run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
+    run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
+    run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
+    run_db_query("DELETE FROM addresses WHERE registration_id = 5")
+    run_db_query("DELETE FROM phones WHERE registration_id = 5")
+    run_db_query("DELETE FROM registration WHERE registration_id = 5")
+
+    headers = {"Authorization": f"Bearer {token}"}
+    response = test_client.get("/legal_representative/", headers=headers)
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Unauthorized"}
+
+
+def test_get_legal_representatives_success(test_client, mock_valid_token):
+    """
+    Test successfully getting legal representatives for a member.
+    Uses member registration_id=6 from the test DB.
+    """
+    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    response = test_client.get("/legal_representative/", headers=headers)
+    # The DB may not have legal representatives for this member, so expect 200 and a list
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
 def test_add_legal_representative_api_key_invalid_token(test_client):
     """
     Test adding a legal representative using API key authentication with an invalid token.

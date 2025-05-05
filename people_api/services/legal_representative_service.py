@@ -7,9 +7,10 @@ from datetime import datetime
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from people_api.database.models.models import LegalRepresentatives, Registration
-from people_api.schemas import UserToken
+from people_api.schemas import InternalToken, UserToken
 
 from ..settings import Settings
 
@@ -27,6 +28,25 @@ class LegalRepresentativeRequest(BaseModel):
 
 
 class LegalRepresentativeService:
+    @staticmethod
+    async def get_legal_representatives(
+        token_data: UserToken | InternalToken, session: AsyncSession
+    ):
+        """Get legal representatives for a member."""
+        registration = (
+            await session.exec(Registration.select_stmt_by_id(token_data.registration_id))
+        ).first()
+        if not registration:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        legal_representatives = (
+            await session.exec(
+                LegalRepresentatives.get_legal_representatives_for_member(
+                    registration.registration_id
+                )
+            )
+        ).all()
+        return legal_representatives
+
     @staticmethod
     def add_legal_representative_api_key(request: LegalRepresentativeRequest, session: Session):
         """Add legal representative to member using API key."""
@@ -62,7 +82,7 @@ class LegalRepresentativeService:
     def add_legal_representative(
         mb: int,
         legal_representative: LegalRepresentatives,
-        token_data: UserToken,
+        token_data: UserToken | InternalToken,
         session: Session,
     ):
         """Add legal representative to member."""
@@ -106,7 +126,7 @@ class LegalRepresentativeService:
         mb: int,
         legal_rep_id: int,
         updated_legal_rep: LegalRepresentatives,
-        token_data: UserToken,
+        token_data: UserToken | InternalToken,
         session: Session,
     ):
         """Update legal representative for member."""
@@ -125,7 +145,7 @@ class LegalRepresentativeService:
 
     @staticmethod
     def delete_legal_representative(
-        mb: int, legal_rep_id: int, token_data: UserToken, session: Session
+        mb: int, legal_rep_id: int, token_data: UserToken | InternalToken, session: Session
     ):
         """Delete legal representative from member."""
         reg_stmt = Registration.select_stmt_by_email(token_data.email)
