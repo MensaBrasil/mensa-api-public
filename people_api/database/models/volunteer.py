@@ -7,7 +7,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import Column, Field, SQLModel, Text, col, desc, func, select
 from sqlmodel.sql.expression import Select
 
-from people_api.database.models.models import BaseSQLModel, Registration
+from people_api.database.models.models import BaseSQLModel
 
 
 class LeaderboardEntry(BaseModel):
@@ -241,27 +241,39 @@ class VolunteerPointTransaction(BaseVolunteerPointTransaction, table=True):
         start_date: datetime,
         end_date: datetime,
     ) -> Select:
-        """Select the leaderboard for a specific period with ranking computed on the DB level."""
+        """
+        Select the leaderboard for a specific period,
+        using volunteer_name from the activity log.
+        """
         total_points_expr: ColumnElement = func.sum(cls.points).label("total_points")
-        rank = func.row_number().over(order_by=desc(total_points_expr)).label("rank")
+        rank_expr = func.row_number().over(order_by=desc(total_points_expr)).label("rank")
 
-        query: Select = (
-            select(Registration.registration_id, Registration.name, total_points_expr, rank)
+        return (
+            select(
+                col(cls.registration_id),
+                VolunteerActivityLog.volunteer_name,
+                total_points_expr,
+                rank_expr,
+            )
             .select_from(cls)
             .join(
-                Registration,
-                col(cls.registration_id) == col(Registration.registration_id),
+                VolunteerActivityEvaluation,
+                col(VolunteerActivityEvaluation.activity_id) == cls.activity_id,
             )
             .join(
-                VolunteerActivityEvaluation,
-                col(VolunteerActivityEvaluation.activity_id) == col(cls.activity_id),
+                VolunteerActivityLog,
+                col(VolunteerActivityLog.id) == cls.activity_id,
             )
+            .where(
+                VolunteerActivityEvaluation.created_at >= start_date,  # type: ignore
+                VolunteerActivityEvaluation.created_at <= end_date,  # type: ignore
+            )
+            .group_by(
+                col(cls.registration_id),
+                col(VolunteerActivityLog.volunteer_name),
+            )
+            .order_by(desc(total_points_expr))
         )
-        query = query.where(VolunteerActivityEvaluation.created_at >= start_date)  # type: ignore
-        query = query.where(VolunteerActivityEvaluation.created_at <= end_date)  # type: ignore
-        query = query.group_by(col(Registration.registration_id), col(Registration.name))
-        query = query.order_by(desc(total_points_expr))
-        return query
 
     @classmethod
     def total_points_query(cls, registration_id: int):
