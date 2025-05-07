@@ -225,7 +225,6 @@ class Addresses(BaseSQLModel, table=True):
     neighborhood: str | None = Field(max_length=100)
     zip: ZipNumber | None = Field(None, max_length=12)
     country: str | None = None
-    latlong: str | None = None
     registration: "Registration" = Relationship(back_populates="addresses")
 
     @classmethod
@@ -538,9 +537,6 @@ class WhatsappComms(BaseSQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     phone_number: str = Field(max_length=20, min_length=10)
-    communication_date: datetime | None = Field(
-        sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
-    )
     status: str = Field(default="pending", max_length=50)
     reason: str | None = Field(default=None, max_length=255)
     timestamp: datetime | None = Field(

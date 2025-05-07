@@ -21,16 +21,16 @@ VALUES
     (11, 'carla.ferreira@mensa.org.br', 'mensa', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
 
 -- Addresses table
-INSERT INTO addresses (registration_id, state, city, address, neighborhood, zip, country, latlong, created_at, updated_at)
+INSERT INTO addresses (registration_id, state, city, address, neighborhood, zip, country, created_at, updated_at)
 VALUES
-    (5, 'RJ', 'Rio de Janeiro', 'Rua das Laranjeiras, 123', 'Laranjeiras', '22240003', 'Brasil', '-22.9361,-43.1782', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (5, 'SP', 'São Paulo', 'Av. Brigadeiro Faria Lima, 2000', 'Itaim Bibi', '04538-132', 'Brasil', '-23.5869,-46.6753', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (6, 'SP', 'São Paulo', 'Av. Paulista, 1000', 'Bela Vista', '01310200', 'Brasil', '-23.5617,-46.6560', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (7, 'MG', 'Belo Horizonte', 'Rua da Bahia, 200', 'Centro', '30160010', 'Brasil', '-19.9245,-43.9352', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (8, 'RS', 'Porto Alegre', 'Av. Ipiranga, 500', 'Jardim Botânico', '90610000', 'Brasil', '-30.0532,-51.1744', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (9, 'BA', 'Salvador', 'Rua Chile, 15', 'Centro', '40020000', 'Brasil', '-12.9718,-38.5108', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (10, 'PR', 'Curitiba', 'Rua XV de Novembro, 800', 'Centro', '80020010', 'Brasil', '-25.4284,-49.2733', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
-    (11, 'PE', 'Recife', 'Av. Boa Viagem, 300', 'Boa Viagem', '51011000', 'Brasil', '-8.1192,-34.9009', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
+    (5, 'RJ', 'Rio de Janeiro', 'Rua das Laranjeiras, 123', 'Laranjeiras', '22240003', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (5, 'SP', 'São Paulo', 'Av. Brigadeiro Faria Lima, 2000', 'Itaim Bibi', '04538-132', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (6, 'SP', 'São Paulo', 'Av. Paulista, 1000', 'Bela Vista', '01310200', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (7, 'MG', 'Belo Horizonte', 'Rua da Bahia, 200', 'Centro', '30160010', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (8, 'RS', 'Porto Alegre', 'Av. Ipiranga, 500', 'Jardim Botânico', '90610000', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (9, 'BA', 'Salvador', 'Rua Chile, 15', 'Centro', '40020000', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (10, 'PR', 'Curitiba', 'Rua XV de Novembro, 800', 'Centro', '80020010', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (11, 'PE', 'Recife', 'Av. Boa Viagem, 300', 'Boa Viagem', '51011000', 'Brasil', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276');
 
 -- Phones table
 INSERT INTO phones (registration_id, phone_number, created_at, updated_at)

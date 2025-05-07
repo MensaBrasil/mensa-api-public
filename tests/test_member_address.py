@@ -22,7 +22,6 @@ def test_get_addresses_should_return_addresses_for_valid_token(
             "neighborhood": "Laranjeiras",
             "zip": "22240003",
             "country": "Brasil",
-            "latlong": "-22.9361,-43.1782",
         },
         {
             "registration_id": 5,
@@ -32,7 +31,6 @@ def test_get_addresses_should_return_addresses_for_valid_token(
             "neighborhood": "Itaim Bibi",
             "zip": "04538-132",
             "country": "Brasil",
-            "latlong": "-23.5869,-46.6753",
         },
     ]
 
@@ -65,7 +63,6 @@ def test_add_address_invalid_token(test_client, mock_valid_token):
         "neighborhood": "Testville",
         "zip": "90001",
         "country": "USA",
-        "latlong": "34.0522,-118.2437",
     }
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post("/address/2623", json=payload, headers=headers)
@@ -79,8 +76,8 @@ def test_add_address_should_return_already_has_address(test_client, mock_valid_t
     """Test adding an address when the user already has an address."""
 
     run_db_query(
-        "INSERT INTO addresses (registration_id, state, city, address, neighborhood, zip, country, latlong) "
-        "VALUES (5, 'CA', 'Los Angeles', '123 Test St', 'Testville', '90001', 'USA', '34.0522,-118.2437')"
+        "INSERT INTO addresses (registration_id, state, city, address, neighborhood, zip, country) "
+        "VALUES (5, 'CA', 'Los Angeles', '123 Test St', 'Testville', '90001', 'USA')"
     )
     payload = {
         "state": "CA",
@@ -89,7 +86,6 @@ def test_add_address_should_return_already_has_address(test_client, mock_valid_t
         "neighborhood": "Testville",
         "zip": "90001",
         "country": "USA",
-        "latlong": "34.0522,-118.2437",
     }
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
 
@@ -111,7 +107,6 @@ def test_add_address_should_return_success(test_client, mock_valid_token, run_db
         "neighborhood": "Testville",
         "zip": "90001",
         "country": "USA",
-        "latlong": "34.0522,-118.2437",
     }
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.post("/address/5", json=payload, headers=headers)
@@ -131,7 +126,6 @@ def test_update_address_invalid_token(test_client, mock_valid_token):
         "neighborhood": "Newtown",
         "zip": "10001",
         "country": "USA",
-        "latlong": "40.7128,-74.0060",
     }
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
     response = test_client.put("/address/2623/1234567", json=payload, headers=headers)
@@ -150,14 +144,13 @@ def test_update_address_should_return_success(test_client, mock_valid_token, run
         "neighborhood": "Newtown",
         "zip": "10001",
         "country": "USA",
-        "latlong": "40.7128,-74.0060",
     }
     headers = {"Authorization": f"Bearer {mock_valid_token}"}
 
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
     run_db_query(
-        "INSERT INTO addresses (address_id, registration_id, state, city, address, neighborhood, zip, country, latlong) "
-        "VALUES (1234567, 5, 'CA', 'Los Angeles', '123 Test St', 'Testville', '90001', 'USA', '34.0522,-118.2437')"
+        "INSERT INTO addresses (address_id, registration_id, state, city, address, neighborhood, zip, country) "
+        "VALUES (1234567, 5, 'CA', 'Los Angeles', '123 Test St', 'Testville', '90001', 'USA')"
     )
 
     response = test_client.put("/address/5/1234567", json=payload, headers=headers)
@@ -184,8 +177,8 @@ def test_delete_address_should_return_success(test_client, mock_valid_token, run
 
     run_db_query("DELETE FROM addresses WHERE registration_id = 5")
     run_db_query(
-        "INSERT INTO addresses (address_id, registration_id, state, city, address, neighborhood, zip, country, latlong) "
-        "VALUES (1234567, 5, 'CA', 'Los Angeles', '123 Test St', 'Testville', '90001', 'USA', '34.0522,-118.2437')"
+        "INSERT INTO addresses (address_id, registration_id, state, city, address, neighborhood, zip, country) "
+        "VALUES (1234567, 5, 'CA', 'Los Angeles', '123 Test St', 'Testville', '90001', 'USA')"
     )
 
     response = test_client.delete("/address/5/1234567", headers=headers)

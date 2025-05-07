@@ -66,7 +66,6 @@ class Address(BaseModel):
     city: str | None = AddressFields.city
     country: str | None = AddressFields.country
     address: str | None = AddressFields.address
-    latlong: str | None = AddressFields.latlong
     neighborhood: str | None = AddressFields.neighborhood
     zip: str | None = AddressFields.zip
     created_at: datetime = AddressFields.created_at
@@ -105,7 +104,6 @@ class AddressCreate(BaseModel):
     state: str = AddressFields.state
     city: str = AddressFields.city
     country: str = AddressFields.country
-    latlong: str = AddressFields.latlong
     address: str = AddressFields.address
     neighborhood: str = AddressFields.neighborhood
     zip: str = AddressFields.zip
@@ -133,7 +131,6 @@ class AddressUpdate(BaseModel):
     state: str | None = AddressFields.state
     city: str | None = AddressFields.city
     country: str | None = AddressFields.country
-    latlong: str | None = AddressFields.latlong
     address: str | None = AddressFields.address
     neighborhood: str | None = AddressFields.neighborhood
     zip: str | None = AddressFields.zip

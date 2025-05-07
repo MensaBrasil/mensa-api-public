@@ -126,7 +126,6 @@ class AddressFields:
     state = Field(description="State", max_length=255)
     country = Field(description="Country", max_length=255)
     city = Field(description="City", max_length=100)
-    latlong = Field(description="Latitude and longitude", max_length=100)
     address = Field(description="Address", max_length=255)
     neighborhood = Field(description="Neighborhood", max_length=100)
     zip = Field(description="ZIP code", max_length=40)
