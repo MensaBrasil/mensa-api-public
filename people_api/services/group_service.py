@@ -5,9 +5,9 @@
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from people_api.schemas import UserToken
+from people_api.schemas import InternalToken, UserToken
 
 from ..database.models import Registration
 from ..enums import Gender
@@ -19,52 +19,64 @@ class GroupService:
     """Service for handling requests from group endpoints."""
 
     @staticmethod
-    def get_can_participate(token_data: UserToken, session: Session) -> list:
+    async def get_can_participate(
+        token_data: UserToken | InternalToken, session: AsyncSession
+    ) -> list:
         """Determines if a member can participate based on their email."""
-        MB = MemberRepository.getMBByEmail(token_data.email, session)
-        can_participate = MemberRepository.getCanParticipate(MB, session)
-        stmt = Registration.select_stmt_by_id(registration_id=MB)
-        member_reg = session.execute(stmt).scalar_one_or_none()
-        if member_reg and member_reg.gender == Gender.MALE:
+        can_participate = await MemberRepository.getCanParticipate(
+            token_data.registration_id, session
+        )
+        member_reg = (
+            await session.exec(
+                Registration.select_stmt_by_id(registration_id=token_data.registration_id)
+            )
+        ).first()
+        if member_reg and member_reg.gender != Gender.FEMALE:
             can_participate = [g for g in can_participate if g.get("group_name") != "MB | Mulheres"]
         return can_participate
 
     @staticmethod
-    def get_participate_in(token_data: UserToken, session: Session):
+    async def get_participate_in(token_data: UserToken | InternalToken, session: AsyncSession):
         """Retrieves the groups that a member is participating in."""
 
-        MB = MemberRepository.getMBByEmail(token_data.email, session)
-        participate_in = MemberRepository.getParticipateIn(MB, session)
+        participate_in = await MemberRepository.getParticipateIn(
+            token_data.registration_id, session
+        )
         return participate_in
 
     @staticmethod
-    def get_pending_requests(token_data: UserToken, session: Session):
+    async def get_pending_requests(token_data: UserToken | InternalToken, session: AsyncSession):
         """Retrieves the pending group join requests for a member."""
 
-        MB = MemberRepository.getMBByEmail(token_data.email, session)
-        pending_requests = MemberRepository.getPendingRequests(MB, session)
+        pending_requests = await MemberRepository.getPendingRequests(
+            token_data.registration_id, session
+        )
         return pending_requests
 
     @staticmethod
-    def get_failed_requests(token_data: UserToken, session: Session):
+    async def get_failed_requests(token_data: UserToken | InternalToken, session: AsyncSession):
         """Retrieves the failed group join requests for a member."""
 
-        MB = MemberRepository.getMBByEmail(token_data.email, session)
-        failed_requests = MemberRepository.getFailedRequests(MB, session)
+        failed_requests = await MemberRepository.getFailedRequests(
+            token_data.registration_id, session
+        )
         return failed_requests
 
     @staticmethod
-    def request_join_group(join_request: GroupJoinRequest, token_data, session: Session):
+    async def request_join_group(
+        join_request: GroupJoinRequest, token_data: UserToken | InternalToken, session: AsyncSession
+    ):
         """Handles a request to join a group."""
 
-        registration_id = MemberRepository.getMBByEmail(token_data.email, session)
-        phones = MemberRepository.getAllMemberAndLegalRepPhonesFromPostgres(
-            registration_id, session
+        phones = await MemberRepository.getAllMemberAndLegalRepPhonesFromPostgres(
+            token_data.registration_id, session
         )
-        pending_group_requests = MemberRepository.getUnfullfilledGroupRequests(
-            registration_id, session
+        pending_group_requests = await MemberRepository.getUnfullfilledGroupRequests(
+            token_data.registration_id, session
         )
-        failed_group_requests = MemberRepository.getFailedGroupRequests(registration_id, session)
+        failed_group_requests = await MemberRepository.getFailedGroupRequests(
+            token_data.registration_id, session
+        )
 
         if not phones:
             raise HTTPException(
@@ -79,7 +91,9 @@ class GroupService:
             )
 
         if join_request.group_id in failed_group_requests:
-            if MemberRepository.updateFailedGroupRequests(registration_id, session):
+            if await MemberRepository.updateFailedGroupRequests(
+                token_data.registration_id, session
+            ):
                 return {"message": "Request to join group sent successfully"}
 
         else:
@@ -87,8 +101,8 @@ class GroupService:
             last_attempt = None
             fulfilled = False
 
-            MemberRepository.addGroupRequest(
-                registration_id,
+            await MemberRepository.addGroupRequest(
+                token_data.registration_id,
                 join_request.group_id,
                 created_at,
                 last_attempt,

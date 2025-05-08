@@ -13,9 +13,12 @@ from .wpp_client_helpers import (
     add_member_legal_reps,
     create_email_request,
     delete_member_legal_reps,
+    get_all_whatsapp_groups,
     get_member_addresses_request,
     get_member_legal_reps,
+    get_pending_whatsapp_group_join_requests,
     recover_email_password_request,
+    request_whatsapp_group_join,
     update_address_request,
     update_member_legal_reps,
 )
@@ -32,6 +35,9 @@ class FunctionCall(StrEnum):
     ADD_MEMBER_LEGAL_REPS = "add_member_legal_representatives"
     UPDATE_MEMBER_LEGAL_REPS = "update_member_legal_representatives"
     DELETE_MEMBER_LEGAL_REPS = "delete_member_legal_representatives"
+    GET_ALL_WHATSAPP_GROUPS = "get_all_whatsapp_groups"
+    REQUEST_WHATSAPP_GROUP_JOIN = "request_whatsapp_group_join"
+    GET_PENDING_WHATSAPP_GROUP_JOIN_REQUESTS = "get_pending_whatsapp_group_join_requests"
 
 
 class ToolCallService:
@@ -142,6 +148,38 @@ class ToolCallService:
                     call_responses[f"{tool_call.id}"] = await delete_member_legal_reps(
                         registration_id=registration_id,
                         legal_representative_id=legal_representative_id,
+                    )
+                if tool_call.function.name == FunctionCall.GET_ALL_WHATSAPP_GROUPS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    call_responses[f"{tool_call.id}"] = await get_all_whatsapp_groups(
+                        registration_id=registration_id
+                    )
+                if tool_call.function.name == FunctionCall.REQUEST_WHATSAPP_GROUP_JOIN:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    args = json.loads(tool_call.function.arguments)
+                    group_id = args.get("group_id")
+                    call_responses[f"{tool_call.id}"] = await request_whatsapp_group_join(
+                        registration_id=registration_id,
+                        group_id=group_id,
+                    )
+                if tool_call.function.name == FunctionCall.GET_PENDING_WHATSAPP_GROUP_JOIN_REQUESTS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    call_responses[
+                        f"{tool_call.id}"
+                    ] = await get_pending_whatsapp_group_join_requests(
+                        registration_id=registration_id
                     )
 
             tool_outputs = [

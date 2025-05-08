@@ -204,3 +204,69 @@ async def delete_member_legal_reps(registration_id: int, legal_representative_id
         logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
         logging.info("[CHATBOT-MENSA] Response content: %s", response.json())
         return response.json()
+
+
+async def get_all_whatsapp_groups(registration_id: int) -> dict:
+    """Send a GET request to retrieve all WhatsApp groups a member can join."""
+    logging.info(
+        "[CHATBOT-MENSA] Getting all WhatsApp groups for registration ID: %s",
+        registration_id,
+    )
+    token = create_token(registration_id=registration_id)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:{get_settings().api_port}/get_can_participate",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        data = response.json()
+        if not data or (isinstance(data, list) and len(data) == 0):
+            logging.info("[CHATBOT-MENSA] No WhatsApp groups found.")
+            return {"message": "No WhatsApp groups found."}
+        logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
+        logging.info("[CHATBOT-MENSA] Response content: %s", data)
+        return data
+
+
+async def request_whatsapp_group_join(registration_id: int, group_id: str) -> dict:
+    """Send a POST request to request joining a WhatsApp group using GroupJoinRequest model."""
+    logging.info(
+        "[CHATBOT-MENSA] Requesting to join WhatsApp group %s for registration ID: %s",
+        group_id,
+        registration_id,
+    )
+    token = create_token(registration_id=registration_id)
+
+    payload = {"group_id": group_id}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"http://localhost:{get_settings().api_port}/request_join_group",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+        )
+        logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
+        logging.info("[CHATBOT-MENSA] Response content: %s", response.json())
+        return response.json()
+
+
+async def get_pending_whatsapp_group_join_requests(registration_id: int) -> dict:
+    """Send a GET request to retrieve pending WhatsApp group join requests."""
+    logging.info(
+        "[CHATBOT-MENSA] Getting pending WhatsApp group join requests for registration ID: %s",
+        registration_id,
+    )
+    token = create_token(registration_id=registration_id)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:{get_settings().api_port}/get_pending_requests",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        data = response.json()
+        if not data or (isinstance(data, list) and len(data) == 0):
+            logging.info("[CHATBOT-MENSA] No pending WhatsApp group join requests found.")
+            return {"message": "No pending WhatsApp group join requests found."}
+        logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
+        logging.info("[CHATBOT-MENSA] Response content: %s", data)
+        return data

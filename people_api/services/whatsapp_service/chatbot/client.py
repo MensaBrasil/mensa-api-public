@@ -79,10 +79,22 @@ class WhatsappChatBot:
                 registration_id=registration_id,
             )
 
-            await TwilioService().send_whatsapp_message(
-                to_=message.From,
-                message=assistant_response,
-            )
+            if len(assistant_response) > 1550:
+                message_parts = [
+                    assistant_response[i : i + 1550]
+                    for i in range(0, len(assistant_response), 1550)
+                ]
+
+                for part in message_parts:
+                    await TwilioService().send_whatsapp_message(
+                        to_=message.From,
+                        message=part,
+                    )
+            else:
+                await TwilioService().send_whatsapp_message(
+                    to_=message.From,
+                    message=assistant_response,
+                )
         except Exception as e:
             logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             error_msg = str(e)

@@ -487,6 +487,11 @@ class Phones(BaseSQLModel, table=True):
         )
 
     @classmethod
+    def select_stmt_by_registration_id(cls, registration_id: int):
+        """Return a select statement for phone records by registration ID."""
+        return select(cls).where(cls.registration_id == registration_id)
+
+    @classmethod
     def get_member_by_trailing_8_digit_phone(cls, phone_number: int):
         """Return a select statement for a member by the last 8 digits of the phone number."""
         phone_pattern = f"%{str(phone_number)[-8:]}"

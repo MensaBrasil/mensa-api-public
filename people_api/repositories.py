@@ -6,10 +6,22 @@ Methods to interact with the database
 
 # # Package # #
 import json
+import re
 from datetime import date, datetime
 
+from fastapi import HTTPException
 from sqlalchemy import text
-from sqlmodel import Session
+from sqlmodel import Session, func, or_, select, union_all, update
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from people_api.database.models.models import (
+    GroupList,
+    GroupRequests,
+    LegalRepresentatives,
+    MemberGroups,
+    Phones,
+    Registration,
+)
 
 from .dbs import firebase_collection
 from .exceptions import (
@@ -40,309 +52,263 @@ class MemberRepository:
         return True
 
     @staticmethod
-    def getCanParticipate(mb: int, session: Session):
-        query = text(
-            """
-            select
-                gl.group_id,
-                gl.group_name
-            from
-                group_list gl
-            left join (
-                select
-                    group_id,
-                    registration_id,
-                    entry_date,
-                    exit_date,
-                    row_number() over (partition by group_id order by entry_date desc, exit_date desc nulls first) as rn
-                from
-                    member_groups
-                where
-                    registration_id = :mb
-            ) mg on gl.group_id = mg.group_id and mg.rn = 1
-            inner join registration r on r.registration_id = :mb
-            where
-            (
-                (r.birth_date <= CURRENT_DATE - interval '18 year'
-                and gl.group_name not like '%%JB%%'
-                and gl.group_name not like '%%OrgMB%%')
-            or
-                (r.birth_date > CURRENT_DATE - interval '18 year'
-                and gl.group_name not like '%%OrgMB%%'
-                and gl.group_name not like 'Avisos Mensa JB%%'
-                and (
-                    gl.group_name like '%R.JB%' or gl.group_name like '%R. JB%'
-                    or (DATE_PART('year', AGE(r.birth_date)) < 12
-                        and (gl.group_name like '%M.JB%' or gl.group_name like '%M. JB%'))
-                    or (DATE_PART('year', AGE(r.birth_date)) >= 11
-                        and (gl.group_name like '%JB%'
-                            and gl.group_name not like '%M.JB%'
-                            and gl.group_name not like '%M. JB%'
-                            and gl.group_name not like '%R.JB%'
-                            and gl.group_name not like '%R. JB%'))
-                    )
+    async def getCanParticipate(mb: int, session: AsyncSession) -> list:
+        """Retrieve a list of groups that the member can participate in."""
+        try:
+            registration = (await session.exec(Registration.select_stmt_by_id(mb))).first()
+            birth_date = registration.birth_date if registration else None
+
+            if birth_date:
+                today = datetime.today().date()
+                age = (
+                    today.year
+                    - birth_date.year
+                    - ((today.month, today.day) < (birth_date.month, birth_date.day))
                 )
+            else:
+                return []
+
+            if age < 12:
+                user_classification = "MJB"
+            elif 12 <= age < 18:
+                user_classification = "JB"
+            else:
+                user_classification = "MB"
+
+            all_groups = (await session.exec(select(GroupList))).all()
+            result_list = []
+
+            for group in all_groups:
+                name = group.group_name
+                group_id = group.group_id
+
+                if re.search(r"^M[\s\.]*JB", name, re.IGNORECASE):
+                    group_classification = "MJB"
+                elif re.search(r"^R[\s\.]*JB", name, re.IGNORECASE):
+                    group_classification = "RJB"
+                elif re.search(r"^(?!R[\s\.]*JB)(?!M[\s\.]*JB)JB", name, re.IGNORECASE):
+                    group_classification = "JB"
+                elif re.search(r"^OrgMB", name, re.IGNORECASE):
+                    group_classification = "OrgMB"
+                else:
+                    group_classification = "MB"
+
+                if user_classification == "MJB" and group_classification in (
+                    "MJB",
+                    "RJB",
+                ):
+                    result_list.append({"group_id": group_id, "group_name": name})
+                elif user_classification == "JB" and group_classification in (
+                    "JB",
+                    "RJB",
+                ):
+                    result_list.append({"group_id": group_id, "group_name": name})
+                elif user_classification == "MB" and group_classification == "MB":
+                    result_list.append({"group_id": group_id, "group_name": name})
+
+            result_list = sorted(result_list, key=lambda x: x["group_name"])
+            return result_list
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail="Error while fetching groups.",
+            ) from e
+
+    @staticmethod
+    async def getParticipateIn(mb: int, session: AsyncSession):
+        """Retrieve a list of groups that the member is participating in."""
+
+        query = (
+            select(MemberGroups, GroupList.group_name)
+            .join(GroupList, MemberGroups.group_id == GroupList.group_id)
+            .where(
+                MemberGroups.registration_id == mb,
+                or_(
+                    MemberGroups.entry_date > MemberGroups.exit_date,
+                    MemberGroups.exit_date.is_(None),
+                ),
+                MemberGroups.group_id.in_(select(GroupList.group_id)),
+                func.right(MemberGroups.phone_number, 8).in_(
+                    select(func.right(Phones.phone_number, 8)).where(Phones.registration_id == mb)
+                ),
             )
-            and (mg.entry_date is null or mg.exit_date is not null)
-            and not exists (
-                select 1
-                from group_requests gr
-                where gr.registration_id = :mb
-                and gr.group_id = gl.group_id
-                and gr.no_of_attempts < 3
-            )
-            order by gl.group_name;
-
-
-            """
         )
-        result = session.execute(query, {"mb": mb})
-        data = result.fetchall()
-        if data:
-            column_names = [column for column in result.keys()]
-            return [{k: v for k, v in zip(column_names, row)} for row in data]
-        return []
 
-    @staticmethod
-    def getParticipateIn(mb: int, session: Session):
-        query = text(
-            """
-            WITH latest_entries AS (
-                SELECT
-                    mg.group_id,
-                    MAX(mg.entry_date) AS latest_entry_date
-                FROM
-                    member_groups mg
-                WHERE
-                    mg.registration_id = :mb
-                GROUP BY
-                    mg.group_id
-            )
-            SELECT
-                gl.group_name,
-                mg.entry_date
-            FROM
-                latest_entries le
-            INNER JOIN
-                member_groups mg
-            ON
-                le.group_id = mg.group_id
-                AND le.latest_entry_date = mg.entry_date
-            INNER JOIN
-                group_list gl
-            ON
-                mg.group_id = gl.group_id
-            WHERE
-                mg.registration_id = :mb
-                AND (mg.exit_date IS NULL OR mg.entry_date > mg.exit_date);
-            """
-        )
-        result = session.execute(query, {"mb": mb})
-        data = result.fetchall()
+        result = (await session.exec(query)).all()
 
-        if data:
-            column_names = result.keys()
-            return [
-                {
-                    k: (v.strftime("%d/%m/%Y") if k == "entry_date" and v else v)
-                    for k, v in zip(column_names, row)
-                }
-                for row in data
-            ]
-        return []
-
-    @staticmethod
-    def getPendingRequests(mb: int, session: Session):
-        query = text(
-            """
-            select
-                gl.group_name,
-                max(gr.last_attempt) as last_attempt,
-                max(gr.no_of_attempts) as no_of_attempts
-            from
-                group_requests gr
-            inner join
-                group_list gl
-                    on
-                        gr.group_id = gl.group_id
-            where
-                gr.registration_id = :mb
-                and gr.fulfilled = false
-                and (gr.no_of_attempts < 3
-                    or gr.no_of_attempts is null)
-            group by
-                gr.group_id,
-                gl.group_name
-            order by
-                last_attempt desc nulls last
-            """
-        )
-        result = session.execute(query, {"mb": mb})
-        data = result.fetchall()
-
-        if data:
-            column_names = [column for column in result.keys()]
-            return [
-                {
-                    k: (v.strftime("%d/%m/%Y") if k == "last_attempt" and v else v)
-                    for k, v in zip(column_names, row)
-                }
-                for row in data
-            ]
-        return []
-
-    @staticmethod
-    def getFailedRequests(mb: int, session: Session):
-        query = text(
-            """
-            select
-                gl.group_name,
-                max(gr.last_attempt) as last_attempt
-            from
-                group_requests gr
-            inner join
-                group_list gl
-            on
-                gr.group_id = gl.group_id
-            where
-                gr.registration_id = :mb
-                and gr.fulfilled = false
-                and gr.no_of_attempts >= 3
-            group by
-                gr.group_id,
-                gl.group_name
-            order by
-                last_attempt desc nulls last
-            """
-        )
-        result = session.execute(query, {"mb": mb})
-        data = result.fetchall()
-        if data:
-            column_names = result.keys()
-            return [
-                {
-                    k: (v.strftime("%d/%m/%Y") if k == "last_attempt" and v else v)
-                    for k, v in zip(column_names, row)
-                }
-                for row in data
-            ]
-        return []
-
-    @staticmethod
-    def idMemberOfGroup(phone_number: int, group_id: str, session: Session) -> bool:
-        query = text("""
-                SELECT EXISTS(
-                    SELECT 1 FROM member_groups WHERE phone_number = :phone_number AND group_id = :group_id
+        if result:
+            group_info = []
+            for group, group_name in result:
+                entry_date = group.entry_date.strftime("%d/%m/%Y")
+                group_info.append(
+                    {
+                        "group_name": group_name,
+                        "entry_date": entry_date,
+                    }
                 )
-            """)
-        result = session.execute(query, {"phone_number": phone_number, "group_id": group_id})
-        return result.fetchone()[0]
+                return group_info
+        return []
 
     @staticmethod
-    def getUnfullfilledGroupRequests(mb: int, session: Session) -> list:
+    async def getPendingRequests(mb: int, session: AsyncSession):
+        """Retrieve a list of pending group join requests for a member"""
+        subquery = (
+            select(
+                GroupRequests.group_id,
+                func.max(GroupRequests.last_attempt).label("last_attempt"),
+                func.max(GroupRequests.no_of_attempts).label("no_of_attempts"),
+            )
+            .where(
+                GroupRequests.registration_id == mb,
+                GroupRequests.fulfilled == False,  # noqa: E712
+                or_(
+                    GroupRequests.no_of_attempts < 3,
+                    GroupRequests.no_of_attempts.is_(None),
+                ),
+            )
+            .group_by(GroupRequests.group_id)
+            .subquery()
+        )
+
+        query = (
+            select(
+                GroupList.group_name,
+                subquery.c.last_attempt,
+                subquery.c.no_of_attempts,
+            )
+            .join(GroupList, GroupList.group_id == subquery.c.group_id)
+            .order_by(subquery.c.last_attempt.desc().nulls_last())
+        )
+        result = await session.exec(query)
+        data = result.mappings().all()
+
+        return [
+            {
+                "group_name": row["group_name"],
+                "last_attempt": row["last_attempt"].strftime("%d/%m/%Y")
+                if row["last_attempt"]
+                else row["last_attempt"],
+                "no_of_attempts": row["no_of_attempts"],
+            }
+            for row in data
+        ]
+
+    @staticmethod
+    async def getFailedRequests(mb: int, session: AsyncSession):
+        subq = (
+            select(
+                GroupRequests.group_id,
+                func.max(GroupRequests.last_attempt).label("last_attempt"),
+            )
+            .where(
+                GroupRequests.registration_id == mb,
+                GroupRequests.fulfilled == False,  # noqa: E712
+                GroupRequests.no_of_attempts >= 3,
+            )
+            .group_by(GroupRequests.group_id)
+            .subquery()
+        )
+
+        query = (
+            select(GroupList.group_name, subq.c.last_attempt)
+            .join(subq, GroupList.group_id == subq.c.group_id)
+            .order_by(subq.c.last_attempt.desc())
+        )
+
+        result = await session.exec(query)
+        rows = result.mappings().all()
+
+        return [
+            {
+                "group_name": row["group_name"],
+                "last_attempt": row["last_attempt"].strftime("%d/%m/%Y")
+                if row["last_attempt"]
+                else None,
+            }
+            for row in rows
+        ]
+
+    @staticmethod
+    async def getUnfullfilledGroupRequests(mb: int, session: AsyncSession) -> list:
         """Retrieve a list of unfulfilled group requests for a member"""
-        query = text("""
-                SELECT group_id
-                FROM group_requests
-                WHERE fulfilled = false
-                AND registration_id = :mb
-                AND no_of_attempts < 3
-            """)
-        result = session.execute(query, {"mb": mb})
-        data = result.scalars().all()
-        if data:
-            return data
-        return []
+        stmt = select(GroupRequests.group_id).where(
+            (GroupRequests.fulfilled == False)  # noqa: E712
+            & (GroupRequests.registration_id == mb)
+            & (GroupRequests.no_of_attempts < 3)
+        )
+
+        result = (await session.exec(stmt)).all()
+        return result if result else []
 
     @staticmethod
-    def getFailedGroupRequests(mb: int, session: Session) -> list:
+    async def getFailedGroupRequests(mb: int, session: AsyncSession) -> list:
         """Retrieve a list of failed group requests for a member"""
-        query = text("""
-                SELECT group_id
-                FROM group_requests
-                WHERE fulfilled = false
-                AND registration_id = :mb
-                AND no_of_attempts >= 3
-            """)
-        result = session.execute(query, {"mb": mb})
-        data = result.scalars().all()
-        if data:
-            return data
-        return []
+        stmt = select(GroupRequests.group_id).where(
+            (GroupRequests.fulfilled == False)  # noqa: E712
+            & (GroupRequests.registration_id == mb)
+            & (GroupRequests.no_of_attempts >= 3)
+        )
+
+        result = (await session.exec(stmt)).all()
+        return result if result else []
 
     @staticmethod
-    def updateFailedGroupRequests(mb: int, session: Session):
-        query = text("""
-                UPDATE group_requests
-                SET no_of_attempts = 0
-                WHERE registration_id = :mb
-                AND fulfilled = false
-                AND group_id IN (
-                    SELECT group_id
-                    FROM group_requests
-                    WHERE fulfilled = false
-                    AND registration_id = :mb
-                    AND no_of_attempts >= 3
-                )
-            """)
-        session.execute(query, {"mb": mb})
+    async def updateFailedGroupRequests(mb: int, session: AsyncSession):
+        subquery = select(GroupRequests.group_id).where(
+            (GroupRequests.fulfilled == False)  # noqa: E712
+            & (GroupRequests.registration_id == mb)
+            & (GroupRequests.no_of_attempts >= 3)
+        )
+
+        stmt = (
+            update(GroupRequests)
+            .where(
+                (GroupRequests.registration_id == mb)
+                & (GroupRequests.fulfilled == False)  # noqa: E712
+                & (GroupRequests.group_id.in_(subquery))
+            )
+            .values(no_of_attempts=0)
+        )
+
+        await session.exec(stmt)
         return True
 
     @staticmethod
-    def addGroupRequest(
+    async def addGroupRequest(
         registration_id: int,
         group_id: str,
         created_at: datetime,
         last_attempt: datetime,
         fulfilled: bool,
-        session: Session,
-    ):
-        query = text("""
-                INSERT INTO group_requests (registration_id, group_id, created_at, last_attempt, fulfilled)
-                VALUES (:registration_id, :group_id, :created_at, :last_attempt, :fulfilled) RETURNING id
-            """)
-        result = session.execute(
-            query,
-            {
-                "registration_id": registration_id,
-                "group_id": group_id,
-                "created_at": created_at,
-                "last_attempt": last_attempt,
-                "fulfilled": fulfilled,
-            },
+        session: AsyncSession,
+    ) -> int:
+        new_request = GroupRequests(
+            registration_id=registration_id,
+            group_id=group_id,
+            created_at=created_at,
+            last_attempt=last_attempt,
+            fulfilled=fulfilled,
         )
-        request_id = result.fetchone()[0]
-        return request_id
+
+        session.add(new_request)
+        await session.flush()
+        return new_request.id
 
     @staticmethod
-    def getAllMemberAndLegalRepPhonesFromPostgres(mb: int, session: Session) -> list:
-        query = text("""SELECT
-                phone_number AS phone  -- Alias the column as 'phone'
-            FROM
-                phones
-            WHERE
-                registration_id = :mb
-            UNION ALL
-            SELECT
-                phone AS phone  -- Alias the column as 'phone'
-            FROM
-                legal_representatives
-            WHERE
-                registration_id = :mb
-            UNION ALL
-            SELECT
-                alternative_phone AS phone  -- Alias the column as 'phone'
-            FROM
-                legal_representatives
-            WHERE
-                registration_id = :mb
-                AND alternative_phone IS NOT NULL;
-                    """)
-        result = session.execute(query, {"mb": mb})
-        data = result.fetchall()
-        if data:
-            column_names = [column for column in result.keys()]
-            return [dict(zip(column_names, row)) for row in data]
+    async def getAllMemberAndLegalRepPhonesFromPostgres(mb: int, session: AsyncSession) -> list:
+        stmt1 = select(Phones.phone_number.label("phone")).where(Phones.registration_id == mb)
+        stmt2 = select(LegalRepresentatives.phone.label("phone")).where(
+            LegalRepresentatives.registration_id == mb
+        )
+        stmt3 = select(LegalRepresentatives.alternative_phone.label("phone")).where(
+            (LegalRepresentatives.registration_id == mb)
+            & (LegalRepresentatives.alternative_phone.isnot(None))
+        )
+
+        result = (await session.exec(union_all(stmt1, stmt2, stmt3))).all()
+        if result:
+            return [phone.phone for phone in result]
         return []
 
     @staticmethod

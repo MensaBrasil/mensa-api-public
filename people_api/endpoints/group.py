@@ -1,10 +1,11 @@
 """Endpoints for managing member WhatsApp groups and group join requests."""
 
 from fastapi import APIRouter, Depends
-from sqlmodel import Session
+
+from people_api.schemas import InternalToken, UserToken
 
 from ..auth import verify_firebase_token
-from ..dbs import get_session
+from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..models.member import GroupJoinRequest
 from ..services import GroupService
 
@@ -17,9 +18,11 @@ group_router = APIRouter()
     tags=["member"],
 )
 async def _get_can_participate(
-    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
-    return GroupService.get_can_participate(token_data, session)
+    response = await GroupService.get_can_participate(token_data, session.ro)
+    return response
 
 
 @group_router.get(
@@ -28,9 +31,10 @@ async def _get_can_participate(
     tags=["member"],
 )
 async def _get_participate_in(
-    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
-    return GroupService.get_participate_in(token_data, session)
+    return await GroupService.get_participate_in(token_data, session.ro)
 
 
 @group_router.get(
@@ -39,9 +43,10 @@ async def _get_participate_in(
     tags=["member"],
 )
 async def _get_pending_requests(
-    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
-    return GroupService.get_pending_requests(token_data, session)
+    return await GroupService.get_pending_requests(token_data, session.ro)
 
 
 @group_router.get(
@@ -50,15 +55,16 @@ async def _get_pending_requests(
     tags=["member"],
 )
 async def _get_failed_requests(
-    token_data=Depends(verify_firebase_token), session: Session = Depends(get_session)
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
-    return GroupService.get_failed_requests(token_data, session)
+    return await GroupService.get_failed_requests(token_data, session.ro)
 
 
 @group_router.post("/request_join_group", tags=["member"], description="Request to join a group")
 async def _request_join_group(
     join_request: GroupJoinRequest,
-    token_data=Depends(verify_firebase_token),
-    session: Session = Depends(get_session),
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
-    return GroupService.request_join_group(join_request, token_data, session)
+    return await GroupService.request_join_group(join_request, token_data, session.rw)
