@@ -39,7 +39,7 @@ async def get_member_info_by_phone_number(phone_number: str, session: AsyncSessi
         await session.exec(Emails.get_emails_for_member(registration.registration_id))
     ).all()
     for email in email_result:
-        if email.email_address.endswith("@mensa.org.br"):
+        if email.email_address and email.email_address.endswith("@mensa.org.br"):
             email = email.email_address
             break
     else:
