@@ -264,12 +264,35 @@ class VolunteerPointTransaction(BaseVolunteerPointTransaction, table=True):
                 Registration,
                 col(Registration.registration_id) == cls.registration_id,
             )
-            .group_by(
-                col(cls.registration_id),
-                col(Registration.name),
-            )
+            .group_by(col(cls.registration_id), col(Registration.name))
             .order_by(desc(total_points))
         )
+
+    @classmethod
+    def select_top_n(
+        cls,
+        start_date: datetime,
+        end_date: datetime,
+        n: int = 10,
+    ) -> Select:
+        """Top-n leaderboard between start/end dates."""
+        return cls.select_leaderboard_period(start_date, end_date).limit(n)
+
+    @classmethod
+    def select_user_rank(
+        cls, start_date: datetime, end_date: datetime, registration_id: int
+    ) -> Select:
+        """
+        Returns a subquery‐filtered row (registration_id, full_name, total_points, rank)
+        for the given member, if they have any approved points in the window.
+        """
+        subq = cls.select_leaderboard_period(start_date, end_date).subquery()
+        return select(
+            subq.c.registration_id,
+            subq.c.full_name,
+            subq.c.total_points,
+            subq.c.rank,
+        ).where(subq.c.registration_id == registration_id)
 
     @classmethod
     def total_points_query(cls, registration_id: int):

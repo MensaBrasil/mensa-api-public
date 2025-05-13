@@ -239,53 +239,27 @@ async def get_member_activity_evaluations(
     status_code=status.HTTP_200_OK,
 )
 async def get_leaderboard(
-    start_date: datetime = Query(..., description="Start date (ISO format)"),
-    end_date: datetime = Query(..., description="End date (ISO format)"),
+    start_date: datetime = Query(..., description="ISO start date"),
+    end_date: datetime = Query(..., description="ISO end date"),
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """
-    Retrieve volunteer point totals and ranking between start_date and end_date,
-    showing only first + last name.
+    Top 10 volunteer rankings between start_date and end_date.
     """
-    query = VolunteerPointTransaction.select_leaderboard_period(start_date, end_date)
-    result = await sessions.ro.exec(query)
-    rows = result.all()
+    rows = (
+        await sessions.ro.exec(VolunteerPointTransaction.select_top_n(start_date, end_date, n=10))
+    ).all()
 
-    leaderboard: list[LeaderboardEntry] = []
-    for registration_id, full_name, total_points, rank in rows:
-        first, last = CombinedNamesResponse.split_name(full_name or "")
-        display_name = f"{first} {last}".strip() or "Unknown"
-
-        leaderboard.append(
-            LeaderboardEntry(
-                registration_id=registration_id,
-                volunteer_name=display_name,
-                total_points=total_points,
-                rank=rank,
-            )
+    return [
+        LeaderboardEntry(
+            registration_id=rid,
+            volunteer_name=" ".join(CombinedNamesResponse.split_name(fn or "")).strip()
+            or "Unknown",
+            total_points=pts,
+            rank=rank,
         )
-
-    return leaderboard
-
-
-@volunteer_router.get(
-    "/activities/",
-    response_model=list[VolunteerActivityLogPublic],
-)
-async def get_public_activity_feed(
-    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
-):
-    """
-    Retrieve all volunteer activity logs for the public feed.
-    """
-    query = VolunteerActivityLog.select_all()
-    result = await sessions.ro.exec(query)
-    logs = result.all()
-
-    for log in logs:
-        log.media_path = generate_presigned_media_url(log.media_path)
-
-    return logs
+        for rid, fn, pts, rank in rows
+    ]
 
 
 @volunteer_router.get(
@@ -514,3 +488,52 @@ async def get_user_full_activities_unevaluated(
         activity.media_path = generate_presigned_media_url(log.media_path)
         activities.append(UserActivityFullResponse(activity=activity, evaluation=None))
     return activities
+
+
+@volunteer_router.get(
+    "/leaderboard/me/",
+    response_model=LeaderboardEntry,
+    status_code=status.HTTP_200_OK,
+)
+async def get_my_ranking(
+    start_date: datetime = Query(..., description="ISO start date"),
+    end_date: datetime = Query(..., description="ISO end date"),
+    token_data: UserToken = Depends(verify_firebase_token),
+    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
+):
+    """
+    Retrieve the calling member’s own rank, name, and total points
+    between start_date and end_date.
+    """
+    user_id = token_data.registration_id
+
+    me_row = (
+        await sessions.ro.exec(
+            VolunteerPointTransaction.select_user_rank(start_date, end_date, user_id)
+        )
+    ).one_or_none()
+
+    if me_row:
+        rid, full_name, pts, rank = me_row
+    else:
+        rid = user_id
+        pts = (
+            await sessions.ro.exec(VolunteerPointTransaction.total_points_query(user_id))
+        ).one_or_none() or 0
+        rank = 0
+        reg = (
+            await sessions.ro.exec(
+                select(Registration).where(Registration.registration_id == user_id)
+            )
+        ).one_or_none()
+        full_name = reg.name if reg and reg.name else ""
+
+    first, last = CombinedNamesResponse.split_name(full_name)
+    display = f"{first} {last}".strip() or "Desconhecido"
+
+    return LeaderboardEntry(
+        registration_id=rid,
+        volunteer_name=display,
+        total_points=pts,
+        rank=rank,
+    )

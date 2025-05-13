@@ -44,13 +44,14 @@ import pytest
             },
         ),
         ("GET", "/volunteer/activity/evaluations/member/", None),
-        ("GET", "/volunteer/activities/", None),
         ("GET", "/volunteer/admin/categories/1", None),
         ("GET", "/volunteer/names", None),
         ("GET", "/volunteer/admin/evaluate-with-category/", None),
         ("GET", "/volunteer/points/?registration_id=6", None),
         ("GET", "/volunteer/activities/full/approved/?registration_id=6", None),
         ("GET", "/volunteer/activities/full/rejected/?registration_id=6", None),
+        ("GET", "/volunteer/activities/full/unevaluated/?registration_id=6", None),
+        ("GET", "/volunteer/leaderboard/me/?registration_id=6", None),
     ],
 )
 def test_protected_endpoints_no_token(test_client, method, endpoint, payload):
@@ -436,19 +437,6 @@ def test_leaderboard_threshold_filtering(test_client, mock_valid_token_auth):
 ###############################
 
 
-def test_get_public_activity_feed(test_client, mock_valid_token_auth):
-    """
-    Test retrieving all volunteer activity logs for the public feed.
-    """
-    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    response = test_client.get("/volunteer/activities/", headers=headers)
-    assert response.status_code == 200, (
-        f"Expected 200, got {response.status_code}. Response: {response.text}"
-    )
-    logs = response.json()
-    assert isinstance(logs, list), "Expected a list of activity logs"
-
-
 def test_get_activity_category_by_id(test_client, mock_valid_token_auth):
     """
     Test retrieving a single activity category by its ID.
@@ -827,3 +815,116 @@ def test_get_user_full_activities_rejected(test_client, mock_valid_token_auth):
     assert evaluation_data and evaluation_data.get("status").lower() == "rejected", (
         "Evaluation status is not 'rejected'"
     )
+
+
+###############################
+# Leaderboard Endpoint Tests
+###############################
+
+
+def test_get_leaderboard_top_n_and_order(
+    test_client,
+    mock_valid_token_auth,
+    run_db_query,
+):
+    """
+    Seed three volunteers with different point totals and verify that the leaderboard endpoint
+    returns them in descending order of points and limits to the top N entries.
+    """
+    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
+
+    run_db_query("DELETE FROM volunteer_point_transactions")
+    run_db_query("DELETE FROM activity_evaluation")
+    run_db_query("DELETE FROM volunteer_activity_log")
+
+    run_db_query("""
+        INSERT INTO volunteer_activity_log
+            (id, registration_id, category_id, title, description, activity_date,
+             media_path, volunteer_name, created_at, updated_at)
+        VALUES
+            (5000, 1805, 10, 'Log A', 'Description A', '2025-01-01', NULL, 'Alice Santos', '2025-01-01 09:00:00', '2025-01-01 09:00:00'),
+            (5001,    5, 10, 'Log B', 'Description B', '2025-01-02', NULL, 'Bruno Lima',  '2025-01-02 09:00:00', '2025-01-02 09:00:00'),
+            (5002,    6, 10, 'Log C', 'Description C', '2025-01-03', NULL, 'Carla Souza', '2025-01-03 09:00:00', '2025-01-03 09:00:00');
+    """)
+
+    run_db_query("""
+        INSERT INTO activity_evaluation
+            (id, activity_id, evaluator_id, status, observation, created_at, updated_at)
+        VALUES
+            (6000, 5000, 999, 'approved', 'OK A', '2025-01-01 10:00:00', '2025-01-01 10:00:00'),
+            (6001, 5001, 999, 'approved', 'OK B', '2025-01-02 10:00:00', '2025-01-02 10:00:00'),
+            (6002, 5002, 999, 'approved', 'OK C', '2025-01-03 10:00:00', '2025-01-03 10:00:00');
+    """)
+
+    run_db_query("""
+        INSERT INTO volunteer_point_transactions
+            (id, registration_id, activity_id, points, created_at, updated_at)
+        VALUES
+            (7000, 1805, 5000,  5, '2025-01-01 10:00:00', '2025-01-01 10:00:00'),
+            (7001,    5, 5001, 10, '2025-01-02 10:00:00', '2025-01-02 10:00:00'),
+            (7002,    6, 5002,  7, '2025-01-03 10:00:00', '2025-01-03 10:00:00');
+    """)
+
+    url = "/volunteer/leaderboard/?start_date=2025-01-01T00:00:00Z&end_date=2025-12-31T23:59:59Z"
+    response = test_client.get(url, headers=headers)
+    assert response.status_code == 200, response.text
+
+    leaderboard = response.json()
+    assert isinstance(leaderboard, list), "Expected a list of leaderboard entries"
+    ids = [entry["registration_id"] for entry in leaderboard]
+    assert ids == [5, 6, 1805], f"Unexpected order: {ids}"
+    points = [entry["total_points"] for entry in leaderboard]
+    assert points == [10, 7, 5]
+    ranks = [entry["rank"] for entry in leaderboard]
+    assert ranks == [1, 2, 3]
+
+
+def test_get_my_ranking_returns_correct_user_entry(
+    test_client,
+    mock_valid_token_auth,
+    run_db_query,
+):
+    """
+    Given seeded data, verify the /leaderboard/me/ endpoint returns the
+    calling user’s registration_id, points and rank correctly.
+    """
+    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
+
+    run_db_query("DELETE FROM volunteer_point_transactions")
+    run_db_query("DELETE FROM activity_evaluation")
+    run_db_query("DELETE FROM volunteer_activity_log")
+
+    run_db_query("""
+        INSERT INTO volunteer_activity_log
+            (id, registration_id, category_id, title, description, activity_date,
+             media_path, volunteer_name, created_at, updated_at)
+        VALUES
+            (5002,    5, 10, 'Log B', 'Description B', '2025-01-02', NULL, 'Fernando Filho', '2025-01-02 10:00:00', '2025-01-02 10:00:00');
+    """)
+
+    run_db_query("""
+        INSERT INTO activity_evaluation
+            (id, activity_id, evaluator_id, status, observation, created_at, updated_at)
+        VALUES
+            (6002, 5002, 999, 'approved', 'OK B', '2025-01-02 11:00:00', '2025-01-02 11:00:00');
+    """)
+
+    run_db_query("""
+        INSERT INTO volunteer_point_transactions
+            (id, registration_id, activity_id, points, created_at, updated_at)
+        VALUES
+            (7002,    5, 5002,  7, '2025-01-02 11:00:00', '2025-01-02 11:00:00');
+    """)
+
+    url_me = (
+        "/volunteer/leaderboard/me/?start_date=2025-01-01T00:00:00Z&end_date=2025-12-31T23:59:59Z"
+    )
+    response = test_client.get(url_me, headers=headers)
+    assert response.status_code == 200, response.text
+
+    me = response.json()
+    assert isinstance(me, dict), "Expected a single leaderboard entry"
+    assert me["registration_id"] == 5
+    assert me["total_points"] == 7
+    assert me["rank"] == 1
+    assert me["volunteer_name"] == "Fernando Filho"
