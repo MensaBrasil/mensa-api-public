@@ -78,6 +78,10 @@ class WhatsappChatBot:
                 message=message_text,
                 registration_id=registration_id,
             )
+            logging.info(
+                "[CHATBOT-MENSA] Assistant response to be sent to user: %s",
+                assistant_response if assistant_response else "No response",
+            )
 
             if len(assistant_response) > 1550:
                 message_parts = [
@@ -104,6 +108,7 @@ class WhatsappChatBot:
                     to_=message.From,
                     message="Erro ao processar mensagem, tente novamente mais tarde...",
                 )
+
             return error_msg
 
         return assistant_response

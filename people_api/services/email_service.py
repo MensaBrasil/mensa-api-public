@@ -95,7 +95,7 @@ class EmailService:
     async def request_password_reset(email: str, registration_id: int, session: AsyncSession):
         """Request password reset for a member."""
         try:
-            if not email.endswith("@mensa.org.br"):
+            if not email or not email.endswith("@mensa.org.br"):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Email must be a Mensa email",
@@ -103,7 +103,7 @@ class EmailService:
 
             db_emails = (await session.exec(Emails.get_emails_for_member(registration_id))).all()
             for e in db_emails:
-                if e.email_address.endswith("@mensa.org.br"):
+                if e.email_address and e.email_address.endswith("@mensa.org.br"):
                     email = str(e.email_address)
                     break
             else:

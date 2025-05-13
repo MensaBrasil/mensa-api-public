@@ -160,7 +160,7 @@ def create_token(
             Emails.get_emails_for_member(registration.registration_id)
         ).all()
         for e in email_result:
-            if e.email_address.endswith("@mensa.org.br"):
+            if e.email_address and e.email_address.endswith("@mensa.org.br"):
                 email = str(e.email_address)
                 break
         else:

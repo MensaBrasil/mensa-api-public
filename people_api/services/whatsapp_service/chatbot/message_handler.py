@@ -17,6 +17,30 @@ class MessageHandler:
 
         logging.info("[CHATBOT-MENSA] Processing message: %s", message)
         try:
+            runs_response = await openai_client.beta.threads.runs.list(thread_id=thread_id)
+            active_runs = [
+                r
+                for r in runs_response.data
+                if r.status not in ("completed", "failed", "cancelled", "expired")
+            ]
+            if active_runs:
+                logging.info(
+                    "[CHATBOT-MENSA] Waiting for active runs to complete before adding new message..."
+                )
+                timeout = 240
+                elapsed = 0
+                while active_runs and elapsed < timeout:
+                    await asyncio.sleep(1)
+                    elapsed += 1
+                    runs_response = await openai_client.beta.threads.runs.list(thread_id=thread_id)
+                    active_runs = [
+                        r
+                        for r in runs_response.data
+                        if r.status not in ("completed", "failed", "cancelled", "expired")
+                    ]
+                if active_runs:
+                    raise TimeoutError("Previous run did not complete in time.")
+
             await openai_client.beta.threads.messages.create(
                 thread_id=thread_id,
                 role="user",
@@ -69,7 +93,9 @@ class MessageHandler:
                     logging.error("[CHATBOT-MENSA] No assistant messages found after completion.")
                     raise ValueError("No valid response from the assistant.")
 
-                latest_timestamp = max(msg.created_at for msg in assistant_messages)
+                assistant_messages.sort(key=lambda msg: msg.created_at)
+
+                latest_timestamp = assistant_messages[-1].created_at
                 latest_messages = [
                     msg for msg in assistant_messages if msg.created_at == latest_timestamp
                 ]
