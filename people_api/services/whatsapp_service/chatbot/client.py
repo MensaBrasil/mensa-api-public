@@ -1,5 +1,6 @@
 """Service for updating WhatsApp-related data for members and their representatives."""
 
+import asyncio
 import logging
 
 from fastapi import HTTPException
@@ -83,22 +84,33 @@ class WhatsappChatBot:
                 assistant_response if assistant_response else "No response",
             )
 
-            if len(assistant_response) > 1550:
-                message_parts = [
-                    assistant_response[i : i + 1550]
-                    for i in range(0, len(assistant_response), 1550)
-                ]
-
-                for part in message_parts:
+            if len(assistant_response) > 1400:
+                parts = []
+                text = assistant_response
+                max_len = 1400
+                while len(text) > max_len:
+                    split_idx = text.rfind("\n", 0, max_len)
+                    if split_idx == -1:
+                        split_idx = max_len
+                    part = text[:split_idx].rstrip()
+                    parts.append(part)
+                    text = text[split_idx:].lstrip("\n")
+                if text:
+                    parts.append(text)
+                logging.info("[CHATBOT-MENSA] Message split into %i parts", len(parts))
+                for part in parts:
                     await TwilioService().send_whatsapp_message(
                         to_=message.From,
                         message=part,
                     )
+                    logging.info("[CHATBOT-MENSA] Sending part of the message: %s", part)
+                    await asyncio.sleep(5)
             else:
                 await TwilioService().send_whatsapp_message(
                     to_=message.From,
                     message=assistant_response,
                 )
+
         except Exception as e:
             logging.error("[CHATBOT-MENSA] Error processing message: %s", e)
             error_msg = str(e)
