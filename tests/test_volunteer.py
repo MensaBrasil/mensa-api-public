@@ -31,7 +31,6 @@ import pytest
             {"activity_id": 6, "evaluator": "Test Evaluator", "status": "pending"},
         ),
         ("GET", "/volunteer/leaderboard/", None),
-        ("GET", "/volunteer/activity-with-category/?activity_id=10", None),
         ("GET", "/volunteer/activities/full/unevaluated/?registration_id=6", None),
         (
             "POST",
@@ -44,7 +43,6 @@ import pytest
             },
         ),
         ("GET", "/volunteer/activity/evaluations/member/", None),
-        ("GET", "/volunteer/admin/categories/1", None),
         ("GET", "/volunteer/names", None),
         ("GET", "/volunteer/admin/evaluate-with-category/", None),
         ("GET", "/volunteer/points/?registration_id=6", None),
@@ -437,30 +435,6 @@ def test_leaderboard_threshold_filtering(test_client, mock_valid_token_auth):
 ###############################
 
 
-def test_get_activity_category_by_id(test_client, mock_valid_token_auth):
-    """
-    Test retrieving a single activity category by its ID.
-    """
-    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    payload = {
-        "name": "GET.CATEGORY",
-        "description": "Category for get-by-id test",
-        "points": 15,
-    }
-    create_resp = test_client.post("/volunteer/admin/categories/", json=payload, headers=headers)
-    assert create_resp.status_code == 201, f"Create failed: {create_resp.text}"
-    category = create_resp.json()
-    category_id = category["id"]
-
-    get_resp = test_client.get(f"/volunteer/admin/categories/{category_id}", headers=headers)
-    assert get_resp.status_code == 200, (
-        f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
-    )
-    fetched_category = get_resp.json()
-    assert fetched_category["id"] == category_id
-    assert fetched_category["name"] == payload["name"]
-
-
 def test_get_combined_names(test_client, mock_valid_token_auth, run_db_query):
     """
     Test retrieving combined names (registration and legal representatives).
@@ -565,61 +539,6 @@ def test_get_all_activity_categories(test_client, mock_valid_token_auth):
     assert isinstance(categories, list), "Expected list of categories"
     assert any(cat["name"] == payload["name"] for cat in categories), (
         "New category not found in list"
-    )
-
-
-def test_get_activity_with_category_success(test_client, mock_valid_token_auth):
-    """
-    Test retrieving an activity along with its category using the /activity-with-category/ endpoint.
-    """
-    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    category_payload = {
-        "name": "AWC.CATEGORY",
-        "description": "Category for get activity with category test",
-        "points": 15,
-    }
-    cat_resp = test_client.post(
-        "/volunteer/admin/categories/", json=category_payload, headers=headers
-    )
-    assert cat_resp.status_code == 201, f"Category creation failed: {cat_resp.text}"
-    category = cat_resp.json()
-    category_id = category["id"]
-
-    activity_payload = {
-        "registration_id": 5,
-        "category_id": category_id,
-        "title": "Activity with Category",
-        "description": "Test activity with category",
-        "activity_date": "2025-03-21",
-    }
-    act_resp = test_client.post("/volunteer/activity/logs/", json=activity_payload, headers=headers)
-    assert act_resp.status_code == 201, f"Activity creation failed: {act_resp.text}"
-    activity = act_resp.json()
-    activity_id = activity["id"]
-
-    get_resp = test_client.get(
-        f"/volunteer/activity-with-category/?activity_id={activity_id}", headers=headers
-    )
-    assert get_resp.status_code == 200, (
-        f"Expected 200, got {get_resp.status_code}. Response: {get_resp.text}"
-    )
-    data = get_resp.json()
-    assert "activity" in data, "Response missing 'activity'"
-    assert "category_name" in data, "Response missing 'category_name'"
-    assert data["activity"]["id"] == activity_id, "Activity id mismatch"
-    assert data["category_name"] == category_payload["name"], "Category name mismatch"
-
-
-def test_get_activity_with_category_not_found(test_client, mock_valid_token_auth):
-    """
-    Test retrieving an activity with category using an invalid activity_id should return 404.
-    """
-    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    get_resp = test_client.get(
-        "/volunteer/activity-with-category/?activity_id=99999", headers=headers
-    )
-    assert get_resp.status_code == 404, (
-        f"Expected 404 for non-existent activity, got {get_resp.status_code}. Response: {get_resp.text}"
     )
 
 

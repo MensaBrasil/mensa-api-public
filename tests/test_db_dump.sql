@@ -159,41 +159,31 @@ VALUES
     (10, 6, 10, 'Pre-Populated Test Activity', 'This activity log is used for evaluation tests', '2024-10-10'),
     (11, 6, 10, 'Activity 1' , 'This activity log is used for evaluation tests', '2024-10-10');
 
-INSERT INTO iam_permissions (permission_name, permission_description)
-VALUES
-  ('VOLUNTEER.CATEGORY.CREATE', 'Permission to create volunteer categories'),
-  ('VOLUNTEER.CATEGORY.UPDATE', 'Permission to update volunteer categories'),
-  ('VOLUNTEER.CATEGORY.DELETE', 'Permission to delete volunteer categories'),
-  ('VOLUNTEER.EVALUATION.CREATE', 'Permission to create volunteer evaluations'),
-  ('VOLUNTEER.EVALUATION.UPDATE', 'Permission to update volunteer evaluations');
+INSERT INTO iam_permissions (permission_name, permission_description) VALUES
+  ('VOLUNTEER.CATEGORY.CREATE',  'Permission to create volunteer categories'),
+  ('VOLUNTEER.CATEGORY.UPDATE',  'Permission to update volunteer categories'),
+  ('VOLUNTEER.CATEGORY.DELETE',  'Permission to delete volunteer categories'),
+  ('VOLUNTEER.EVALUATION.CREATE','Permission to create volunteer evaluations'),
+  ('VOLUNTEER.EVALUATION.UPDATE','Permission to update volunteer evaluations'),
+  ('VOLUNTEER.ACTIVITY.CREATE',  'Members can create volunteer activity logs'),
+  ('VOLUNTEER.LEADERBOARD.VIEW', 'Members can view the volunteer leaderboard'),
+  ('VOLUNTEER.CATEGORY.LIST',    'Members can list volunteer categories'),
+  ('VOLUNTEER.EVALUATION.VIEW',  'Members can view their activity evaluations');
 
 INSERT INTO iam_roles (role_name, role_description)
 VALUES ('VOLUNTEER.ADMIN', 'Volunteer administrator with category and evaluation management permissions');
 
 INSERT INTO iam_role_permissions_map (role_id, permission_id)
-VALUES
-  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
-   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.CATEGORY.CREATE'));
-
-INSERT INTO iam_role_permissions_map (role_id, permission_id)
-VALUES
-  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
-   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.CATEGORY.UPDATE'));
-
-INSERT INTO iam_role_permissions_map (role_id, permission_id)
-VALUES
-  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
-   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.CATEGORY.DELETE'));
-
-INSERT INTO iam_role_permissions_map (role_id, permission_id)
-VALUES
-  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
-   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.EVALUATION.CREATE'));
-
-INSERT INTO iam_role_permissions_map (role_id, permission_id)
-VALUES
-  ((SELECT id FROM iam_roles WHERE role_name = 'VOLUNTEER.ADMIN'),
-   (SELECT id FROM iam_permissions WHERE permission_name = 'VOLUNTEER.EVALUATION.UPDATE'));
+SELECT r.id, p.id
+  FROM iam_roles r
+  JOIN iam_permissions p ON p.permission_name IN (
+    'VOLUNTEER.CATEGORY.CREATE',
+    'VOLUNTEER.CATEGORY.UPDATE',
+    'VOLUNTEER.CATEGORY.DELETE',
+    'VOLUNTEER.EVALUATION.CREATE',
+    'VOLUNTEER.EVALUATION.UPDATE'
+  )
+ WHERE r.role_name = 'VOLUNTEER.ADMIN';
 
 INSERT INTO registration
   (registration_id, name, expelled, deceased, transferred, cpf, birth_date, profession, gender, join_date, facebook, created_at, updated_at)
@@ -214,6 +204,17 @@ INSERT INTO iam_user_groups_map (registration_id, group_id)
 SELECT 1805, id
 FROM iam_groups
 WHERE group_name = 'VOLUNTEER.MEMBER';
+
+INSERT INTO iam_group_permissions_map (group_id, permission_id)
+SELECT g.id, p.id
+  FROM iam_groups g
+  JOIN iam_permissions p ON p.permission_name IN (
+    'VOLUNTEER.ACTIVITY.CREATE',
+    'VOLUNTEER.LEADERBOARD.VIEW',
+    'VOLUNTEER.CATEGORY.LIST',
+    'VOLUNTEER.EVALUATION.VIEW'
+  )
+ WHERE g.group_name = 'VOLUNTEER.MEMBER';
 
 -- Create read-only user mensa_ro and grant SELECT on all tables
 

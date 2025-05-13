@@ -32,7 +32,8 @@ from people_api.database.models.volunteer import (
     VolunteerActivityLogPublic,
     VolunteerPointTransaction,
 )
-from people_api.permissions import Volunteer as P
+from people_api.permissions import VolunteerAdmin as A
+from people_api.permissions import VolunteerMember as M
 from people_api.utils import generate_presigned_media_url, upload_media_to_s3
 
 from ..dbs import AsyncSessionsTuple, get_async_sessions
@@ -50,7 +51,7 @@ volunteer_router = APIRouter(
     "/admin/categories/",
     response_model=VolunteerActivityCategoryPublic,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(permission_required(P.category_create))],
+    dependencies=[Depends(permission_required(A.category_create))],
 )
 async def create_activity_category(
     category: VolunteerActivityCategoryCreate,
@@ -68,7 +69,7 @@ async def create_activity_category(
     "/admin/categories/by-name/{category_name}",
     response_model=VolunteerActivityCategoryPublic,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(permission_required(P.category_update))],
+    dependencies=[Depends(permission_required(A.category_update))],
 )
 async def update_activity_category_by_name(
     category_name: str,
@@ -91,7 +92,7 @@ async def update_activity_category_by_name(
 @volunteer_router.delete(
     "/admin/categories/{category_name}",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(permission_required(P.category_delete))],
+    dependencies=[Depends(permission_required(A.category_delete))],
 )
 async def delete_activity_category(
     category_name: str,
@@ -111,6 +112,7 @@ async def delete_activity_category(
     "/categories/",
     response_model=list[VolunteerActivityCategoryPublic],
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(permission_required(M.category_list))],
 )
 async def get_all_activity_categories(
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
@@ -128,6 +130,7 @@ async def get_all_activity_categories(
     "/activity/logs/",
     response_model=VolunteerActivityLogPublic,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(permission_required(M.activity_create))],
 )
 async def create_activity_log(
     log: VolunteerActivityLogCreate,
@@ -167,7 +170,7 @@ async def create_activity_log(
     "/admin/evaluations/",
     response_model=VolunteerActivityEvaluationPublic,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(permission_required(P.evaluation_create))],
+    dependencies=[Depends(permission_required(A.evaluation_create))],
 )
 async def create_activity_evaluation(
     evaluation: VolunteerActivityEvaluationCreate,
@@ -237,6 +240,7 @@ async def get_member_activity_evaluations(
     "/leaderboard/",
     response_model=list[LeaderboardEntry],
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(permission_required(M.leaderboard_view))],
 )
 async def get_leaderboard(
     start_date: datetime = Query(..., description="ISO start date"),
@@ -263,26 +267,9 @@ async def get_leaderboard(
 
 
 @volunteer_router.get(
-    "/admin/categories/{category_id}",
-    response_model=VolunteerActivityCategoryPublic,
-)
-async def get_activity_category_by_id(
-    category_id: int,
-    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
-):
-    """
-    Retrieve a single activity category by its ID.
-    """
-    query = VolunteerActivityCategory.select_one(id=category_id)
-    result = await sessions.ro.exec(query)
-    category_obj = result.one_or_none()
-    if not category_obj:
-        raise HTTPException(status_code=404, detail="Activity category not found")
-    return category_obj
-
-
-@volunteer_router.get(
-    "/names", response_model=CombinedNamesResponse, status_code=status.HTTP_200_OK
+    "/names",
+    response_model=CombinedNamesResponse,
+    status_code=status.HTTP_200_OK,
 )
 async def get_combined_names(
     token_data: UserToken = Depends(verify_firebase_token),
@@ -310,6 +297,7 @@ async def get_combined_names(
     "/admin/evaluate-with-category/",
     response_model=list[ActivityWithCategoryPublic],
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(permission_required(A.evaluation_create))],
 )
 async def get_unevaluated_activities_for_evaluation(
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
@@ -344,40 +332,6 @@ async def get_unevaluated_activities_for_evaluation(
             )
         )
     return activities_with_category
-
-
-@volunteer_router.get(
-    "/activity-with-category/",
-    response_model=ActivityWithCategoryPublic,
-    status_code=status.HTTP_200_OK,
-)
-async def get_activity_with_category(
-    activity_id: int,
-    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
-):
-    """
-    Retrieve a single activity by its ID along with the category name.
-    """
-    query = select(VolunteerActivityLog).where(VolunteerActivityLog.id == activity_id)
-    result = await sessions.ro.exec(query)
-    activity_obj = result.one_or_none()
-    if not activity_obj:
-        raise HTTPException(status_code=404, detail="Activity log not found")
-
-    category_query = select(VolunteerActivityCategory).where(
-        VolunteerActivityCategory.id == activity_obj.category_id
-    )
-    category_result = await sessions.ro.exec(category_query)
-    category_obj = category_result.one_or_none()
-    if not category_obj:
-        raise HTTPException(status_code=404, detail="Activity category not found")
-    presigned_media_url = generate_presigned_media_url(activity_obj.media_path)
-    activity_public = VolunteerActivityLogPublic.model_validate(activity_obj)
-    return ActivityWithCategoryPublic(
-        activity=activity_public,
-        category_name=category_obj.name,
-        presigned_media_url=presigned_media_url,
-    )
 
 
 @volunteer_router.get(
