@@ -47,7 +47,7 @@ async def run_update() -> None:
             get_inactive_jb_emails,
         ]
 
-        admin_emails = get_settings().google_workspace_admin_emails
+        admin_emails = get_settings().workspace_managers_email_list
 
         logging.log(logging.INFO, "Updating workspace groups")
         for ids, f in zip(groups_ids, functions):
