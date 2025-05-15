@@ -10,6 +10,7 @@ import requests
 
 from people_api.cronjobs.workspace_groups.helpers.core import (
     get_email_list_from_workspace,
+    set_group_managers,
     update_workspace_group,
 )
 from people_api.cronjobs.workspace_groups.helpers.get_service import get_service
@@ -19,7 +20,8 @@ from people_api.cronjobs.workspace_groups.helpers.orm_queries import (
     get_inactive_adult_emails,
     get_inactive_jb_emails,
 )
-from people_api.settings import get_settings
+
+from .settings import get_settings
 
 UPTIME_URL = get_settings().google_workspace_cronjob_uptime_url
 
@@ -45,6 +47,8 @@ async def run_update() -> None:
             get_inactive_jb_emails,
         ]
 
+        admin_emails = get_settings().google_workspace_admin_emails
+
         logging.log(logging.INFO, "Updating workspace groups")
         for ids, f in zip(groups_ids, functions):
             logging.log(logging.INFO, "Updating workspace group: %s", ids)
@@ -55,7 +59,7 @@ async def run_update() -> None:
 
             logging.log(logging.INFO, "Getting emails from database...")
             active_on_db = await f()
-            active_emails = [email for _, email in active_on_db]
+            active_emails = [email for _, email in active_on_db if email not in admin_emails]
             logging.log(logging.INFO, "Emails retrieved from database successfully!")
 
             logging.log(logging.INFO, "Sending/Removing emails from workspace...")
@@ -67,8 +71,11 @@ async def run_update() -> None:
             )
             logging.log(logging.INFO, "Workspace group %s updated successfully!", ids)
 
+            logging.log(logging.INFO, "Setting managers for group %s...", ids)
+            set_group_managers(service=service, group_key=ids, manager_emails=admin_emails)
+            logging.log(logging.INFO, "Managers set for group %s", ids)
+
         logging.log(logging.INFO, "All workspace groups updated successfully")
-        # Request uptime URL to notify successful execution
 
         try:
             response = requests.get(UPTIME_URL, timeout=10)

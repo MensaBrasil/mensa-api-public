@@ -95,5 +95,5 @@ jobs:
         google_api_scopes: https://www.googleapis.com/auth/admin.directory.group
         google_service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
         google_workspace_cronjob_uptime_url: ${{ secrets.GOOGLE_WORKSPACE_CRONJOB_UPTIME_URL }}
-
+        google_workspace_admin_emails: ${{ secrets.WORKSPACE_MANAGERS_EMAIL_LIST }}
       run: uv run -m people_api update_workspace_groups

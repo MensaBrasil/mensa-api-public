@@ -49,7 +49,6 @@ class Settings(BaseSettings):
     google_api_scopes: str
     google_service_account: str
     google_workspace_admin_account: str
-    google_workspace_cronjob_uptime_url: str
     service_account_file: str
 
     region_name: str

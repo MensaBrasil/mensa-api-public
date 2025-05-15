@@ -1,5 +1,7 @@
 """Core functions for workspace groups cronjobs."""
 
+import logging
+
 import googleapiclient
 from googleapiclient.errors import HttpError
 
@@ -44,7 +46,7 @@ def update_workspace_group(
     group_key: str,
 ) -> None:
     """Update workspace group with active associates and remove inactive ones."""
-    # Adding active associates to google workspace
+
     for email in db_emails:
         if email not in [member.get("email") for member in workspace_emails]:
             try:
@@ -56,7 +58,6 @@ def update_workspace_group(
             except Exception as error:
                 print(f"Failed to add {email}: {error}")
 
-    # Removing inactive associates from google workspace
     for associate in workspace_emails:
         if associate.get("email") not in db_emails:
             try:
@@ -69,3 +70,21 @@ def update_workspace_group(
                 print(f"Failed to remove {associate.get('email')}: {error}")
             except Exception as error:
                 print(f"Failed to remove {associate.get('email')}: {error}")
+
+
+def set_group_managers(service, group_key: str, manager_emails: list[str]) -> None:
+    """
+    Ensures the given list of emails are set as MANAGERS of the Google Group.
+    """
+
+    for email in manager_emails:
+        try:
+            service.members().insert(
+                groupKey=group_key, body={"email": email, "role": "MANAGER"}
+            ).execute()
+            logging.info("Set %s as MANAGER for group %s", email, group_key)
+        except HttpError as e:
+            if e.resp.status == 409:
+                logging.info("%s is already a MANAGER or member of group %s", email, group_key)
+            else:
+                logging.error("Failed to set manager %s for group %s: %s", email, group_key, e)
