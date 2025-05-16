@@ -78,6 +78,16 @@ def get_s3_client():
     )
 
 
+def get_aws_client(service: str):
+    """Returns a boto3 client for the specified AWS service."""
+    return boto3.client(
+        service,
+        region_name=get_settings().region_name,
+        aws_access_key_id=get_settings().aws_access_key_id,
+        aws_secret_access_key=get_settings().aws_secret_access_key,
+    )
+
+
 def upload_media_to_s3(bucket: str, key: str, content: bytes, content_type: str) -> str:
     """
     Uploads content to S3 under the given bucket and key,

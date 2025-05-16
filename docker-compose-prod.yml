@@ -15,6 +15,18 @@ services:
     networks:
       - my_network
 
+  sqs_handler:
+    build:
+      context: .
+    command: uv run -m people_api sqs_handler
+    depends_on:
+      - people_api
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    networks:
+      - my_network
+
   redis:
     image: redis:7-alpine
     restart: always

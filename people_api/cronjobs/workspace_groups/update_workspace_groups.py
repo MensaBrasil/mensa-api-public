@@ -2,7 +2,6 @@
 
 # pylint: disable=C0413
 
-import asyncio
 import logging
 import sys
 
@@ -87,7 +86,3 @@ async def run_update() -> None:
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    asyncio.run(run_update())
