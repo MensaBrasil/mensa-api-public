@@ -1,7 +1,6 @@
-version: "3.8"
-
 services:
   people_api:
+    container_name: people_api
     build:
       context: .
     ports:
@@ -16,6 +15,7 @@ services:
       - my_network
 
   sqs_handler:
+    container_name: sqs_handler
     build:
       context: .
     command: uv run -m people_api sqs_handler
@@ -28,6 +28,7 @@ services:
       - my_network
 
   redis:
+    container_name: redis
     image: redis:7-alpine
     restart: always
     ports:
@@ -36,46 +37,52 @@ services:
       - my_network
     command: ["redis-server", "--appendonly", "yes"]
 
-  jaeger-db:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.13
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0@sha256:2f602552550869fb29b6fd5848c5118d3ef3a2e1d5d45802e3ab9088cb2de8e2
     environment:
       - discovery.type=single-node
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
       - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - action.destructive_requires_name=false
+      - xpack.monitoring.collection.enabled=false
+      - ES_LOG_LEVEL=trace
+      - logger.org.elasticsearch.index.search.slowlog=TRACE
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
-      - "9300:9300"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200 || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    networks:
+      - my_network
     volumes:
       - jaeger_data:/usr/share/elasticsearch/data
-    networks:
-      - my_network
 
   jaeger:
-    image: jaegertracing/all-in-one:1.41
-    restart: always
+    container_name: jaeger
+    image: jaegertracing/all-in-one:latest
+    restart: unless-stopped
     environment:
-      - COLLECTOR_OTLP_ENABLED=true
       - SPAN_STORAGE_TYPE=elasticsearch
-      - ES_SERVER_URLS=http://jaeger-db:9200
-
-    entrypoint:
-      - sh
-      - -c
-      - |
-        sleep 15
-        exec /go/bin/all-in-one-linux
+      - ES_SERVER_URLS=http://elasticsearch:9200
+      - COLLECTOR_OTLP_ENABLED=true
+      - ES_TAGS_AS_FIELDS_ALL=true
     ports:
-      - "6831:6831/udp"
-      - "6832:6832/udp"
-      - "5778:5778"
       - "16686:16686"
-      - "14250:14250"
-      - "14268:14268"
-      - "14269:14269"
-      - "9411:9411"
       - "4317:4317"
+      - "4318:4318"
+      - "5778:5778"
+      - "9411:9411"
     networks:
       - my_network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
 volumes:
   jaeger_data:
