@@ -2,6 +2,7 @@
 
 import secrets
 import string
+import unicodedata
 
 from fastapi import Depends, Form, Header, HTTPException, status
 from google.oauth2 import service_account
@@ -66,6 +67,16 @@ def create_google_workspace_user(primary_email, given_name, family_name, seconda
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+def normalize_name(name):
+    """Normalize a name to remove non-ASCII characters and convert to lowercase."""
+    if not name:
+        return ""
+    nfkd_form = unicodedata.normalize("NFKD", name)
+    only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    only_letters = "".join([c for c in only_ascii if c.isalpha() or c.isspace()])
+    return only_letters.lower()
+
+
 class WorkspaceService:
     """Service for handling Google Workspace user creation."""
 
@@ -128,16 +139,20 @@ class WorkspaceService:
                             detail=f"Mensa email already exists for this member. Email Address: {str(email.email_address)}",
                         )
 
-            complete_name = member.name
-            first_name = complete_name.split()[0].lower() if complete_name else ""
-            last_name = complete_name.split()[-1].lower() if complete_name else ""
-            primary_email = f"{first_name}.{last_name}@mensa.org.br"
-
-            if not first_name:
+            if not member.name:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="First name is required to create a Mensa email.",
+                    detail="Member name is required to create a Mensa email.",
                 )
+            complete_name = normalize_name(member.name).split()
+            if len(complete_name) < 2:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Member name must contain at least a first and last name.",
+                )
+            first_name = complete_name[0]
+            last_name = complete_name[-1]
+            primary_email = f"{first_name}.{last_name}@mensa.org.br"
 
             creds = service_account.Credentials.from_service_account_file(
                 SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES

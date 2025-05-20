@@ -287,11 +287,9 @@ def test_request_email_creation_member_not_found(
     assert response.json()["detail"] == error_detail
 
 
-def test_request_email_creation_missing_first_name(
-    test_client, mock_valid_internal_token, run_db_query
-):
+def test_request_email_creation_missing_name(test_client, mock_valid_internal_token, run_db_query):
     """
-    Test requesting email creation when the member does not have a first name.
+    Test requesting email creation when the member does not have a name.
     Should return 400 with appropriate error message.
     """
 
@@ -302,7 +300,25 @@ def test_request_email_creation_missing_first_name(
 
     response = test_client.post("/emailrequest/", headers=headers)
     assert response.status_code == 400
-    assert response.json()["detail"] == "First name is required to create a Mensa email."
+    assert response.json()["detail"] == "Member name is required to create a Mensa email."
+
+
+def test_request_email_creation_missing_first_or_last_name(
+    test_client, mock_valid_internal_token, run_db_query
+):
+    """
+    Test requesting email creation when the member does not have a first or last name.
+    Should return 400 with appropriate error message.
+    """
+
+    run_db_query("DELETE FROM emails WHERE registration_id = 5")
+    run_db_query("UPDATE registration SET name = 'Fernando' WHERE registration_id = 5")
+
+    headers = {"Authorization": f"Bearer {mock_valid_internal_token}"}
+
+    response = test_client.post("/emailrequest/", headers=headers)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Member name must contain at least a first and last name."
 
 
 def test_request_email_creation_success(test_client, mock_valid_internal_token, run_db_query):
