@@ -21,6 +21,13 @@ uv sync
 # Run the app (available at http://localhost:5000/...)
 make run OR uv run main.py
 
+# Alternatively use the CLI entrypoints
+python -m people_api api
+# Update workspace groups
+python -m people_api update_workspace_groups
+# Start the SQS/SNS handler
+python -m people_api sqs_handler
+
 ```
 
 ## Dumping a new version of the db

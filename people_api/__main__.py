@@ -1,6 +1,5 @@
-"""This module is the main entry point for the application."""
+"""Main entry point for ``python -m people_api``."""
 
 from .entrypoints import main
 
-if __name__ == "__main__":
-    main()
+main()
