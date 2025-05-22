@@ -23,15 +23,18 @@ class GroupService:
         token_data: UserToken | InternalToken, session: AsyncSession
     ) -> list:
         """Determines if a member can participate based on their email."""
-        can_participate = await MemberRepository.getCanParticipate(
-            token_data.registration_id, session
-        )
         member_reg = (
             await session.exec(
                 Registration.select_stmt_by_id(registration_id=token_data.registration_id)
             )
         ).first()
-        if member_reg and member_reg.gender != Gender.FEMALE:
+        if not member_reg:
+            raise HTTPException(
+                status_code=404,
+                detail="Member not found",
+            )
+        can_participate = await MemberRepository.getCanParticipate(member_reg, session)
+        if member_reg.gender != Gender.FEMALE:
             can_participate = [g for g in can_participate if g.get("group_name") != "MB | Mulheres"]
         return can_participate
 

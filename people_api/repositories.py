@@ -52,28 +52,69 @@ class MemberRepository:
         return True
 
     @staticmethod
-    async def getCanParticipate(mb: int, session: AsyncSession) -> list:
+    async def getCanParticipate(registration: Registration, session: AsyncSession) -> list:
         """Retrieve a list of groups that the member can participate in."""
         try:
-            registration = (await session.exec(Registration.select_stmt_by_id(mb))).first()
-            birth_date = registration.birth_date if registration else None
+            birth_date = registration.birth_date
 
-            if birth_date:
-                today = datetime.today().date()
-                age = (
-                    today.year
-                    - birth_date.year
-                    - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            if not birth_date:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Birth date is required to determine group participation.",
                 )
-            else:
-                return []
 
-            if age < 12:
+            today = datetime.today().date()
+            age = (
+                today.year
+                - birth_date.year
+                - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            )
+
+            should_show_RJB_groups_in_app = False
+
+            if age < 10:
                 user_classification = "MJB"
-            elif 12 <= age < 18:
+            elif 10 <= age < 18:
                 user_classification = "JB"
             else:
                 user_classification = "MB"
+
+            if user_classification in ("MJB", "JB"):
+                legal_representatives = (
+                    await session.exec(
+                        LegalRepresentatives.get_legal_representatives_for_member(
+                            member_id=registration.registration_id
+                        )
+                    )
+                ).all()
+                legal_rep_mensans = []
+                for legal_rep in legal_representatives:
+                    legal_mensan = (
+                        await session.exec(
+                            Registration.get_registration_by_last_8_phone_digits(legal_rep.phone)
+                        )
+                    ).first()
+                    if legal_mensan:
+                        legal_rep_mensans.append(legal_mensan)
+                if len(legal_rep_mensans) < len(legal_representatives):
+                    should_show_RJB_groups_in_app = True
+
+            if user_classification == "MB":
+                member_phones = (
+                    await session.exec(
+                        Phones.select_stmt_by_registration_id(registration.registration_id)
+                    )
+                ).all()
+                for phone in member_phones:
+                    legal_rep_correspondence = (
+                        await session.exec(
+                            select(LegalRepresentatives).where(
+                                LegalRepresentatives.phone == phone.phone_number
+                            )
+                        )
+                    ).first()
+                    if legal_rep_correspondence:
+                        should_show_RJB_groups_in_app = True
 
             all_groups = (await session.exec(select(GroupList))).all()
             result_list = []
@@ -90,18 +131,18 @@ class MemberRepository:
                     group_classification = "JB"
                 elif re.search(r"^OrgMB", name, re.IGNORECASE):
                     group_classification = "OrgMB"
-                else:
+                elif re.search(r"^MB", name, re.IGNORECASE) or re.search(
+                    r"^Mensa", name, re.IGNORECASE
+                ):
                     group_classification = "MB"
+                else:
+                    group_classification = "NotMensa"
 
-                if user_classification == "MJB" and group_classification in (
-                    "MJB",
-                    "RJB",
-                ):
+                if should_show_RJB_groups_in_app and group_classification == "RJB":
                     result_list.append({"group_id": group_id, "group_name": name})
-                elif user_classification == "JB" and group_classification in (
-                    "JB",
-                    "RJB",
-                ):
+                if user_classification == "MJB" and group_classification == "MJB":
+                    result_list.append({"group_id": group_id, "group_name": name})
+                elif user_classification == "JB" and group_classification == "JB":
                     result_list.append({"group_id": group_id, "group_name": name})
                 elif user_classification == "MB" and group_classification == "MB":
                     result_list.append({"group_id": group_id, "group_name": name})
