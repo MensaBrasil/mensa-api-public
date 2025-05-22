@@ -270,3 +270,49 @@ async def get_pending_whatsapp_group_join_requests(registration_id: int) -> dict
         logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
         logging.info("[CHATBOT-MENSA] Response content: %s", data)
         return data
+
+
+async def get_failed_whatsapp_group_join_requests(registration_id: int) -> dict:
+    """Send a GET request to retrieve failed WhatsApp group join requests."""
+    logging.info(
+        "[CHATBOT-MENSA] Getting failed WhatsApp group join requests for registration ID: %s",
+        registration_id,
+    )
+    token = create_token(registration_id=registration_id)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:{get_settings().api_port}/get_failed_requests",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        data = response.json()
+        if not data or (isinstance(data, list) and len(data) == 0):
+            logging.info("[CHATBOT-MENSA] No failed WhatsApp group join requests found.")
+            return {"message": "No failed WhatsApp group join requests found."}
+        logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
+        logging.info("[CHATBOT-MENSA] Response content: %s", data)
+        return data
+
+
+async def send_feedback_to_api(
+    registration_id: int, feedback_text: str, feedback_type: str, feedback_target: str = "chatbot"
+) -> dict:
+    """Send feedback to the API endpoint."""
+    logging.info("[CHATBOT-MENSA] Sending feedback to API for registration ID: %s", registration_id)
+    token = create_token(registration_id=registration_id)
+    payload = {
+        "registration_id": registration_id,
+        "feedback_text": feedback_text,
+        "feedback_type": feedback_type,
+        "feedback_target": feedback_target,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"http://localhost:{get_settings().api_port}/feedback/",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+        )
+        logging.info("[CHATBOT-MENSA] Response status code: %s", response.status_code)
+        logging.info("[CHATBOT-MENSA] Response content: %s", response.json())
+        return response.json()

@@ -97,6 +97,17 @@ VALUES
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 6, 10, '2023-04-15', '2023-10-15', 100.00, 'Semi-annual membership', 'PIX', 'PIX234567', 'CONFIRMED'),
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 7, 11, '2023-08-01', '2024-08-01', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS678901', 'CONFIRMED');
 
+-- Feedbacks table
+INSERT INTO feedbacks (registration_id, feedback_text, feedback_target, feedback_type, created_at, updated_at)
+VALUES
+    (5, 'O chatbot respondeu rápido, mas poderia ser mais claro.', 'CHATBOT', 'NEUTRAL', '2024-05-01 10:00:00', '2024-05-01 10:00:00'),
+    (6, 'Gostei muito do atendimento via WhatsApp, foi excelente!', 'WHATSAPP', 'POSITIVE', '2024-05-02 11:30:00', '2024-05-02 11:30:00'),
+    (7, 'O aplicativo móvel travou algumas vezes durante o uso.', 'MOBILE_APP', 'NEGATIVE', '2024-05-03 09:15:00', '2024-05-03 09:15:00'),
+    (8, 'Seria ótimo se a secretaria pudesse responder fora do horário comercial.', 'SECRETARIA', 'FEATURE_REQUEST', '2024-05-04 14:45:00', '2024-05-04 14:45:00'),
+    (9, 'A gestão está de parabéns pela organização do evento.', 'GESTAO', 'POSITIVE', '2024-05-05 16:20:00', '2024-05-05 16:20:00'),
+    (10, 'O chatbot não entendeu minha dúvida sobre pagamentos.', 'CHATBOT', 'NEGATIVE', '2024-05-06 08:10:00', '2024-05-06 08:10:00'),
+    (11, 'Gostaria de sugerir uma nova funcionalidade no app.', 'MOBILE_APP', 'FEATURE_REQUEST', '2024-05-07 17:05:00', '2024-05-07 17:05:00');
+
 -- Additional data for IAM tests,
 -- Roles table
 INSERT INTO iam_roles (role_name, role_description)

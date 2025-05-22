@@ -9,6 +9,7 @@ from .models import (
     CertsAntecCriminais,
     Emails,
     EmailsAudit,
+    Feedback,
     GroupList,
     GroupRequests,
     IAMGroupPermissionsMap,
@@ -71,4 +72,5 @@ __all__ = [
     "VolunteerActivityLog",
     "VolunteerActivityEvaluation",
     "VolunteerPointTransaction",
+    "Feedback",
 ]

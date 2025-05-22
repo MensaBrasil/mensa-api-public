@@ -763,3 +763,141 @@ async def test_handle_get_pending_whatsapp_group_join_requests(monkeypatch):
             "fulfilled": False,
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_handle_get_failed_whatsapp_group_join_requests(monkeypatch):
+    """Test if the ToolCallService.handle_tool_calls processes a GET_FAILED_WHATSAPP_GROUP_JOIN_REQUESTS call correctly."""
+    tool_call = SimpleNamespace(
+        id="12",
+        function=SimpleNamespace(
+            name=FunctionCall.GET_FAILED_WHATSAPP_GROUP_JOIN_REQUESTS,
+            arguments="{}",
+        ),
+    )
+    run = SimpleNamespace(
+        id="r12",
+        thread_id="t12",
+        required_action=SimpleNamespace(
+            submit_tool_outputs=SimpleNamespace(tool_calls=[tool_call])
+        ),
+    )
+    registration_id = 5
+
+    async def fake_get_failed_whatsapp_group_join_requests(registration_id: int):
+        return [
+            {
+                "group_id": "120363150360123420@g.us",
+                "group_name": "Grupos Regionais Mensa Brasil",
+                "no_of_attempts": 5,
+                "last_attempt": "2023-10-05",
+                "fulfilled": False,
+                "failed": True,
+            }
+        ]
+
+    monkeypatch.setattr(
+        "people_api.services.whatsapp_service.chatbot.tool_calls_handler.get_failed_whatsapp_group_join_requests",
+        fake_get_failed_whatsapp_group_join_requests,
+    )
+
+    called = {}
+
+    async def fake_submit(thread_id: str, run_id: str, tool_outputs: list):
+        called["args"] = (thread_id, run_id, tool_outputs)
+        return run
+
+    monkeypatch.setattr(
+        "people_api.services.whatsapp_service.chatbot.tool_calls_handler.openai_client.beta.threads.runs.submit_tool_outputs",
+        fake_submit,
+    )
+
+    result = await ToolCallService.handle_tool_calls(run, registration_id)  # type: ignore
+    assert result is run
+    thread_id, run_id, tool_outputs = called["args"]
+    assert thread_id == "t12"
+    assert run_id == "r12"
+    assert len(tool_outputs) == 1
+    to = tool_outputs[0]
+    assert isinstance(to, dict)
+    assert to["tool_call_id"] == "12"
+    assert json.loads(to["output"]) == [
+        {
+            "group_id": "120363150360123420@g.us",
+            "group_name": "Grupos Regionais Mensa Brasil",
+            "no_of_attempts": 5,
+            "last_attempt": "2023-10-05",
+            "fulfilled": False,
+            "failed": True,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_handle_give_zelador_feedback(monkeypatch):
+    """Test if the ToolCallService.handle_tool_calls processes a GIVE_ZELADOR_FEEDBACK call correctly."""
+    tool_call = SimpleNamespace(
+        id="13",
+        function=SimpleNamespace(
+            name=FunctionCall.GIVE_ZELADOR_FEEDBACK,
+            arguments=json.dumps(
+                {
+                    "feedback": "O grupo está muito organizado!",
+                    "feedback_type": "positive",
+                    "feedback_target": "zelador",
+                }
+            ),
+        ),
+    )
+    run = SimpleNamespace(
+        id="r13",
+        thread_id="t13",
+        required_action=SimpleNamespace(
+            submit_tool_outputs=SimpleNamespace(tool_calls=[tool_call])
+        ),
+    )
+    registration_id = 15
+
+    async def fake_send_feedback_to_api(
+        registration_id: int, feedback_text: str, feedback_type: str, feedback_target: str
+    ):
+        return {
+            "message": "Feedback sent successfully",
+            "registration_id": registration_id,
+            "feedback_text": feedback_text,
+            "feedback_type": feedback_type,
+            "feedback_target": feedback_target,
+        }
+
+    monkeypatch.setattr(
+        "people_api.services.whatsapp_service.chatbot.tool_calls_handler.send_feedback_to_api",
+        fake_send_feedback_to_api,
+    )
+
+    called = {}
+
+    async def fake_submit(thread_id: str, run_id: str, tool_outputs: list):
+        called["args"] = (thread_id, run_id, tool_outputs)
+        return run
+
+    monkeypatch.setattr(
+        "people_api.services.whatsapp_service.chatbot.tool_calls_handler.openai_client.beta.threads.runs.submit_tool_outputs",
+        fake_submit,
+    )
+
+    result = await ToolCallService.handle_tool_calls(run, registration_id)  # type: ignore
+    assert result is run
+    thread_id, run_id, tool_outputs = called["args"]
+    assert thread_id == "t13"
+    assert run_id == "r13"
+    assert len(tool_outputs) == 1
+    to = tool_outputs[0]
+    assert isinstance(to, dict)
+    assert to["tool_call_id"] == "13"
+    assert json.loads(to["output"]) == {
+        "message": "Feedback sent successfully",
+        "registration_id": registration_id,
+        "feedback_text": "O grupo está muito organizado!",
+        "feedback_type": "positive",
+        "feedback_target": "zelador",
+    }

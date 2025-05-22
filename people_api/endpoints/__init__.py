@@ -1,5 +1,6 @@
 from .certificate import certificate_router
 from .data import data_router
+from .feedback import feedback_router
 from .google_workspace import google_workspace_router
 from .group import group_router
 from .iam import iam_router
@@ -28,4 +29,5 @@ __all__ = [
     "oauth_router",
     "iam_router",
     "volunteer_router",
+    "feedback_router",
 ]

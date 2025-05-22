@@ -4,6 +4,7 @@ import secrets
 import string
 import unicodedata
 
+import gspread
 from fastapi import Depends, Form, Header, HTTPException, status
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -253,3 +254,19 @@ class WorkspaceService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
             ) from e
+
+    @staticmethod
+    async def get_google_spreadsheets_client() -> gspread.Client:
+        """Get Google Drive and Google Sheets service."""
+
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive",
+        ]
+        creds = service_account.Credentials.from_service_account_file(
+            get_settings().service_account_file, scopes=scopes
+        )
+
+        gsclient = gspread.authorize(creds)
+
+        return gsclient

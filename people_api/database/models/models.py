@@ -10,6 +10,7 @@ from sqlmodel import (
     Boolean,
     Column,
     DateTime,
+    Enum,
     Field,
     ForeignKey,
     Integer,
@@ -28,6 +29,7 @@ from sqlmodel import (
     update,
 )
 
+from people_api.database.models.feedback import FeedbackTargets, FeedbackTypes
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
 
 
@@ -847,3 +849,24 @@ class IAMUserGroupsMap(SQLModel, table=True):
         Return a select statement to check if a group is already assigned to a member.
         """
         return select(cls).where(cls.group_id == group_id, cls.registration_id == member_id)
+
+
+class Feedback(BaseSQLModel, table=True):
+    """Model for feedback records."""
+
+    __tablename__ = "feedbacks"
+
+    id: int | None = Field(default=None, primary_key=True)
+    registration_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("registration.registration_id", ondelete="CASCADE"))
+    )
+    feedback_text: str | None = Field(max_length=1200)
+    feedback_target: FeedbackTargets = Field(
+        sa_column=Column(Enum(FeedbackTargets), nullable=False)
+    )
+    feedback_type: FeedbackTypes = Field(
+        sa_column=Column(
+            Enum(FeedbackTypes),
+            nullable=False,
+        )
+    )

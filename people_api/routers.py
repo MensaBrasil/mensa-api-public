@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from .endpoints import (
     certificate_router,
     data_router,
+    feedback_router,
     google_workspace_router,
     group_router,
     iam_router,
@@ -32,6 +33,7 @@ APP_ROUTERS = [
     oauth_router,
     iam_router,
     volunteer_router,
+    feedback_router,
 ]
 
 all_routers = APIRouter()

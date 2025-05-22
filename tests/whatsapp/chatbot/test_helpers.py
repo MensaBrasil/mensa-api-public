@@ -360,3 +360,69 @@ async def test_get_pending_whatsapp_group_join_requests_found(monkeypatch):
 
     result = await helpers.get_pending_whatsapp_group_join_requests(14)
     assert result == [{"group_id": "g3", "status": "pending"}]
+
+
+@pytest.mark.asyncio
+async def test_get_failed_whatsapp_group_join_requests_empty(monkeypatch):
+    """Test get_failed_whatsapp_group_join_requests when no requests are found."""
+    monkeypatch.setattr(helpers, "create_token", lambda registration_id: "token")
+    mock_response = MagicMock()
+    mock_response.json.return_value = []
+    mock_response.status_code = 200
+
+    mock_client = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock()
+    mock_client.get = AsyncMock(return_value=mock_response)
+
+    monkeypatch.setattr(
+        helpers, "httpx", MagicMock(AsyncClient=MagicMock(return_value=mock_client))
+    )
+    monkeypatch.setattr(helpers, "get_settings", lambda: MagicMock(api_port=8000))
+
+    result = await helpers.get_failed_whatsapp_group_join_requests(15)
+    assert result == {"message": "No failed WhatsApp group join requests found."}
+
+
+@pytest.mark.asyncio
+async def test_get_failed_whatsapp_group_join_requests_found(monkeypatch):
+    """Test get_failed_whatsapp_group_join_requests when requests are found."""
+    monkeypatch.setattr(helpers, "create_token", lambda registration_id: "token")
+    mock_response = MagicMock()
+    mock_response.json.return_value = [{"group_id": "g4", "status": "failed"}]
+    mock_response.status_code = 200
+
+    mock_client = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock()
+    mock_client.get = AsyncMock(return_value=mock_response)
+
+    monkeypatch.setattr(
+        helpers, "httpx", MagicMock(AsyncClient=MagicMock(return_value=mock_client))
+    )
+    monkeypatch.setattr(helpers, "get_settings", lambda: MagicMock(api_port=8000))
+
+    result = await helpers.get_failed_whatsapp_group_join_requests(16)
+    assert result == [{"group_id": "g4", "status": "failed"}]
+
+
+@pytest.mark.asyncio
+async def test_send_feedback_to_api(monkeypatch):
+    """Test send_feedback_to_api function."""
+    monkeypatch.setattr(helpers, "create_token", lambda registration_id: "token")
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": "feedback received"}
+    mock_response.status_code = 200
+
+    mock_client = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    monkeypatch.setattr(
+        helpers, "httpx", MagicMock(AsyncClient=MagicMock(return_value=mock_client))
+    )
+    monkeypatch.setattr(helpers, "get_settings", lambda: MagicMock(api_port=8000))
+
+    result = await helpers.send_feedback_to_api(17, "Great bot!", "positive", "chatbot")
+    assert result == {"message": "feedback received"}

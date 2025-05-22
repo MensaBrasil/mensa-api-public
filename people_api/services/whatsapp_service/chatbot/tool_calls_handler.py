@@ -14,11 +14,13 @@ from .wpp_client_helpers import (
     create_email_request,
     delete_member_legal_reps,
     get_all_whatsapp_groups,
+    get_failed_whatsapp_group_join_requests,
     get_member_addresses_request,
     get_member_legal_reps,
     get_pending_whatsapp_group_join_requests,
     recover_email_password_request,
     request_whatsapp_group_join,
+    send_feedback_to_api,
     update_address_request,
     update_member_legal_reps,
 )
@@ -38,6 +40,8 @@ class FunctionCall(StrEnum):
     GET_ALL_WHATSAPP_GROUPS = "get_all_whatsapp_groups"
     REQUEST_WHATSAPP_GROUP_JOIN = "request_whatsapp_group_join"
     GET_PENDING_WHATSAPP_GROUP_JOIN_REQUESTS = "get_pending_whatsapp_group_join_requests"
+    GET_FAILED_WHATSAPP_GROUP_JOIN_REQUESTS = "get_failed_whatsapp_group_join_requests"
+    GIVE_ZELADOR_FEEDBACK = "give_zelador_feedback"
 
 
 class ToolCallService:
@@ -180,6 +184,33 @@ class ToolCallService:
                         f"{tool_call.id}"
                     ] = await get_pending_whatsapp_group_join_requests(
                         registration_id=registration_id
+                    )
+                if tool_call.function.name == FunctionCall.GET_FAILED_WHATSAPP_GROUP_JOIN_REQUESTS:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    call_responses[
+                        f"{tool_call.id}"
+                    ] = await get_failed_whatsapp_group_join_requests(
+                        registration_id=registration_id
+                    )
+                if tool_call.function.name == FunctionCall.GIVE_ZELADOR_FEEDBACK:
+                    logging.info(
+                        "[CHATBOT-MENSA] Tool call detected: %s with arguments: %s",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    args = json.loads(tool_call.function.arguments)
+                    feedback_text = args.get("feedback")
+                    feedback_type = args.get("feedback_type")
+                    feedback_target = args.get("feedback_target")
+                    call_responses[f"{tool_call.id}"] = await send_feedback_to_api(
+                        registration_id=registration_id,
+                        feedback_text=feedback_text,
+                        feedback_type=feedback_type,
+                        feedback_target=feedback_target,
                     )
 
             tool_outputs = [
