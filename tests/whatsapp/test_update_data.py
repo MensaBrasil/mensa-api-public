@@ -73,43 +73,15 @@ def test_update_phone_with_valid_data_or_invalid_data(
 
 @patch("people_api.services.whatsapp_service.utils.API_KEY", MOCK_API_KEY)
 def test_update_phone_for_representative_with_valid_data_or_invalid_data(
-    test_client: TestClient, run_db_query: Any
+    test_client: TestClient,
 ) -> None:
     """Test updating a representative's phone number when CPF is valid"""
 
-    run_db_query(
-        """
-        DELETE FROM legal_representatives
-        WHERE registration_id IN (
-            SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'
-        )
-    """
-    )
-
-    run_db_query(
-        """
-        INSERT INTO legal_representatives (registration_id, cpf, full_name, phone, alternative_phone)
-        VALUES (
-            (SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'),
-            '98765432100',
-            'Test Legal Rep',
-            '1234567890',
-            '1234567890'
-        )
-    """
-    )
-
-    registration_id = run_db_query(
-        "SELECT registration_id FROM emails WHERE email_address = 'fernando.filho@mensa.org.br'"
-    )[0][0]
-
-    print("Fetched registration_id:", registration_id)
-
     payload = {
-        "phone": "0987654321",
+        "phone": "11999999999",
         "birth_date": None,
-        "cpf": "98765432100",
-        "registration_id": registration_id,
+        "cpf": "12345678900",
+        "registration_id": 7,
         "is_representative": True,
         "token": MOCK_API_KEY,
     }

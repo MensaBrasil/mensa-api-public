@@ -851,6 +851,42 @@ class IAMUserGroupsMap(SQLModel, table=True):
         return select(cls).where(cls.group_id == group_id, cls.registration_id == member_id)
 
 
+class WhatsappAuthorization(BaseSQLModel, table=True):
+    """Model for the whatsapp_authorization table."""
+
+    __tablename__ = "whatsapp_authorization"
+
+    auth_id: int = Field(primary_key=True)
+    phone_number: str = Field(max_length=20, min_length=10)
+    registration_id: int | None = Field(
+        foreign_key="registration.registration_id", ondelete="CASCADE"
+    )
+    authorized: bool = Field(default=False)
+    is_legal_representative: bool = Field(default=False)
+    legal_representative_id: int | None = Field(
+        sa_column=Column(
+            Integer, ForeignKey("legal_representatives.representative_id", ondelete="CASCADE")
+        )
+    )
+    represented_registration_id: int | None = Field(
+        foreign_key="registration.registration_id", ondelete="CASCADE"
+    )
+
+    @classmethod
+    def select_stmt_by_last_8_digits(cls, phone_number: str):
+        """
+        Return a select statement for WhatsappAuthorization instances by the last 8 digits of the phone number.
+        """
+        if not phone_number:
+            raise ValueError("phone_number must not be None or empty")
+        phone_pattern = f"%{phone_number[-8:]}"
+        return select(cls).where(
+            func.lower(
+                func.cast(func.regexp_replace(cls.phone_number, r"\D", "", "g"), String)
+            ).like(phone_pattern)
+        )
+
+
 class Feedback(BaseSQLModel, table=True):
     """Model for feedback records."""
 

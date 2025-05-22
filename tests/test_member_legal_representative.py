@@ -139,28 +139,11 @@ def test_add_legal_representative_invalid_token(test_client, mock_valid_token):
 
 
 def test_add_legal_representative_should_return_success(
-    test_client, mock_valid_token, run_db_query
+    test_client, get_valid_internal_token, run_db_query
 ):
-    run_db_query("DELETE FROM emails WHERE registration_id = 5")
-    run_db_query("DELETE FROM membership_payments WHERE registration_id = 5")
-    run_db_query("DELETE FROM legal_representatives WHERE registration_id = 5")
-    run_db_query("DELETE FROM member_groups WHERE registration_id = 5")
-    run_db_query("DELETE FROM addresses WHERE registration_id = 5")
-    run_db_query("DELETE FROM phones WHERE registration_id = 5")
-    run_db_query("DELETE FROM registration WHERE registration_id = 5")
-    run_db_query("DELETE FROM emails WHERE email_id = 1")
-    run_db_query("DELETE FROM legal_representatives WHERE representative_id = 1")
+    run_db_query("DELETE FROM legal_representatives WHERE registration_id = 7")
 
-    run_db_query(
-        "INSERT INTO registration (registration_id, expelled, deceased, transferred, birth_date, cpf, join_date) "
-        "VALUES (5, False, False, False, '2025-12-10', '11111111111', '2021-01-01')"
-    )
-
-    run_db_query(
-        "INSERT INTO emails (email_id, registration_id, email_type, email_address) "
-        "VALUES (1, 5, 'main', 'fernando.filho@mensa.org.br')"
-    )
-
+    token = get_valid_internal_token(7)
     payload = {
         "cpf": "22222222222",
         "full_name": "Legal Rep Two",
@@ -170,9 +153,9 @@ def test_add_legal_representative_should_return_success(
         "observations": "Another test observation",
     }
 
-    headers = {"Authorization": f"Bearer {mock_valid_token}"}
+    headers = {"Authorization": f"Bearer {token}"}
 
-    response = test_client.post("/legal_representative/5", json=payload, headers=headers)
+    response = test_client.post("/legal_representative/7", json=payload, headers=headers)
 
     assert response.status_code == 200, f"Expected 200 but got {response.status_code}"
     assert response.json() == {"message": "Legal representative added successfully"}

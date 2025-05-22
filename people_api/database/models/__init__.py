@@ -27,6 +27,7 @@ from .models import (
     PhonesAudit,
     Registration,
     RegistrationAudit,
+    WhatsappAuthorization,
     WhatsappComms,
     WhatsappMessages,
 )
@@ -72,5 +73,6 @@ __all__ = [
     "VolunteerActivityLog",
     "VolunteerActivityEvaluation",
     "VolunteerPointTransaction",
+    "WhatsappAuthorization",
     "Feedback",
 ]

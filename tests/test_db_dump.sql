@@ -35,7 +35,7 @@ VALUES
 -- Phones table
 INSERT INTO phones (registration_id, phone_number, created_at, updated_at)
 VALUES
-    (5, '+552197654322', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
+    (5, '+552197654321', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
     (6, '+552198765432', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
     (7, '+552199876543', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
     (8, '+552191234567', '2023-08-19 21:47:18.276', '2023-08-19 21:47:18.276'),
@@ -46,7 +46,7 @@ VALUES
 -- Member groups table
 INSERT INTO member_groups (registration_id, phone_number, group_id, entry_date, status)
 VALUES
-    (5, '+552197654322', '120363045725875023@g.us', '2023-10-19', 'Active'),
+    (5, '+552197654321', '120363045725875023@g.us', '2023-10-19', 'Active'),
     (6, '+552198765432', '120363025301625133@g.us', '2023-10-19', 'Active'),
     (7, '+552199876543', '120363115167512889@g.us', '2023-10-19', 'Active'),
     (8, '+552191234567', '556184020538-1393452040@g.us', '2023-10-19', 'Active'),
@@ -97,6 +97,32 @@ VALUES
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 6, 10, '2023-04-15', '2023-10-15', 100.00, 'Semi-annual membership', 'PIX', 'PIX234567', 'CONFIRMED'),
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 7, 11, '2023-08-01', '2024-08-01', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS678901', 'CONFIRMED');
 
+-- Legal Representatives table
+INSERT INTO legal_representatives (representative_id, registration_id, cpf, full_name, email, phone, alternative_phone, observations, created_at, updated_at)
+VALUES
+    (1, 7, '12345678900', 'Carlos Silva', 'carlos.silva@example.com', '+5521955555551', NULL, 'Father of Ana Silva Junior (registration 7)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (2, 7, '12345678901', 'Ana Silva', 'ana.silva@example.com', '+5521955555552', NULL, 'Mother of Ana Silva Junior (registration 7)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (3, 8, '23456789000', 'Fernando Oliveira', 'fernando.oliveira@example.com', '+5521955555554', NULL, 'Father of Pedro Santos (registration 8)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (4, 8, '23456789001', 'Fernanda Oliveira', 'fernanda.oliveira@example.com', '+5521955555555', NULL, 'Mother of Pedro Santos (registration 8)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (5, 10, '34567890100', 'Marcos Costa', 'marcos.costa@example.com', '+5521955555556', NULL, 'Father of Lucas Costa (registration 10)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (6, 10, '34567890101', 'Mariana Costa', 'mariana.costa@example.com', '+5521955555557', NULL, 'Mother of Lucas Costa (registration 10)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+
+-- WhatsApp Authorization table
+INSERT INTO whatsapp_authorization (auth_id, phone_number, registration_id, authorized, is_legal_representative, legal_representative_id, represented_registration_id, created_at, updated_at)
+VALUES
+    (1, '+552197654321', 5, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (2, '+552198765432', 6, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (3, '+552199876543', 7, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (4, '+552191234567', 8, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (5, '+552192345678', 9, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (6, '+552193456789', 10, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (7, '+552194567890', 11, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (8, '+5521955555551', NULL, true, true, 1, 7, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (9, '+5521955555552', NULL, true, true, 2, 7, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (10, '+5521955555554', NULL, true, true, 3, 8, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (11, '+5521955555555', NULL, true, true, 4, 8, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (12, '+5521955555556', NULL, true, true, 5, 10, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (13, '+5521955555557', NULL, true, true, 6, 10, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
 -- Feedbacks table
 INSERT INTO feedbacks (registration_id, feedback_text, feedback_target, feedback_type, created_at, updated_at)
 VALUES

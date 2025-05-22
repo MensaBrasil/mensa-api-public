@@ -13,7 +13,7 @@ run: ## python run app
 	uvicorn main:app --reload
 
 token:
-	uv run utils/generate_token.py
+	uv run utils/generate_token.py $(id)
 
 fresh-run:
 	docker compose down test-db people_api --remove-orphans

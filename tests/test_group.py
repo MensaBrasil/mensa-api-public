@@ -303,3 +303,89 @@ def test_request_join_group_new_request(
         "SELECT fulfilled FROM group_requests WHERE registration_id = 5 AND group_id = 'abc'"
     )
     assert result[0][0] is False
+
+
+def test_get_authorization_status_valid_token(
+    test_client: Any, get_valid_internal_token: Any
+) -> None:
+    """Test retrieving authorization status for a valid token."""
+    token = get_valid_internal_token(7)
+    headers = {"Authorization": f"Bearer {token}"}
+    response = test_client.get("/get_authorization_status", headers=headers)
+    assert response.status_code == 200
+    response_data = response.json()
+    assert isinstance(response_data, list)
+    # Should include member phone
+    assert any(
+        p["phone_number"] == "+552199876543"
+        and p["name"].startswith("Ana")
+        and p["authorization_status"] is True
+        and p["type"] == "member"
+        for p in response_data
+    )
+    # Should include both legal representatives
+    assert any(
+        p["phone_number"] == "+5521955555551"
+        and p["name"].startswith("Carlos")
+        and p["authorization_status"] is True
+        and p["type"] == "legal_representative"
+        for p in response_data
+    )
+    assert any(
+        p["phone_number"] == "+5521955555552"
+        and p["name"].startswith("Ana")
+        and p["authorization_status"] is True
+        and p["type"] == "legal_representative"
+        for p in response_data
+    )
+
+
+def test_get_authorization_status_invalid_token(test_client: Any) -> None:
+    """Test retrieving authorization status with an invalid token."""
+    headers = {"Authorization": "Bearer invalid-token"}
+    response = test_client.get("/get_authorization_status", headers=headers)
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid Token"}
+
+
+def test_get_authorization_status_missing_token(test_client: Any) -> None:
+    """Test retrieving authorization status without a token."""
+    response = test_client.get("/get_authorization_status")
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Not authenticated"
+
+
+def test_get_authorization_status_no_phones(
+    test_client: Any, get_valid_internal_token: Any, run_db_query: Any
+) -> None:
+    """Test that authorization status includes all expected phones for the member and legal representatives."""
+    token = get_valid_internal_token(5)
+    headers = {"Authorization": f"Bearer {token}"}
+    run_db_query("DELETE FROM whatsapp_authorization WHERE registration_id = 5")
+    run_db_query("DELETE FROM phones WHERE registration_id = 5")
+    response = test_client.get("/get_authorization_status", headers=headers)
+    assert response.status_code == 200
+    # Since there are no phones and the member is not a minor, should return only the member with phone_number None and authorization_status False
+    assert response.json() == [
+        {
+            "type": "member",
+            "name": "Fernando Filho",
+            "phone_number": None,
+            "authorization_status": False,
+        }
+    ]
+
+
+def test_get_authorization_status_with_legal_rep_phone(
+    test_client: Any, get_valid_internal_token: Any
+) -> None:
+    """Test that authorization status includes all expected phones for the member and legal representatives."""
+    token = get_valid_internal_token(8)
+    headers = {"Authorization": f"Bearer {token}"}
+    response = test_client.get("/get_authorization_status", headers=headers)
+    assert response.status_code == 200
+    response_data = response.json()
+    numbers = {p["phone_number"] for p in response_data}
+    assert "+552191234567" in numbers
+    assert "+5521955555554" in numbers
+    assert "+5521955555555" in numbers

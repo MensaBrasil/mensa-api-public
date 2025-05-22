@@ -435,26 +435,14 @@ def test_leaderboard_threshold_filtering(test_client, mock_valid_token_auth):
 ###############################
 
 
-def test_get_combined_names(test_client, mock_valid_token_auth, run_db_query):
+def test_get_combined_names(test_client, get_valid_internal_token):
     """
     Test retrieving combined names (registration and legal representatives).
-    For testing purposes, ensure the registration record and legal representatives are seeded.
+    Uses seeded data from test_db_dump.sql.
     """
-    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
-    registration_id = 5
 
-    run_db_query(
-        f"UPDATE registration SET name='TestFirst TestLast' WHERE registration_id={registration_id}"
-    )
-
-    run_db_query(f"""
-        INSERT INTO legal_representatives (registration_id, cpf, full_name, email, phone, alternative_phone, observations)
-        VALUES ({registration_id}, '12345678901', 'Ana Silva', 'ana@example.com', '5551111111', '5552222222', 'Test LR One')
-    """)
-    run_db_query(f"""
-        INSERT INTO legal_representatives (registration_id, cpf, full_name, email, phone, alternative_phone, observations)
-        VALUES ({registration_id}, '12345678902', 'Carlos Pereira', 'carlos@example.com', '5553333333', '5554444444', 'Test LR Two')
-    """)
+    token = get_valid_internal_token(7)
+    headers = {"Authorization": f"Bearer {token}"}
 
     response = test_client.get("/volunteer/names", headers=headers)
     assert response.status_code == 200, (
@@ -465,13 +453,11 @@ def test_get_combined_names(test_client, mock_valid_token_auth, run_db_query):
 
     names = data["names"]
     assert isinstance(names, list), "The 'names' value should be a list"
-    assert len(names) == 3, f"Expected exactly 3 names, got {len(names)}"
-    assert names[0] == "TestFirst TestLast", (
-        f"Expected registration name to be 'TestFirst TestLast', got {names[0]}"
-    )
-    assert names[1] == "Ana Silva", f"Expected first legal rep to be 'Ana Silva', got {names[1]}"
-    assert names[2] == "Carlos Pereira", (
-        f"Expected second legal rep to be 'Carlos Pereira', got {names[2]}"
+
+    expected_names = {"Ana Junior", "Carlos Silva", "Ana Silva"}
+    found_names = set(names)
+    assert expected_names.issubset(found_names), (
+        f"Expected names {expected_names} in response, got {found_names}"
     )
 
 

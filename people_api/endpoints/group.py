@@ -15,7 +15,7 @@ group_router = APIRouter()
 @group_router.get(
     "/get_can_participate",
     description="Get groups that the member can participate in",
-    tags=["member"],
+    tags=["group", "whatsapp", "zelador"],
 )
 async def _get_can_participate(
     token_data: UserToken | InternalToken = Depends(verify_firebase_token),
@@ -28,7 +28,7 @@ async def _get_can_participate(
 @group_router.get(
     "/get_participate_in",
     description="Get groups that the member is participating in",
-    tags=["member"],
+    tags=["group", "whatsapp", "zelador"],
 )
 async def _get_participate_in(
     token_data: UserToken | InternalToken = Depends(verify_firebase_token),
@@ -40,7 +40,7 @@ async def _get_participate_in(
 @group_router.get(
     "/get_pending_requests",
     description="Get pending group join requests",
-    tags=["member"],
+    tags=["group", "whatsapp", "zelador"],
 )
 async def _get_pending_requests(
     token_data: UserToken | InternalToken = Depends(verify_firebase_token),
@@ -52,7 +52,7 @@ async def _get_pending_requests(
 @group_router.get(
     "/get_failed_requests",
     description="Get failed group join requests",
-    tags=["member"],
+    tags=["group", "whatsapp", "zelador"],
 )
 async def _get_failed_requests(
     token_data: UserToken | InternalToken = Depends(verify_firebase_token),
@@ -61,10 +61,26 @@ async def _get_failed_requests(
     return await GroupService.get_failed_requests(token_data, session.ro)
 
 
-@group_router.post("/request_join_group", tags=["member"], description="Request to join a group")
+@group_router.post(
+    "/request_join_group",
+    tags=["group", "whatsapp", "zelador"],
+    description="Request to join a group",
+)
 async def _request_join_group(
     join_request: GroupJoinRequest,
     token_data: UserToken | InternalToken = Depends(verify_firebase_token),
     session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     return await GroupService.request_join_group(join_request, token_data, session.rw)
+
+
+@group_router.get(
+    "/get_authorization_status",
+    tags=["group", "whatsapp", "zelador"],
+    description="Get zelador authorization status",
+)
+async def _get_authorization_status(
+    token_data: UserToken | InternalToken = Depends(verify_firebase_token),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
+):
+    return await GroupService.get_authorization_status(token_data, session.ro)
