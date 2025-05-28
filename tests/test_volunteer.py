@@ -461,12 +461,18 @@ def test_get_combined_names(test_client, get_valid_internal_token):
     )
 
 
-def test_create_activity_log_with_media(test_client, aws_resource, mock_valid_token_auth):
+def test_create_activity_log_with_media(
+    test_client, aws_resource, mock_valid_token_auth, monkeypatch
+):
     """Test creating a new activity log with a media file."""
     headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
 
     bucket = "volunteer-platform-staging"
     aws_resource.create_bucket(Bucket=bucket)
+    monkeypatch.setenv("volunteer_s3_bucket", bucket)
+    from people_api.settings import get_settings
+
+    get_settings.cache_clear()
 
     dummy = b"hello, moto!"
     media_file_b64 = base64.b64encode(dummy).decode()

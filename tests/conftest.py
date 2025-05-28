@@ -1,5 +1,6 @@
 """Fixtures for the test suite."""
 
+import os
 import subprocess
 import time
 from collections.abc import Generator
@@ -32,6 +33,36 @@ MY_BUCKET_NAME = "mybucket"
 AWS_S3_ENDPOINT_URL = "http://localhost"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def ensure_env_and_keys() -> Generator[None, None, None]:
+    """Ensure RSA keys exist for tests."""
+
+    # The tests expect environment variables to be already configured via a
+    # pre-existing ``.env`` file.  We therefore skip copying ``sample.env`` and
+    # simply rely on the file being present.
+
+    private_key = Path("private_key.pem")
+    public_key = Path("public_key.pem")
+    if not private_key.exists() or not public_key.exists():
+        subprocess.run(["openssl", "genrsa", "-out", "private_key.pem", "4096"], check=True)
+        subprocess.run(
+            [
+                "openssl",
+                "rsa",
+                "-in",
+                "private_key.pem",
+                "-pubout",
+                "-out",
+                "public_key.pem",
+            ],
+            check=True,
+        )
+        private_key.chmod(0o600)
+        public_key.chmod(0o644)
+
+    yield
+
+
 def wait_for_db(timeout=60):
     """Wait for the database to be ready, retrying until timeout"""
     start_time = time.time()
@@ -49,15 +80,17 @@ def wait_for_db(timeout=60):
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     """Set up the database before any tests run."""
+    use_docker = os.getenv("USE_DOCKER_POSTGRES_FOR_TESTS", "true").lower() == "true"
     try:
-        # Make sure composer is down before starting the test
-        subprocess.run(["uv", "run", "docker", "compose", "down"], check=True)
+        if use_docker:
+            # Make sure composer is down before starting the test
+            subprocess.run(["uv", "run", "docker", "compose", "down"], check=True)
 
-        # Start the test database container
-        subprocess.run(
-            ["uv", "run", "docker", "compose", "up", "-d", "test-db", "redis"],
-            check=True,
-        )
+            # Start the test database container
+            subprocess.run(
+                ["uv", "run", "docker", "compose", "up", "-d", "test-db", "redis"],
+                check=True,
+            )
 
         # Apply migrations
         subprocess.run(
@@ -95,7 +128,8 @@ def setup_db():
     # Make sure composer is down after all tests
     yield
     try:
-        subprocess.run(["uv", "run", "docker", "compose", "down"], check=True)
+        if use_docker:
+            subprocess.run(["uv", "run", "docker", "compose", "down"], check=True)
     except subprocess.CalledProcessError as e:
         pytest.exit(f"Failed to tear down Docker containers: {e}")
 

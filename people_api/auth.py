@@ -1,7 +1,9 @@
 """This module contains the authentication logic for the API"""
 
 import logging
+import subprocess
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -14,6 +16,21 @@ from people_api.dbs import AsyncSessionsTuple, get_async_sessions, get_read_only
 from people_api.schemas import InternalToken, UserToken
 from people_api.services import IamService
 from people_api.settings import get_settings
+
+
+def _ensure_rsa_keys() -> None:
+    """Generate RSA key pair if missing."""
+    private_key = Path(f"{get_settings().private_internal_token_key}.pem")
+    public_key = Path(f"{get_settings().public_internal_token_key}.pem")
+    if not private_key.exists() or not public_key.exists():
+        subprocess.run(["openssl", "genrsa", "-out", private_key, "4096"], check=True)
+        subprocess.run(
+            ["openssl", "rsa", "-in", private_key, "-pubout", "-out", public_key],
+            check=True,
+        )
+        private_key.chmod(0o600)
+        public_key.chmod(0o644)
+
 
 http_bearer = HTTPBearer()
 
@@ -94,6 +111,7 @@ def get_registration_id(token_data: UserToken = Depends(verify_firebase_token)) 
 
 ALGORITHM = "RS256"
 
+_ensure_rsa_keys()
 with open(f"{get_settings().private_internal_token_key}.pem", "rb") as key_file:
     PRIVATE_SECRET_KEY = key_file.read()
 with open(f"{get_settings().public_internal_token_key}.pem", "rb") as key_file:
