@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     aws_access_key_id: str
     aws_secret_access_key: str
     volunteer_s3_bucket: str
+    aws_sqs_access_key: str
+    aws_sqs_secret_access_key: str
 
     private_internal_token_key: str
     public_internal_token_key: str

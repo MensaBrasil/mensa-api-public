@@ -83,8 +83,8 @@ def get_aws_client(service: str):
     return boto3.client(
         service,
         region_name=get_settings().region_name,
-        aws_access_key_id=get_settings().aws_access_key_id,
-        aws_secret_access_key=get_settings().aws_secret_access_key,
+        aws_access_key_id=get_settings().aws_sqs_access_key,
+        aws_secret_access_key=get_settings().aws_sqs_secret_access_key,
     )
 
 
