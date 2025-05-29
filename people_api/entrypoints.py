@@ -8,7 +8,10 @@ from collections.abc import Callable
 
 from people_api.app import start_api
 from people_api.cronjobs.workspace_groups.update_workspace_groups import run_update
-from people_api.services.sqs_handler import setup_sqs_and_sns
+from people_api.services.sqs_handler import (
+    consume_and_store_messages,
+    setup_sqs_and_sns,
+)
 
 
 def api(_: argparse.Namespace) -> None:
@@ -23,7 +26,8 @@ def update_workspace_groups(_: argparse.Namespace) -> None:
 
 def sqs_handler(_: argparse.Namespace) -> None:
     """Start the SQS/SNS handler."""
-    setup_sqs_and_sns()
+    sns, sqs, topic_arn, queue_url, dlq_url = setup_sqs_and_sns()
+    asyncio.run(consume_and_store_messages(sqs_client=sqs, queue_url=queue_url))
 
 
 def build_parser() -> argparse.ArgumentParser:

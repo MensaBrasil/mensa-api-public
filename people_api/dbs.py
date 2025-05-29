@@ -9,7 +9,7 @@ import firebase_admin
 import redis.asyncio as redis
 from firebase_admin import credentials, firestore
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlmodel import Session, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -29,27 +29,11 @@ RO_DATABASE_URL = f"postgresql://{settings.postgres_ro_user}:{settings.postgres_
 
 SITE_RO_DATABASE_URL = f"postgresql://{settings.site_ro_user}:{settings.site_ro_password}@{settings.postgres_host}/{settings.site_database}"
 
-async_engine_rw = create_async_engine(
-    url=ASYNC_DATABASE_URL,
-    poolclass=AsyncAdaptedQueuePool,
-    pool_size=5,
-    max_overflow=20,
-    pool_pre_ping=True,
-)
-rw_sessionmaker = async_sessionmaker(
-    async_engine_rw, class_=AsyncSession, autoflush=False, expire_on_commit=False
-)
+async_engine_rw: AsyncEngine | None = None
+rw_sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
-async_engine_ro = create_async_engine(
-    url=ASYNC_RO_DATABASE_URL,
-    poolclass=AsyncAdaptedQueuePool,
-    pool_size=5,
-    max_overflow=20,
-    pool_pre_ping=True,
-)
-ro_sessionmaker = async_sessionmaker(
-    async_engine_ro, class_=AsyncSession, autoflush=False, expire_on_commit=False
-)
+async_engine_ro: AsyncEngine | None = None
+ro_sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
 # Create SQLModel engine
 engine = create_engine(url=DATABASE_URL)
@@ -89,6 +73,30 @@ class AsyncSessionsTuple(BaseModel):
 
 async def get_async_sessions() -> AsyncIterator[AsyncSessionsTuple]:
     """Provide async read-only and read-write sessions."""
+    global async_engine_rw, async_engine_ro, rw_sessionmaker, ro_sessionmaker
+    if rw_sessionmaker is None or ro_sessionmaker is None:
+        async_engine_rw = create_async_engine(
+            url=ASYNC_DATABASE_URL,
+            poolclass=AsyncAdaptedQueuePool,
+            pool_size=5,
+            max_overflow=20,
+            pool_pre_ping=True,
+        )
+        rw_sessionmaker = async_sessionmaker(
+            async_engine_rw, class_=AsyncSession, autoflush=False, expire_on_commit=False
+        )
+
+        async_engine_ro = create_async_engine(
+            url=ASYNC_RO_DATABASE_URL,
+            poolclass=AsyncAdaptedQueuePool,
+            pool_size=5,
+            max_overflow=20,
+            pool_pre_ping=True,
+        )
+        ro_sessionmaker = async_sessionmaker(
+            async_engine_ro, class_=AsyncSession, autoflush=False, expire_on_commit=False
+        )
+
     rw_session = rw_sessionmaker()
     ro_session = ro_sessionmaker()
     try:

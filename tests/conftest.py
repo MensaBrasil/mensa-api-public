@@ -11,6 +11,7 @@ from unittest import mock
 import boto3
 import psycopg2
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from moto import mock_aws
 from moto.server import ThreadedMotoServer
@@ -343,3 +344,20 @@ def sync_rw_session():
 
     with Session(engine) as session:
         yield session
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def reset_async_db_engines():
+    """Reset async DB engines after each test to avoid cross-loop issues."""
+    yield
+    from people_api import dbs
+
+    if dbs.async_engine_rw is not None:
+        await dbs.async_engine_rw.dispose()
+    if dbs.async_engine_ro is not None:
+        await dbs.async_engine_ro.dispose()
+
+    dbs.async_engine_rw = None
+    dbs.async_engine_ro = None
+    dbs.rw_sessionmaker = None
+    dbs.ro_sessionmaker = None

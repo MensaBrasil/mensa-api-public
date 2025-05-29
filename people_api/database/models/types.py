@@ -36,14 +36,14 @@ class CPFNumber(str):
         yield cls.validate_cpf
 
     @classmethod
-    def validate_cpf(cls, v):
+    def validate_cpf(cls, value, info):
         "Validates a Brazilian CPF (Cadastro de Pessoas Físicas)."
-        if v is not None:
-            if not v.isdigit():
+        if value is not None:
+            if not value.isdigit():
                 raise ValueError("CPF must contain only numbers.")
-            if len(v) != 11:
+            if len(value) != 11:
                 raise ValueError("CPF must be exactly 11 digits long.")
-        return v
+        return value
 
 
 class ZipNumber(str):
@@ -54,12 +54,12 @@ class ZipNumber(str):
         yield cls.validate_zip
 
     @classmethod
-    def validate_zip(cls, v):
+    def validate_zip(cls, value, info):
         "Validates a zip code."
-        if v is None:
-            return v
-        if not re.match(r"^[a-zA-Z0-9]+$", v):
+        if value is None:
+            return value
+        if not re.match(r"^[a-zA-Z0-9]+$", value):
             raise ValueError("Zip code must contain only numbers and letters.")
-        if len(v) > 12:
+        if len(value) > 12:
             raise ValueError("Zip code must be at most 12 characters long.")
-        return v
+        return value

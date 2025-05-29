@@ -31,6 +31,7 @@ from .models import (
     WhatsappComms,
     WhatsappMessages,
 )
+from .pending_registration import PendingRegistration
 from .volunteer import (
     VolunteerActivityCategory,
     VolunteerActivityEvaluation,
@@ -73,6 +74,7 @@ __all__ = [
     "VolunteerActivityLog",
     "VolunteerActivityEvaluation",
     "VolunteerPointTransaction",
+    "PendingRegistration",
     "WhatsappAuthorization",
     "Feedback",
 ]
