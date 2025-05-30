@@ -10,16 +10,16 @@ run: ## python run app
 	docker compose up test-db -d
 	make migrate-upgrade
 	python utils/reset_db.py
-	uvicorn main:app --reload
+	uvicorn people_api.app:app --reload --host 0.0.0.0 --port 5000
 
 token:
 	uv run utils/generate_token.py $(id)
 
 fresh-run:
-	docker compose down test-db people_api --remove-orphans
+	docker compose down people_api test-db --remove-orphans
 	docker compose up test-db -d
 	@echo "Waiting for test-db to be ready..."
-	@until docker exec mensa-api-test-db-1 pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
+	@until docker exec test-db pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
 	@echo "Making migrations..."
 	make migrate-upgrade
 	@echo "Resetting database..."
@@ -39,10 +39,10 @@ restart: ## restart app
 	docker compose restart people_api
 
 run-docker-background: ## start running through docker-compose, detached
-	docker-compose up -d
+	docker compose up -d
 
 teardown-docker: ## remove from docker through docker-compose
-	docker-compose down
+	docker compose down
 
 start-test-mongo: ## start mongodb in docker for tests
 	docker run -d --rm --name=fastapi_mongodb_tests -p 27017:27017 --tmpfs=/data/db mongo

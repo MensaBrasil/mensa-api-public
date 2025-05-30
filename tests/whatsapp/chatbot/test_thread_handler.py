@@ -29,12 +29,16 @@ valid_payload = {
 
 
 @pytest.mark.asyncio
-async def test_chatbot_create_new_thread_when_no_thread_exists(test_client):
+async def test_chatbot_create_new_thread_when_no_thread_exists(test_client, sign_twilio_request):
     """
     Integration test for /whatsapp/chatbot-message with a phone number not attached to an active member.
     """
     new_thread_payload = valid_payload.copy()
     new_thread_payload["Body"] = "Hello, chatbot!"
+
+    # Prepare Twilio signature headers
+    url = "http://localhost:5000/whatsapp/chatbot-message"
+    headers = sign_twilio_request(url, new_thread_payload)
 
     with (
         patch(
@@ -67,7 +71,9 @@ async def test_chatbot_create_new_thread_when_no_thread_exists(test_client):
             "Hello, user! I'm the mensa chatbot. How can I assist you today?"
         )
 
-        response = test_client.post("/whatsapp/chatbot-message", data=new_thread_payload)
+        response = test_client.post(
+            "/whatsapp/chatbot-message", data=new_thread_payload, headers=headers
+        )
         assert response.status_code == 200
         assert response.json() == "Hello, user! I'm the mensa chatbot. How can I assist you today?"
         mock_openai_create_thread.assert_awaited_once()
@@ -80,7 +86,7 @@ async def test_chatbot_create_new_thread_when_no_thread_exists(test_client):
 
 
 @pytest.mark.asyncio
-async def test_chatbot_resume_already_existent_thread(test_client):
+async def test_chatbot_resume_already_existent_thread(test_client, sign_twilio_request):
     """
     Integration test for /whatsapp/chatbot-message with a phone number attached to an active member and existing thread.
     """
@@ -91,6 +97,10 @@ async def test_chatbot_resume_already_existent_thread(test_client):
     phone_number = existing_thread_payload["WaId"]
     ThreadService.threads_by_phone[phone_number] = "existing_thread_id"
     ThreadService.message_counts[phone_number] = {"existing_thread_id": 1}
+
+    # Prepare Twilio signature headers
+    url = "http://localhost:5000/whatsapp/chatbot-message"
+    headers = sign_twilio_request(url, existing_thread_payload)
 
     with (
         patch(
@@ -106,7 +116,9 @@ async def test_chatbot_resume_already_existent_thread(test_client):
             "Hello, user! I'm the mensa chatbot. How can I assist you today?"
         )
 
-        response = test_client.post("/whatsapp/chatbot-message", data=existing_thread_payload)
+        response = test_client.post(
+            "/whatsapp/chatbot-message", data=existing_thread_payload, headers=headers
+        )
         assert response.status_code == 200
         assert response.json() == "Hello, user! I'm the mensa chatbot. How can I assist you today?"
         mock_process_message.assert_awaited_once()

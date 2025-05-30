@@ -7,6 +7,7 @@ from people_api.services.whatsapp_service.chatbot.client import WhatsappChatBot
 from ..database.models import UpdateInput
 from ..database.models.whatsapp import ReceivedWhatsappMessage
 from ..dbs import AsyncSessionsTuple, get_async_sessions
+from ..services.twilio_service import TwilioService as Tw
 from ..services.whatsapp_service.chatbot.validation import (
     validate_member_and_permissions,
 )
@@ -30,6 +31,7 @@ async def update_data(
 async def chatbot_message(
     request: Request,
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
+    validate_twilio_request: bool = Depends(Tw.validate_twilio_request),
 ):
     """
     Whatsapp endpoint for chatbot messages.

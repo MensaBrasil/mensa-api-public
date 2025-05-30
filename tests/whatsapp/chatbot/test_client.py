@@ -22,18 +22,23 @@ valid_payload = {
 }
 
 
-def test_chatbot_reset_command_success(test_client):
+def test_chatbot_reset_command_success(test_client, sign_twilio_request):
     """
     Integration test for /whatsapp/chatbot-message with a phone number attached to an active member.
     """
     reset_payload = valid_payload.copy()
     reset_payload["Body"] = "!reset"
 
+    url = "http://localhost:5000/whatsapp/chatbot-message"
+    headers = sign_twilio_request(url, reset_payload)
+
     with patch(
         "people_api.services.whatsapp_service.chatbot.client.TwilioService.send_whatsapp_message",
         new_callable=AsyncMock,
     ) as mock_send:
-        response = test_client.post("/whatsapp/chatbot-message", data=reset_payload)
+        response = test_client.post(
+            "/whatsapp/chatbot-message", data=reset_payload, headers=headers
+        )
         assert response.status_code == 200
         assert response.json() == "Thread reset successfully!"
         mock_send.assert_awaited_once_with(

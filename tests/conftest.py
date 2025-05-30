@@ -16,11 +16,13 @@ from fastapi.testclient import TestClient
 from moto import mock_aws
 from moto.server import ThreadedMotoServer
 from sqlmodel import Session
+from twilio.request_validator import RequestValidator
 
 from people_api.app import app  # type: ignore
 from people_api.auth import create_token, verify_firebase_token
 from people_api.dbs import engine
 from people_api.schemas import UserToken
+from people_api.settings import get_settings
 from tests.router_config import test_router
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/stats"
@@ -344,6 +346,31 @@ def sync_rw_session():
 
     with Session(engine) as session:
         yield session
+
+
+@pytest.fixture
+def sign_twilio_request():
+    """
+    Fixture to sign Twilio requests for endpoint testing.
+
+    Usage:
+        headers = sign_twilio_request(url, form_data)
+        response = test_client.post(url, data=form_data, headers=headers)
+    """
+
+    def _sign(url, form_data, auth_token=None):
+        # Use the configured Twilio auth token if not provided
+        if auth_token is None:
+            auth_token = get_settings().twilio_auth_token
+
+        validator = RequestValidator(auth_token)
+        signature = validator.compute_signature(url, form_data)
+        return {
+            "X-Twilio-Signature": signature,
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+
+    return _sign
 
 
 @pytest_asyncio.fixture(autouse=True)

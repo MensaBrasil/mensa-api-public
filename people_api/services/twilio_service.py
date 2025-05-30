@@ -2,6 +2,8 @@
 
 import asyncio
 
+from fastapi import HTTPException, Request, status
+from twilio.request_validator import RequestValidator
 from twilio.rest import Client
 
 from ..settings import get_settings
@@ -34,3 +36,20 @@ class TwilioService:
                 to=to_,
             ),
         )
+
+    @classmethod
+    async def validate_twilio_request(cls, request: Request):
+        """Validates the incoming request from Twilio."""
+        validator = RequestValidator(get_settings().twilio_auth_token)
+        signature = request.headers.get("X-Twilio-Signature", "")
+        form = await request.form()
+        form_dict = dict(form)
+
+        scheme = request.headers.get("X-Forwarded-Proto", "http")
+        host = request.headers.get("X-Forwarded-Host", request.headers.get("host", ""))
+        url = f"{scheme}://{host}{request.url.path}"
+
+        if not validator.validate(url, form_dict, signature):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Twilio signature."
+            )
