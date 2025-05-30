@@ -4,7 +4,7 @@ Endpoints for managing the Volunteer Recognition platform.
 
 import base64
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
@@ -250,6 +250,10 @@ async def get_leaderboard(
     """
     Top 10 volunteer rankings between start_date and end_date.
     """
+
+    start_date = datetime.combine(start_date.date(), time.min)
+    end_date = datetime.combine(end_date.date(), time.max)
+
     rows = (
         await sessions.ro.exec(VolunteerPointTransaction.select_top_n(start_date, end_date, n=10))
     ).all()
@@ -459,6 +463,10 @@ async def get_my_ranking(
     Retrieve the calling member’s own rank, name, and total points
     between start_date and end_date.
     """
+
+    start_date = datetime.combine(start_date.date(), time.min)
+    end_date = datetime.combine(end_date.date(), time.max)
+
     user_id = token_data.registration_id
 
     me_row = (
