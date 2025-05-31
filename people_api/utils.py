@@ -57,7 +57,7 @@ def create_certificate(nome: str, MB: int, expiration: datetime) -> io.BytesIO:
     draw.text((expiration_x, 3250), expiration_text, font=FONT_SMALL, fill=(0, 0, 0))
 
     buf = io.BytesIO()
-    img.save(buf, format="WEBP", lossless=True)
+    img.save(buf, format="PNG")
     buf.seek(0)
     return buf
 

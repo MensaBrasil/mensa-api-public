@@ -22,7 +22,7 @@ class CertificateService:
         )
         return StreamingResponse(
             cert,
-            media_type="application/octet-stream",
+            media_type="image/png",
             headers={"Content-Disposition": "attachment; filename=certificate.png"},
         )
 
