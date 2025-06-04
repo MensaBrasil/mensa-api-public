@@ -4,7 +4,7 @@ import uuid
 from datetime import date
 
 from pydantic import BaseModel, EmailStr
-from sqlmodel import JSON, Column, Field
+from sqlmodel import JSON, Column, Field, select
 
 from people_api.database.models.models import BaseSQLModel
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
@@ -18,6 +18,12 @@ class PendingRegistration(BaseSQLModel, table=True):
     id: int = Field(primary_key=True)
     data: dict = Field(sa_column=Column(JSON))
     token: str = Field(default_factory=lambda: str(uuid.uuid4()), unique=True)
+
+    @classmethod
+    def get_select_stmt_by_token(cls, token: str):
+        """Get a select statement to find a pending registration by its token."""
+
+        return select(cls).where(cls.token == token)
 
 
 class LegalRepresentative(BaseModel):
@@ -36,6 +42,7 @@ class Address(BaseModel):
     city: str
     state: str
     zip_code: ZipNumber | None = Field(None, max_length=12)
+    country: str | None = Field(None)
 
 
 class PendingRegistrationData(BaseModel):
@@ -47,12 +54,15 @@ class PendingRegistrationData(BaseModel):
     birth_date: date
     cpf: CPFNumber | None = Field(max_length=11, min_length=11)
     profession: str | None = None
+    gender: str | None = None
     phone_number: PhoneNumber = Field(max_length=60, min_length=9)
     address: Address
     legal_representatives: list[LegalRepresentative] | None = None
 
 
 class PendingRegistrationMessage(BaseModel):
+    """Message model for pending registration."""
+
     id: int
     data: PendingRegistrationData
     token: str

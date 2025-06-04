@@ -8,6 +8,7 @@ from .member_address import member_address_router
 from .member_email import member_email_router
 from .member_legal_representative import member_legal_representative_router
 from .member_misc import member_misc_router
+from .member_onboarding import member_onboarding_router
 from .member_phone import member_phone_router
 from .missing_fields import missing_fields_router
 from .oauth import oauth_router
@@ -30,4 +31,5 @@ __all__ = [
     "iam_router",
     "volunteer_router",
     "feedback_router",
+    "member_onboarding_router",
 ]

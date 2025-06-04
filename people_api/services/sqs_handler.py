@@ -11,13 +11,6 @@ from botocore.exceptions import ClientError
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from people_api.database.models.models import (
-    Addresses,
-    Emails,
-    LegalRepresentatives,
-    Phones,
-    Registration,
-)
 from people_api.database.models.pending_registration import (
     PendingRegistration,
     PendingRegistrationData,
@@ -25,6 +18,8 @@ from people_api.database.models.pending_registration import (
 )
 from people_api.dbs import get_async_sessions
 from people_api.utils import get_aws_client
+
+from .member_utils import convert_pending_to_member_models
 
 
 class SQSSettings(BaseSettings):
@@ -128,40 +123,8 @@ def _build_member_models(data: PendingRegistrationData) -> None:
     registration into a real member.
     """
 
-    Registration(
-        name=data.full_name,
-        social_name=data.social_name,
-        birth_date=data.birth_date,
-        cpf=data.cpf,
-        profession=data.profession,
-    )
-
-    Addresses(
-        registration_id=0,
-        state=data.address.state,
-        city=data.address.city,
-        address=data.address.street,
-        neighborhood=data.address.neighborhood,
-        zip=data.address.zip_code,
-    )
-
-    Emails(
-        registration_id=0,
-        email_address=data.email,
-    )
-
-    Phones(
-        registration_id=0,
-        phone_number=data.phone_number,
-    )
-
-    for rep in data.legal_representatives or []:
-        LegalRepresentatives(
-            registration_id=0,
-            full_name=rep.name,
-            email=rep.email,
-            phone=rep.phone_number,
-        )
+    # Just instantiate the models to validate the payload fields.
+    convert_pending_to_member_models(data)
 
 
 async def process_message(raw_message: str) -> PendingRegistration:

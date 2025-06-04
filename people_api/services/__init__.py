@@ -7,6 +7,7 @@ from .email_service import EmailService
 from .group_service import GroupService
 from .iam_service import IamService
 from .legal_representative_service import LegalRepresentativeService
+from .member_onboarding import MemberOnboardingService
 from .misc_service import MiscService
 from .missing_fields_service import MissingFieldsService
 from .phone_service import PhoneService
@@ -25,4 +26,5 @@ __all__ = [
     "WorkspaceService",
     "IamService",
     "openai_service",
+    "MemberOnboardingService",
 ]

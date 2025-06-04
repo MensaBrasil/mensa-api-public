@@ -1,0 +1,53 @@
+{
+    "object": "payment",
+    "id": "pay_xypol5hj9ff5r4on",
+    "dateCreated": "2025-05-29",
+    "customer": "cus_000006738328",
+    "checkoutSession": null,
+    "paymentLink": null,
+    "value": 139,
+    "netValue": 135.75,
+    "originalValue": null,
+    "interestValue": null,
+    "description": "Membership payment for Maria da Silva, for membership valid until 2026-01-31!",
+    "billingType": "UNDEFINED",
+    "pixTransaction": null,
+    "status": "PENDING",
+    "dueDate": "2025-05-30",
+    "originalDueDate": "2025-05-30",
+    "paymentDate": null,
+    "clientPaymentDate": null,
+    "installmentNumber": null,
+    "invoiceUrl": "https://asaas.com/somelink",
+    "invoiceNumber": "09462112",
+    "externalReference": "{\"pending_token\":\"e7b8c9d2-4f3a-4a1b-8c2d-1a2b3c4d5e6f\",\"expiration_date\":\"2026-01-31\"}",
+    "deleted": false,
+    "anticipated": false,
+    "anticipable": false,
+    "creditDate": null,
+    "estimatedCreditDate": null,
+    "transactionReceiptUrl": null,
+    "nossoNumero": "10993584",
+    "bankSlipUrl": "https://asaas.com/somelink/boleto",
+    "lastInvoiceViewedDate": null,
+    "lastBankSlipViewedDate": null,
+    "discount": {
+        "value": 0.0,
+        "limitDate": null,
+        "dueDateLimitDays": 0,
+        "type": "FIXED"
+    },
+    "fine": {
+        "value": 0.0,
+        "type": "FIXED"
+    },
+    "interest": {
+        "value": 0.0,
+        "type": "PERCENTAGE"
+    },
+    "postalService": false,
+    "daysAfterDueDateToRegistrationCancellation": 0,
+    "custody": null,
+    "escrow": null,
+    "refunds": null
+}

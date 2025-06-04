@@ -97,6 +97,9 @@ VALUES
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 6, 10, '2023-04-15', '2023-10-15', 100.00, 'Semi-annual membership', 'PIX', 'PIX234567', 'CONFIRMED'),
     ('2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332', 7, 11, '2023-08-01', '2024-08-01', 180.00, 'Annual membership fee', 'BANK_TRANSFER', 'TRANS678901', 'CONFIRMED');
 
+-- Reset sequence for membership_payments
+SELECT setval('membership_payments_payment_id_seq', (SELECT MAX(payment_id) FROM membership_payments));
+
 -- Legal Representatives table
 INSERT INTO legal_representatives (representative_id, registration_id, cpf, full_name, email, phone, alternative_phone, observations, created_at, updated_at)
 VALUES

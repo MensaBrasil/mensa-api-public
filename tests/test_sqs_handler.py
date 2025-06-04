@@ -132,6 +132,7 @@ async def test_process_valid_message(set_policy, sync_rw_session):
                 "birth_date": "1990-05-20",
                 "cpf": "25760480057",
                 "profession": "Engenheira de Software",
+                "gender": "Feminino",
                 "phone_number": "+5511987654321",
                 "address": {
                     "street": "Rua das Flores",
@@ -139,6 +140,7 @@ async def test_process_valid_message(set_policy, sync_rw_session):
                     "city": "São Paulo",
                     "state": "SP",
                     "zip_code": "01234567",
+                    "country": "Brasil",
                 },
                 "legal_representatives": [
                     {
@@ -176,13 +178,15 @@ async def test_process_valid_message(set_policy, sync_rw_session):
     stored = sync_rw_session.query(PendingRegistration).filter_by(id=123).one_or_none()
     assert stored is not None
     assert stored.token == "valid-token"
-    assert stored.data == {
+    # The data payload should include the new optional fields 'gender' and 'address.country'
+    expected_data = {
         "full_name": "Maria da Silva",
         "social_name": "Maria Silva",
         "email": "maria.silva@example.com",
         "birth_date": "1990-05-20",
         "cpf": "25760480057",
         "profession": "Engenheira de Software",
+        "gender": "Feminino",
         "phone_number": "+5511987654321",
         "address": {
             "street": "Rua das Flores",
@@ -190,6 +194,7 @@ async def test_process_valid_message(set_policy, sync_rw_session):
             "city": "São Paulo",
             "state": "SP",
             "zip_code": "01234567",
+            "country": "Brasil",
         },
         "legal_representatives": [
             {
@@ -204,6 +209,7 @@ async def test_process_valid_message(set_policy, sync_rw_session):
             },
         ],
     }
+    assert stored.data == expected_data
 
 
 @pytest.mark.asyncio

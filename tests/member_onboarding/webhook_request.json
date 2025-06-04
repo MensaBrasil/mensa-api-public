@@ -1,0 +1,60 @@
+{
+    "id": "evt_d26e303b238e509335ac9ba210e51b0f&9359138",
+    "event": "PAYMENT_RECEIVED",
+    "dateCreated": "2025-05-29 19:28:46",
+    "payment": {
+        "object": "payment",
+        "id": "pay_gs0gzhtvzbq42hxs",
+        "dateCreated": "2025-05-29",
+        "customer": "cus_000006731537",
+        "checkoutSession": null,
+        "paymentLink": null,
+        "value": 139,
+        "netValue": 138.01,
+        "originalValue": null,
+        "interestValue": null,
+        "description": "Membership payment for João das Neves Souza, for membership valid until 2026-01-31!",
+        "billingType": "BOLETO",
+        "canBePaidAfterDueDate": true,
+        "confirmedDate": "2025-05-29",
+        "pixTransaction": null,
+        "status": "RECEIVED",
+        "dueDate": "2025-05-30",
+        "originalDueDate": "2025-05-30",
+        "paymentDate": "2025-05-29",
+        "clientPaymentDate": "2025-05-29",
+        "installmentNumber": null,
+        "invoiceUrl": "https://asaas.com/i/linkdoinvoice",
+        "invoiceNumber": "09462041",
+        "externalReference": "{\"pending_token\":\"nkflajhl23230fjalkjf120\",\"expiration_date\":\"2026-01-31\"}",
+        "deleted": false,
+        "anticipated": false,
+        "anticipable": false,
+        "creditDate": "2025-05-29",
+        "estimatedCreditDate": "2025-05-29",
+        "transactionReceiptUrl": "https://asaas.com/comprovantes/h/comprovatelinkaqui",
+        "nossoNumero": "10993546",
+        "bankSlipUrl": "https://asaas.com/b/pdf/pdflinkxdxd",
+        "lastInvoiceViewedDate": null,
+        "lastBankSlipViewedDate": null,
+        "discount": {
+            "value": 0,
+            "limitDate": null,
+            "dueDateLimitDays": 0,
+            "type": "FIXED"
+        },
+        "fine": {
+            "value": 0,
+            "type": "FIXED"
+        },
+        "interest": {
+            "value": 0,
+            "type": "PERCENTAGE"
+        },
+        "postalService": false,
+        "daysAfterDueDateToRegistrationCancellation": 0,
+        "custody": null,
+        "escrow": null,
+        "refunds": null
+    }
+}

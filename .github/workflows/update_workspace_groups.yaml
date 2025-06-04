@@ -93,6 +93,9 @@ jobs:
         private_internal_token_key: private_key
         public_internal_token_key: public_key
 
+        asaas_auth_token: very_secret_token
+        asaas_api_key: secret_key
+
         service_account_file: client_secret.json
         google_api_scopes: https://www.googleapis.com/auth/admin.directory.group
         google_service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}

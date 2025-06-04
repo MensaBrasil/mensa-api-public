@@ -62,6 +62,17 @@ class Settings(BaseSettings):
     public_internal_token_key: str
 
 
+class AsaasSettings(BaseSettings):
+    """Settings for the Asaas API integration."""
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    asaas_auth_token: str
+    asaas_api_key: str
+    asaas_payments_url: str = "https://api.asaas.com/v3/payments"
+    asaas_customers_url: str = "https://api.asaas.com/v3/customers"
+
+
 class SMTPSettings(BaseSettings):
     """Settings for SMTP email sending."""
 
@@ -77,6 +88,12 @@ class SMTPSettings(BaseSettings):
 def get_settings() -> Settings:
     """Returns a cached instance of Settings."""
     return Settings()  # type: ignore[call-arg]
+
+
+@lru_cache
+def get_asaas_settings() -> AsaasSettings:
+    """Returns a cached instance of Settings."""
+    return AsaasSettings()  # type: ignore[call-arg]
 
 
 @lru_cache

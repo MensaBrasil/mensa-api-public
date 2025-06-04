@@ -11,6 +11,7 @@ from .endpoints import (
     member_email_router,
     member_legal_representative_router,
     member_misc_router,
+    member_onboarding_router,
     member_phone_router,
     missing_fields_router,
     oauth_router,
@@ -34,6 +35,7 @@ APP_ROUTERS = [
     iam_router,
     volunteer_router,
     feedback_router,
+    member_onboarding_router,
 ]
 
 all_routers = APIRouter()

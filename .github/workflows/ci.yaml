@@ -110,6 +110,9 @@ jobs:
         private_internal_token_key: private_key
         public_internal_token_key: public_key
 
+        asaas_auth_token: very_secret_token
+        asaas_api_key: secret_key
+
         SMTP_SERVER: smtp.example.com
         SMTP_PORT: 587
         SMTP_USERNAME: your-username
