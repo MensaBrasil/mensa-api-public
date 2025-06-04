@@ -62,7 +62,24 @@ class Settings(BaseSettings):
     public_internal_token_key: str
 
 
+class SMTPSettings(BaseSettings):
+    """Settings for SMTP email sending."""
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    smtp_server: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
+
+
 @lru_cache
 def get_settings() -> Settings:
     """Returns a cached instance of Settings."""
     return Settings()  # type: ignore[call-arg]
+
+
+@lru_cache
+def get_smtp_settings() -> SMTPSettings:
+    """Returns a cached instance of SMTPSettings."""
+    return SMTPSettings()  # type: ignore[call-arg]

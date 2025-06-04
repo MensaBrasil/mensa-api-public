@@ -110,6 +110,11 @@ jobs:
         private_internal_token_key: private_key
         public_internal_token_key: public_key
 
+        SMTP_SERVER: smtp.example.com
+        SMTP_PORT: 587
+        SMTP_USERNAME: your-username
+        SMTP_PASSWORD: your-password
+
       run: |
         uv run coverage run -m pytest -sv .
         uv run coverage report
