@@ -40,21 +40,28 @@ def get_uuid() -> str:
 def create_certificate(nome: str, MB: int, expiration: datetime) -> io.BytesIO:
     img = CERT_TEMPLATE.copy()
     draw = ImageDraw.Draw(img)
-    meio = 2500
+    orig_w, orig_h = 5000, 3462
+    scale_x, scale_y = img.width / orig_w, img.height / orig_h
+
+    font_large = FONT_LARGE.font_variant(size=int(FONT_LARGE.size * scale_y))
+    font_medium = FONT_MEDIUM.font_variant(size=int(FONT_MEDIUM.size * scale_y))
+    font_small = FONT_SMALL.font_variant(size=int(FONT_SMALL.size * scale_y))
 
     today = format_date(datetime.now(), format="long", locale=LOCALE)
     expiration_text = (
         f"Certificado válido até {format_date(expiration, format='dd/MM/yyyy', locale=LOCALE)}"
     )
 
-    nomex = meio - FONT_LARGE.getlength(nome) / 2
-    datax = meio - FONT_MEDIUM.getlength(today) / 2
-    expiration_x = meio - FONT_SMALL.getlength(expiration_text) / 2
+    center_x = img.width / 2
+    nomex = center_x - font_large.getlength(nome) / 2
+    mbx, mby = 2900 * scale_x, 1625 * scale_y
+    datax = center_x - font_medium.getlength(today) / 2
+    expiration_x = center_x - font_small.getlength(expiration_text) / 2
 
-    draw.text((nomex, 1150), nome, font=FONT_LARGE, fill=(0, 0, 0))
-    draw.text((2900, 1625), str(MB), font=FONT_MEDIUM, fill=(0, 0, 0))
-    draw.text((datax, 2100), today, font=FONT_MEDIUM, fill=(0, 0, 0))
-    draw.text((expiration_x, 3250), expiration_text, font=FONT_SMALL, fill=(0, 0, 0))
+    draw.text((nomex, 1150 * scale_y), nome, font=font_large, fill=(0, 0, 0))
+    draw.text((mbx, mby), str(MB), font=font_medium, fill=(0, 0, 0))
+    draw.text((datax, 2100 * scale_y), today, font=font_medium, fill=(0, 0, 0))
+    draw.text((expiration_x, 3250 * scale_y), expiration_text, font=font_small, fill=(0, 0, 0))
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
