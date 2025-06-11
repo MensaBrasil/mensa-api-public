@@ -17,6 +17,7 @@ from people_api.database.models.pending_registration import (
     PendingRegistrationMessage,
 )
 from people_api.dbs import get_async_sessions
+from people_api.services.member_onboarding import send_initial_payment_email
 from people_api.utils import get_aws_client
 
 from .member_utils import convert_pending_to_member_models
@@ -213,6 +214,11 @@ async def consume_and_store_messages(sqs_client, queue_url, *, max_polls: int | 
                         "Successfully deleted message with ReceiptHandle: %s",
                         msg["ReceiptHandle"],
                     )
+                    async for sessions in get_async_sessions():
+                        await send_initial_payment_email(
+                            session=sessions.rw,
+                            pending_registration=pending,
+                        )
                 except (ValidationError, JSONDecodeError, ClientError) as e:
                     logging.error("Error processing message: %s", e)
                     logging.warning("Skipping message due to error: %s", e)

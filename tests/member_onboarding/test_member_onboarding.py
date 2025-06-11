@@ -14,11 +14,14 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from people_api.database.models.pending_registration import (
     PendingRegistration,
 )
+from people_api.dbs import get_async_sessions
 from people_api.models.asaas import AnuityType, PaymentChoice
+from people_api.services.email_service import EmailTemplates
 from people_api.services.member_onboarding import (
     CalculatedPaymentResponse,
     MemberOnboardingService,
     calculate_payment_value,
+    send_initial_payment_email,
 )
 from people_api.services.workspace_service import WorkspaceService
 
@@ -33,6 +36,16 @@ def mock_settings():
         settings.asaas_api_key = "test_api_key"
         settings.asaas_auth_token = "test_auth_token"
         mock_get_asaas_settings.return_value = settings
+        yield settings
+
+
+@pytest.fixture
+def mock_smtp_settings():
+    """Mock SMTP settings for email sending during onboarding scan."""
+    with patch("people_api.services.member_onboarding.get_smtp_settings") as mock_get_smtp_settings:
+        settings = Mock()
+        settings.smtp_username = "sender@example.com"
+        mock_get_smtp_settings.return_value = settings
         yield settings
 
 
@@ -265,12 +278,10 @@ class TestMemberOnboardingService:
             assert "Pending registration not found" in excinfo.value.detail
 
 
-# End-to-end HTTP endpoint tests for member onboarding
 class TestMemberOnboardingEndpoints:
     """Tests for the /onboarding endpoints using TestClient."""
 
     def test_request_payment_link_success(self, test_client, run_db_query, monkeypatch):
-        # Insert pending registration
         token = "test-token-123"
         pending_data: dict = {
             "full_name": "Maria da Silva",
@@ -296,12 +307,10 @@ class TestMemberOnboardingEndpoints:
             + token
             + "')"
         )
-        # Load mock Asaas responses
         with open("tests/member_onboarding/customer_created.json", encoding="utf-8") as f:
             customer_json = json.load(f)
         with open("tests/member_onboarding/payment_created.json", encoding="utf-8") as f:
             payment_json = json.load(f)
-        # Mock HTTP client
         from people_api.services.member_onboarding import MemberOnboardingService
 
         class DummyResponse:
@@ -324,7 +333,6 @@ class TestMemberOnboardingEndpoints:
                 return DummyResponse(404, {})
 
         monkeypatch.setattr(MemberOnboardingService, "webclient", DummyClient())
-        # Call endpoint
         response = test_client.post(
             "/onboarding/request_payment_link",
             json={"anuityType": "1A", "externalReference": token},
@@ -341,13 +349,11 @@ class TestMemberOnboardingEndpoints:
         assert response.json() == {"detail": "Invalid token."}
 
     def test_validate_payment_success(self, test_client, run_db_query, monkeypatch):
-        # Load webhook event payload
         payload_path = "tests/member_onboarding/webhook_request.json"
         with open(payload_path, encoding="utf-8") as f:
             payload = json.load(f)
         ext_ref = json.loads(payload["payment"]["externalReference"])
         token = ext_ref["pending_token"]
-        # Insert pending registration
 
         monkeypatch.setattr(
             WorkspaceService,
@@ -362,6 +368,33 @@ class TestMemberOnboardingEndpoints:
                     "information": "User will be prompted to change the password at the first login.",
                 }
             ),
+        )
+
+        mock_email_service = Mock()
+        mock_template_emails = [
+            {
+                "recipient_email": "joao.souza@example.com",
+                "subject": "Welcome to Mensa Brazil",
+                "body": "<html><body>Welcome email content</body></html>",
+            }
+        ]
+
+        monkeypatch.setattr(
+            "people_api.services.member_onboarding.EmailSendingService",
+            Mock(return_value=mock_email_service),
+        )
+
+        monkeypatch.setattr(
+            "people_api.services.member_onboarding.EmailTemplates",
+            Mock(
+                return_value=Mock(
+                    render_welcome_emails_from_pending=Mock(return_value=mock_template_emails)
+                )
+            ),
+        )
+        monkeypatch.setattr(
+            "people_api.services.member_onboarding.get_smtp_settings",
+            Mock(return_value=SimpleNamespace(smtp_username="tescalvin@mensa.org.br")),
         )
 
         pending_data = {
@@ -387,11 +420,9 @@ class TestMemberOnboardingEndpoints:
             + token
             + "')"
         )
-        # Mock auth token
 
         dummy_settings = SimpleNamespace(asaas_auth_token="valid-token")
         monkeypatch.setattr(MemberOnboardingService, "settings", dummy_settings)
-        # Call endpoint
         response = test_client.post(
             "/onboarding/validate_payment",
             headers={"asaas-access-token": "valid-token"},
@@ -406,9 +437,7 @@ class TestMemberOnboardingEndpoints:
         assert isinstance(data["details"]["expiration_date"], str)
         assert data["details"]["email"]["address"] == "maria.silva@mensa.org.br"
         assert data["details"]["email"]["password"] == "mocked-password"
-        # Verify that the member registration was inserted into the database
         registration_id = data["details"]["registration_id"]
-        # Check registration record
         reg_rows = run_db_query(
             f"SELECT name, cpf, birth_date, profession"
             f" FROM registration WHERE registration_id = {registration_id}"  # noqa: E999
@@ -419,17 +448,112 @@ class TestMemberOnboardingEndpoints:
         assert cpf_val == pending_data["cpf"]
         assert str(birth_date_val) == pending_data["birth_date"]
         assert profession_val == pending_data["profession"]
-        # Check membership payment record
         pay_rows = run_db_query(
             f"SELECT expiration_date, amount_paid, payment_status"
             f" FROM membership_payments WHERE registration_id = {registration_id}"  # noqa: E999
         )
         assert len(pay_rows) == 1
         exp_date_val, amount_paid_val, status_val = pay_rows[0]
-        # expiration_date matches the one in payload externalReference
         assert str(exp_date_val) == ext_ref["expiration_date"]
         assert amount_paid_val == payload["payment"]["value"]
         assert status_val == payload["payment"]["status"]
-        # Ensure pending registration entry was removed
         pending_rows = run_db_query(f"SELECT * FROM pending_registration WHERE token = '{token}'")
         assert pending_rows == []
+
+
+class TestMemberOnboardingEmails:
+    """Tests for email sending during member onboarding."""
+
+    @pytest.mark.asyncio
+    async def test_send_initial_payment_email_sends_email_and_updates_registration(
+        self,
+        mock_session,
+        mock_settings,
+        mock_smtp_settings,
+        pending_registration_model,
+    ):
+        """Should send initial payment email and update pending registration."""
+        mock_settings.initial_payment_url = "http://test-url"
+        token = pending_registration_model.token
+
+        with patch(
+            "people_api.services.member_onboarding.EmailSendingService"
+        ) as mock_email_svc_cls:
+            await send_initial_payment_email(mock_session, pending_registration_model)
+
+            mock_email_svc_cls.assert_called_once()
+            email_svc = mock_email_svc_cls.return_value
+            email_svc.send_email.assert_called_once()
+            to_email, subject, html_content, sender = email_svc.send_email.call_args[0]
+
+            assert to_email == pending_registration_model.data["email"]
+            assert subject == "Parabéns! Você foi aprovado na Mensa Brasil"
+            assert sender == mock_smtp_settings.smtp_username
+
+            expected_html = EmailTemplates.render_pending_payment_email(
+                full_name=pending_registration_model.data["full_name"],
+                complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
+            )
+            assert html_content == expected_html
+
+        assert pending_registration_model.email_sent_at == date.today()
+        mock_session.add.assert_called_once_with(pending_registration_model)
+
+    @pytest.mark.asyncio
+    async def test_send_initial_payment_email_integration_sends_email_and_updates_db(
+        self,
+        run_db_query,
+        mock_settings,
+        mock_smtp_settings,
+        monkeypatch,
+    ):
+        """Should send payment email for pending registration in DB and update flags."""
+        data = {
+            "full_name": "Test User",
+            "social_name": "Tester",
+            "birth_date": "2000-01-01",
+            "cpf": "12345678909",
+            "email": "test.user@example.com",
+            "phone_number": "5511999998888",
+            "profession": "Developer",
+            "address": {
+                "street": "Test Street",
+                "neighborhood": "Test Neighborhood",
+                "city": "Test City",
+                "state": "TS",
+                "zip_code": "12345678",
+            },
+            "legal_representatives": [],
+        }
+        token = "00000000-0000-0000-0000-000000000000"
+        run_db_query(
+            f"INSERT INTO pending_registration (data, token) VALUES ('{json.dumps(data)}'::json, '{token}')"
+        )
+        dummy_email_svc = SimpleNamespace(send_email=Mock())
+        monkeypatch.setattr(
+            "people_api.services.member_onboarding.EmailSendingService",
+            lambda: dummy_email_svc,
+        )
+        mock_settings.initial_payment_url = "http://test-payment-url"
+        async for sessions in get_async_sessions():
+            result = await sessions.rw.exec(
+                PendingRegistration.get_all_pending_registrations_with_no_email_sent()
+            )
+            for pending in result.all():
+                await send_initial_payment_email(sessions.rw, pending)
+        dummy_email_svc.send_email.assert_called_once()
+        to_email, subject, html_content, sender = dummy_email_svc.send_email.call_args[0]
+        assert to_email == data["email"]
+        assert subject == "Parabéns! Você foi aprovado na Mensa Brasil"
+        assert sender == mock_smtp_settings.smtp_username
+        expected_html = EmailTemplates.render_pending_payment_email(
+            full_name=data["full_name"],  # type: ignore
+            complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
+        )
+        assert html_content == expected_html
+        rows = run_db_query(
+            f"SELECT email_sent_at FROM pending_registration WHERE token = '{token}'"
+        )
+        assert len(rows) == 1
+        (email_sent_at,) = rows[0]
+        assert email_sent_at == date.today()

@@ -17,8 +17,10 @@ from people_api.database.models.pending_registration import (
 )
 from people_api.dbs import AsyncSessionsTuple
 from people_api.models.asaas import AnuityType, PaymentChoice
+from people_api.services.email_sending_service import EmailSendingService
+from people_api.services.email_service import EmailTemplates
 from people_api.services.workspace_service import WorkspaceService
-from people_api.settings import get_asaas_settings
+from people_api.settings import get_asaas_settings, get_smtp_settings
 
 from .member_utils import convert_pending_to_member_models
 
@@ -276,6 +278,25 @@ class MemberOnboardingService:
             email_address = mensa_email["user_data"]["email"]
             email_password = mensa_email["user_data"]["password"]
 
+            sender = get_smtp_settings().smtp_username
+            email_service = EmailSendingService()
+            template_service = EmailTemplates()
+
+            emails = template_service.render_welcome_emails_from_pending(
+                pending_data=member_data,
+                registration_id=registration.registration_id,
+                mensa_email=email_address,
+                temp_email_password=email_password,
+            )
+
+            for email in emails:
+                email_service.send_email(
+                    to_email=email["recipient_email"],
+                    subject=email["subject"],
+                    html_content=email["body"],
+                    sender_email=sender,
+                )
+
             return {
                 "message": "Member onboarding processed successfully.",
                 "details": {
@@ -295,3 +316,41 @@ class MemberOnboardingService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to process member onboarding.",
             ) from e
+
+
+async def send_initial_payment_email(
+    session: AsyncSession, pending_registration: PendingRegistration
+):
+    """Scan the database for new pending payments and send email with payment url + token."""
+    email_service = EmailSendingService()
+    sender_email = get_smtp_settings().smtp_username
+
+    try:
+        payment_url = get_asaas_settings().initial_payment_url
+        member_data = PendingRegistrationData.model_validate(pending_registration.data)
+
+        complete_payment_url = f"{payment_url}?t={pending_registration.token}"
+
+        subject = "Parabéns! Você foi aprovado na Mensa Brasil"
+        html_content = EmailTemplates.render_pending_payment_email(
+            full_name=member_data.full_name,
+            complete_payment_url=complete_payment_url,
+        )
+
+        email_service.send_email(member_data.email, subject, html_content, sender_email)
+
+        pending_registration.email_sent_at = date.today()
+        session.add(pending_registration)
+
+        logging.info(
+            "Payment email sent to %s for registration %s",
+            member_data.email,
+            pending_registration.token,
+        )
+
+    except Exception as e:
+        logging.error(
+            "Failed to send payment email for pending_registration token:%s\nerro:%s",
+            pending_registration.token,
+            e,
+        )

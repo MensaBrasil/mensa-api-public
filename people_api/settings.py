@@ -69,6 +69,7 @@ class AsaasSettings(BaseSettings):
 
     asaas_auth_token: str
     asaas_api_key: str
+    initial_payment_url: str
     asaas_payments_url: str = "https://api.asaas.com/v3/payments"
     asaas_customers_url: str = "https://api.asaas.com/v3/customers"
 

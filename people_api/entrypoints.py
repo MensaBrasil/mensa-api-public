@@ -26,7 +26,7 @@ def update_workspace_groups(_: argparse.Namespace) -> None:
 
 def sqs_handler(_: argparse.Namespace) -> None:
     """Start the SQS/SNS handler."""
-    sns, sqs, topic_arn, queue_url, dlq_url = setup_sqs_and_sns()
+    _, sqs, _, queue_url, _ = setup_sqs_and_sns()
     asyncio.run(consume_and_store_messages(sqs_client=sqs, queue_url=queue_url))
 
 

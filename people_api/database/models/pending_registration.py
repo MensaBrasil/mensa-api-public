@@ -4,7 +4,7 @@ import uuid
 from datetime import date
 
 from pydantic import BaseModel, EmailStr
-from sqlmodel import JSON, Column, Field, select
+from sqlmodel import JSON, Column, Date, Field, select
 
 from people_api.database.models.models import BaseSQLModel
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
@@ -18,12 +18,21 @@ class PendingRegistration(BaseSQLModel, table=True):
     id: int = Field(primary_key=True)
     data: dict = Field(sa_column=Column(JSON))
     token: str = Field(default_factory=lambda: str(uuid.uuid4()), unique=True)
+    email_sent_at: date | None = Field(
+        sa_column=Column(Date, default=None, nullable=True, server_default=None)
+    )
 
     @classmethod
     def get_select_stmt_by_token(cls, token: str):
         """Get a select statement to find a pending registration by its token."""
 
         return select(cls).where(cls.token == token)
+
+    @classmethod
+    def get_all_pending_registrations_with_no_email_sent(cls):
+        """Get a select statement to retrieve all pending registrations."""
+
+        return select(cls).where(cls.email_sent_at == None)  # noqa: E711
 
 
 class LegalRepresentative(BaseModel):

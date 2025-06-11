@@ -112,6 +112,7 @@ jobs:
 
         asaas_auth_token: very_secret_token
         asaas_api_key: secret_key
+        initial_payment_url: https://pagina_pagamento?=token
 
         SMTP_SERVER: smtp.example.com
         SMTP_PORT: 587
