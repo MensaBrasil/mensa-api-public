@@ -307,10 +307,12 @@ class TestMemberOnboardingEndpoints:
             + token
             + "')"
         )
+
         with open("tests/member_onboarding/customer_created.json", encoding="utf-8") as f:
             customer_json = json.load(f)
         with open("tests/member_onboarding/payment_created.json", encoding="utf-8") as f:
             payment_json = json.load(f)
+
         from people_api.services.member_onboarding import MemberOnboardingService
 
         class DummyResponse:
@@ -318,7 +320,7 @@ class TestMemberOnboardingEndpoints:
                 self.status_code = status_code
                 self._data = data
 
-            async def json(self):
+            def json(self):
                 return self._data
 
         class DummyClient:
@@ -338,7 +340,7 @@ class TestMemberOnboardingEndpoints:
             json={"anuityType": "1A", "externalReference": token},
         )
         assert response.status_code == 200
-        assert response.json() == payment_json["invoiceUrl"]
+        assert response.json() == {"payment_link": payment_json["invoiceUrl"]}
 
     def test_request_payment_link_not_found(self, test_client):
         response = test_client.post(

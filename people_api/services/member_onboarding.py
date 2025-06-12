@@ -75,11 +75,12 @@ class MemberOnboardingService:
     settings = get_asaas_settings()
 
     webclient = httpx.AsyncClient(
+        timeout=httpx.Timeout(10.0, connect=10.0),
         headers={
             "accept": "application/json",
             "content-type": "application/json",
             "access_token": settings.asaas_api_key,
-        }
+        },
     )
 
     @classmethod
@@ -135,44 +136,74 @@ class MemberOnboardingService:
                 detail="CPF is required for customer creation.",
             )
 
-        result = await cls.webclient.get(
-            url=f"{get_asaas_settings().asaas_customers_url}?cpfCnpj={member_data.cpf}"
-        )
-        result_json = await result.json()
+        try:
+            result = await cls.webclient.get(
+                url=f"{get_asaas_settings().asaas_customers_url}?cpfCnpj={member_data.cpf}"
+            )
+            result_json = result.json() if isinstance(result, dict) else result.json()
+        except Exception as e:
+            logging.error("Error communicating with Asaas API: %s", str(e))
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Failed to communicate with Asaas API.",
+            ) from e
 
         if result.status_code == 200 and result_json.get("totalCount") != 1:
             customer_response = await cls.webclient.post(
                 url=get_asaas_settings().asaas_customers_url, json=payload
             )
-            customer = await customer_response.json()
+            customer = customer_response.json()
+
+            if customer_response.status_code != 200 or "id" not in customer:
+                logging.error(
+                    "Customer creation failed. Response: %s", json.dumps(customer, indent=2)
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Failed to create customer on Asaas.",
+                )
         else:
-            customer = result_json["data"][0]
+            try:
+                customer = result_json["data"][0]
+            except (KeyError, IndexError):
+                logging.error(
+                    "Customer lookup failed. Result: %s", json.dumps(result_json, indent=2)
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Customer not found and could not be created.",
+                )
 
         payment_information = calculate_payment_value(payment).to_dict()
 
         payment_payload = {
             "billingType": "UNDEFINED",
-            "customer": (customer["id"] if isinstance(customer, dict) else customer.json()["id"]),
+            "customer": customer["id"],
             "value": payment_information.get("payment_value"),
             "dueDate": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
             "daysAfterDueDateToRegistrationCancellation": 0,
             "externalReference": payment.externalReference,
-            "description": f"Pagamento de associação para {member_data.full_name}, com validade até {payment_information.get('expiration_date_br_format')}!",
+            "description": (
+                f"Pagamento de associação para {member_data.full_name}, com validade até "
+                f"{payment_information.get('expiration_date_br_format')}!"
+            ),
         }
 
         payment_response = await cls.webclient.post(
             url=get_asaas_settings().asaas_payments_url, json=payment_payload
         )
 
-        payment_result = await payment_response.json()
-
+        payment_result = payment_response.json()
         if payment_response.status_code != 200 or "invoiceUrl" not in payment_result:
+            logging.error(
+                "Payment creation failed. Response: %s", json.dumps(payment_result, indent=2)
+            )
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Failed to create payment. Please try again later.",
             )
 
-        return payment_result["invoiceUrl"]
+        return {"payment_link": payment_result["invoiceUrl"]}
 
     @classmethod
     async def process_member_onboarding(
