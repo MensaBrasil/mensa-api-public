@@ -3,7 +3,7 @@
 import uuid
 from datetime import date
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, model_validator
 from sqlmodel import JSON, Column, Date, Field, select
 
 from people_api.database.models.models import BaseSQLModel
@@ -38,9 +38,9 @@ class PendingRegistration(BaseSQLModel, table=True):
 class LegalRepresentative(BaseModel):
     """Model for legal representatives of a pending registration."""
 
-    name: str
-    email: EmailStr = Field(max_length=255, min_length=5, index=True)
-    phone_number: PhoneNumber = Field(max_length=60, min_length=9)
+    name: str | None
+    email: EmailStr | None = Field(max_length=255, min_length=5, index=True)
+    phone_number: PhoneNumber | None = Field(max_length=60, min_length=9)
 
 
 class Address(BaseModel):
@@ -61,12 +61,43 @@ class PendingRegistrationData(BaseModel):
     social_name: str | None = None
     email: EmailStr = Field(max_length=255, min_length=5, index=True)
     birth_date: date
-    cpf: CPFNumber | None = Field(max_length=11, min_length=11)
+    cpf: CPFNumber | None
     profession: str | None = None
     gender: str | None = None
     phone_number: PhoneNumber = Field(max_length=60, min_length=9)
     address: Address
     legal_representatives: list[LegalRepresentative] | None = None
+
+    @model_validator(mode="after")
+    def validate_legal_representatives(self):
+        """Set legal_representatives to [] if fields are empty or if age < 18."""
+
+        today = date.today()
+        age = (
+            today.year
+            - self.birth_date.year
+            - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
+        )
+
+        if age >= 18:
+            self.legal_representatives = []
+            return self
+
+        if not self.legal_representatives:
+            raise ValueError("Legal representatives are required for members under 18 years old")
+
+        filtered_reps = []
+        for rep in self.legal_representatives:
+            if rep.name and rep.email and rep.phone_number:
+                filtered_reps.append(rep)
+
+        if not filtered_reps:
+            raise ValueError(
+                "At least one legal representative with complete information (name, email, phone) is required"
+            )
+
+        self.legal_representatives = filtered_reps
+        return self
 
 
 class PendingRegistrationMessage(BaseModel):

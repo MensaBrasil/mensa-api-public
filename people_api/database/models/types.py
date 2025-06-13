@@ -37,13 +37,14 @@ class CPFNumber(str):
 
     @classmethod
     def validate_cpf(cls, value, info):
-        "Validates a Brazilian CPF (Cadastro de Pessoas Físicas)."
+        """Validates a Brazilian CPF (Cadastro de Pessoas Físicas), allowing formatted input."""
         if value is not None:
-            if not value.isdigit():
-                raise ValueError("CPF must contain only numbers.")
-            if len(value) != 11:
+            if not isinstance(value, str):
+                raise TypeError("CPF must be a string.")
+            cleaned = re.sub(r"\D", "", value)
+            if len(cleaned) != 11:
                 raise ValueError("CPF must be exactly 11 digits long.")
-        return value
+        return cleaned
 
 
 class ZipNumber(str):
@@ -55,11 +56,10 @@ class ZipNumber(str):
 
     @classmethod
     def validate_zip(cls, value, info):
-        "Validates a zip code."
+        """Validates a zip code, allowing only numbers and letters. Removes any symbols."""
         if value is None:
             return value
-        if not re.match(r"^[a-zA-Z0-9]+$", value):
-            raise ValueError("Zip code must contain only numbers and letters.")
-        if len(value) > 12:
+        cleaned = re.sub(r"[^A-Za-z0-9]", "", value)
+        if len(cleaned) > 12:
             raise ValueError("Zip code must be at most 12 characters long.")
-        return value
+        return cleaned

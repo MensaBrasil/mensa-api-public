@@ -148,10 +148,8 @@ async def process_message(raw_message: str) -> PendingRegistration:
         data_dict = message.data.model_dump()
         data_serializable = convert_dates(data_dict)
 
-        # Validate that the payload can be converted into the models used for a
-        # real member. Any validation errors raised here will surface as
-        # ``ValidationError`` and be handled by the caller.
-        _build_member_models(message.data)
+        # Use data_serializable to build member models
+        _build_member_models(PendingRegistrationData(**data_serializable))
 
         pending_reg = PendingRegistration(
             id=message.id,

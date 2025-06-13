@@ -95,6 +95,7 @@ jobs:
 
         asaas_auth_token: very_secret_token
         asaas_api_key: secret_key
+        initial_payment_url: https://pagina_pagamento?=token
 
         service_account_file: client_secret.json
         google_api_scopes: https://www.googleapis.com/auth/admin.directory.group
