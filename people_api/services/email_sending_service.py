@@ -13,24 +13,19 @@ class EmailSendingService:
 
     def send_email(self, to_email: str, subject: str, html_content: str, sender_email: str):
         """Sends an email with the provided HTML content and sender."""
-        try:
-            settings = get_smtp_settings()
 
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = sender_email
-            msg["To"] = to_email
+        settings = get_smtp_settings()
 
-            msg.attach(MIMEText(html_content, "html"))
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = sender_email
+        msg["To"] = to_email
 
-            with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
-                server.starttls()
-                server.login(settings.smtp_username, settings.smtp_password)
-                server.sendmail(sender_email, to_email, msg.as_string())
+        msg.attach(MIMEText(html_content, "html"))
 
-            logging.info("Email sent successfully from %s to %s", sender_email, to_email)
+        with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
+            server.starttls()
+            server.login(settings.smtp_username, settings.smtp_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
 
-        except smtplib.SMTPException as e:
-            logging.error("Error sending email via SMTP: %s", e)
-        except Exception as e:
-            logging.error("Unexpected error while sending email: %s", e)
+        logging.info("Email sent successfully from %s to %s", sender_email, to_email)

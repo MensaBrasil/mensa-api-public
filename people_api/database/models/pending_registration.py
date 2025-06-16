@@ -3,7 +3,7 @@
 import uuid
 from datetime import date
 
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr
 from sqlmodel import JSON, Column, Date, Field, select
 
 from people_api.database.models.models import BaseSQLModel
@@ -68,41 +68,9 @@ class PendingRegistrationData(BaseModel):
     address: Address
     legal_representatives: list[LegalRepresentative] | None = None
 
-    @model_validator(mode="after")
-    def validate_legal_representatives(self):
-        """Set legal_representatives to [] if fields are empty or if age < 18."""
-
-        today = date.today()
-        age = (
-            today.year
-            - self.birth_date.year
-            - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
-        )
-
-        if age >= 18:
-            self.legal_representatives = []
-            return self
-
-        if not self.legal_representatives:
-            raise ValueError("Legal representatives are required for members under 18 years old")
-
-        filtered_reps = []
-        for rep in self.legal_representatives:
-            if rep.name and rep.email and rep.phone_number:
-                filtered_reps.append(rep)
-
-        if not filtered_reps:
-            raise ValueError(
-                "At least one legal representative with complete information (name, email, phone) is required"
-            )
-
-        self.legal_representatives = filtered_reps
-        return self
-
 
 class PendingRegistrationMessage(BaseModel):
     """Message model for pending registration."""
 
-    id: int
     data: PendingRegistrationData
     token: str

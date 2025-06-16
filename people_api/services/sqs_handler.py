@@ -4,6 +4,8 @@ import asyncio
 import json
 import logging
 import time
+import uuid
+from datetime import date
 from functools import lru_cache
 from json import JSONDecodeError
 
@@ -143,16 +145,52 @@ async def process_message(raw_message: str) -> PendingRegistration:
             return obj.isoformat()
         return obj
 
+    def process_legal_representatives(data_dict):
+        """Set legal_representatives to [] if fields are empty or if age >= 18."""
+
+        birth_date_str = data_dict.get("birth_date")
+        if birth_date_str:
+            birth_date = date.fromisoformat(birth_date_str)
+            today = date.today()
+            age = (
+                today.year
+                - birth_date.year
+                - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            )
+
+            if age >= 18:
+                data_dict["legal_representatives"] = []
+                return
+
+            legal_reps = data_dict.get("legal_representatives", [])
+            filtered_reps = []
+            for rep in legal_reps:
+                if rep.get("name") and rep.get("email") and rep.get("phone_number"):
+                    filtered_reps.append(rep)
+
+            if not filtered_reps:
+                raise ValueError(
+                    "At least one legal representative with complete information (name, email, phone) is required for members under 18 years old"
+                )
+
+            data_dict["legal_representatives"] = filtered_reps
+
     try:
-        message = PendingRegistrationMessage.model_validate_json(raw_message)
+        data_dict = json.loads(raw_message)
+
+        process_legal_representatives(data_dict)
+
+        message = PendingRegistrationMessage(
+            data=PendingRegistrationData(**data_dict),
+            token=str(uuid.uuid4()),
+        )
+
         data_dict = message.data.model_dump()
         data_serializable = convert_dates(data_dict)
 
-        # Use data_serializable to build member models
         _build_member_models(PendingRegistrationData(**data_serializable))
 
         pending_reg = PendingRegistration(
-            id=message.id,
             data=data_serializable,
             token=message.token,
         )
@@ -217,7 +255,7 @@ async def consume_and_store_messages(sqs_client, queue_url, *, max_polls: int | 
                             session=sessions.rw,
                             pending_registration=pending,
                         )
-                except (ValidationError, JSONDecodeError, ClientError) as e:
+                except (ValidationError, JSONDecodeError, ClientError, ValueError) as e:
                     logging.error("Error processing message: %s", e)
                     logging.warning("Skipping message due to error: %s", e)
                     try:

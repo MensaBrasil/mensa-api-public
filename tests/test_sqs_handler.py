@@ -7,7 +7,6 @@ import os
 
 import boto3
 import pytest
-from pydantic import ValidationError
 
 from people_api.database.models.pending_registration import PendingRegistration
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
@@ -121,47 +120,41 @@ def test_sqs_sns_message_delivery(set_policy):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "payload, expected_id, expected_token, expected_data",
+    "payload, expected_data",
     [
         (
             json.dumps(
                 {
-                    "id": 123,
-                    "data": {
-                        "full_name": "Maria da Silva",
-                        "social_name": "Maria Silva",
-                        "email": "maria.silva@example.com",
-                        "birth_date": "1990-05-20",
-                        "cpf": "257.604.800-57",
-                        "profession": "Engenheira de Software",
-                        "gender": "Feminino",
-                        "phone_number": "+55 (11) 987654321",
-                        "address": {
-                            "street": "Rua das Flores",
-                            "neighborhood": "Jardim Primavera",
-                            "city": "São Paulo",
-                            "state": "SP",
-                            "zip_code": "01234-567",
-                            "country": "Brasil",
-                        },
-                        "legal_representatives": [
-                            {
-                                "name": "João Silva",
-                                "email": "joao.silva@example.com",
-                                "phone_number": "+5511999998888",
-                            },
-                            {
-                                "name": "Ana Pereira",
-                                "email": "ana.pereira@example.com",
-                                "phone_number": "+5511988887777",
-                            },
-                        ],
+                    "full_name": "Maria da Silva",
+                    "social_name": "Maria Silva",
+                    "email": "maria.silva@example.com",
+                    "birth_date": "1990-05-20",
+                    "cpf": "257.604.800-57",
+                    "profession": "Engenheira de Software",
+                    "gender": "Feminino",
+                    "phone_number": "+55 (11) 987654321",
+                    "address": {
+                        "street": "Rua das Flores",
+                        "neighborhood": "Jardim Primavera",
+                        "city": "São Paulo",
+                        "state": "SP",
+                        "zip_code": "01234-567",
+                        "country": "Brasil",
                     },
-                    "token": "valid-token",
+                    "legal_representatives": [
+                        {
+                            "name": "João Silva",
+                            "email": "joao.silva@example.com",
+                            "phone_number": "+5511999998888",
+                        },
+                        {
+                            "name": "Ana Pereira",
+                            "email": "ana.pereira@example.com",
+                            "phone_number": "+5511988887777",
+                        },
+                    ],
                 }
             ),
-            123,
-            "valid-token",
             {
                 "full_name": "Maria da Silva",
                 "social_name": "Maria Silva",
@@ -185,37 +178,31 @@ def test_sqs_sns_message_delivery(set_policy):
         (
             json.dumps(
                 {
-                    "id": 123,
-                    "data": {
-                        "full_name": "Maria da Silva",
-                        "social_name": "Maria Silva",
-                        "email": "maria.silva@example.com",
-                        "birth_date": "1990-05-20",
-                        "cpf": "257.604.800-57",
-                        "profession": "Engenheira de Software",
-                        "gender": "Feminino",
-                        "phone_number": "+55 (11) 987654321",
-                        "address": {
-                            "street": "Rua das Flores",
-                            "neighborhood": "Jardim Primavera",
-                            "city": "São Paulo",
-                            "state": "SP",
-                            "zip_code": "01234-567",
-                            "country": "Brasil",
-                        },
-                        "legal_representatives": [
-                            {
-                                "name": None,
-                                "email": None,
-                                "phone_number": None,
-                            },
-                        ],
+                    "full_name": "Maria da Silva",
+                    "social_name": "Maria Silva",
+                    "email": "maria.silva@example.com",
+                    "birth_date": "1990-05-20",
+                    "cpf": "257.604.800-57",
+                    "profession": "Engenheira de Software",
+                    "gender": "Feminino",
+                    "phone_number": "+55 (11) 987654321",
+                    "address": {
+                        "street": "Rua das Flores",
+                        "neighborhood": "Jardim Primavera",
+                        "city": "São Paulo",
+                        "state": "SP",
+                        "zip_code": "01234-567",
+                        "country": "Brasil",
                     },
-                    "token": "valid-token",
+                    "legal_representatives": [
+                        {
+                            "name": None,
+                            "email": None,
+                            "phone_number": None,
+                        },
+                    ],
                 }
             ),
-            123,
-            "valid-token",
             {
                 "full_name": "Maria da Silva",
                 "social_name": "Maria Silva",
@@ -233,54 +220,42 @@ def test_sqs_sns_message_delivery(set_policy):
                     "zip_code": "01234-567",
                     "country": "Brasil",
                 },
-                "legal_representatives": [
-                    {
-                        "name": None,
-                        "email": None,
-                        "phone_number": None,
-                    },
-                ],
+                "legal_representatives": [],
             },
         ),
         (
             json.dumps(
                 {
-                    "id": 124,
-                    "data": {
-                        "full_name": "Carlos Souza",
-                        "social_name": "Carlos Souza",
-                        "email": "carlos.souza@example.com",
-                        "birth_date": "2016-10-15",
-                        "cpf": "123.456.789-01",
-                        "profession": "Analista de Sistemas",
-                        "gender": "Masculino",
-                        "phone_number": "+55 (11) 976543210",
-                        "address": {
-                            "street": "Avenida Central",
-                            "neighborhood": "Centro",
-                            "city": "Rio de Janeiro",
-                            "state": "RJ",
-                            "zip_code": "20000-000",
-                            "country": "Brasil",
-                        },
-                        "legal_representatives": [
-                            {
-                                "name": "Pedro Lima",
-                                "email": "pedro.lima@example.com",
-                                "phone_number": "+55 (11) 912345678",
-                            },
-                            {
-                                "name": None,
-                                "email": None,
-                                "phone_number": None,
-                            },
-                        ],
+                    "full_name": "Carlos Souza",
+                    "social_name": "Carlos Souza",
+                    "email": "carlos.souza@example.com",
+                    "birth_date": "2016-10-15",
+                    "cpf": "123.456.789-01",
+                    "profession": "Analista de Sistemas",
+                    "gender": "Masculino",
+                    "phone_number": "+55 (11) 976543210",
+                    "address": {
+                        "street": "Avenida Central",
+                        "neighborhood": "Centro",
+                        "city": "Rio de Janeiro",
+                        "state": "RJ",
+                        "zip_code": "20000-000",
+                        "country": "Brasil",
                     },
-                    "token": "token-two-legal-reps",
+                    "legal_representatives": [
+                        {
+                            "name": "Pedro Lima",
+                            "email": "pedro.lima@example.com",
+                            "phone_number": "+55 (11) 912345678",
+                        },
+                        {
+                            "name": None,
+                            "email": None,
+                            "phone_number": None,
+                        },
+                    ],
                 }
             ),
-            124,
-            "token-two-legal-reps",
             {
                 "full_name": "Carlos Souza",
                 "social_name": "Carlos Souza",
@@ -304,19 +279,12 @@ def test_sqs_sns_message_delivery(set_policy):
                         "email": "pedro.lima@example.com",
                         "phone_number": "+55 (11) 912345678",
                     },
-                    {
-                        "name": None,
-                        "email": None,
-                        "phone_number": None,
-                    },
                 ],
             },
         ),
     ],
 )
-async def test_process_valid_message(
-    set_policy, sync_rw_session, payload, expected_id, expected_token, expected_data
-):
+async def test_process_valid_message(set_policy, sync_rw_session, payload, expected_data):
     """Test that a valid message is processed and stored in PendingMessages."""
 
     sns, sqs, topic_arn, queue_url = set_policy
@@ -337,9 +305,9 @@ async def test_process_valid_message(
 
     assert await check_message_deletion(sqs, queue_url)
 
-    stored = sync_rw_session.query(PendingRegistration).filter_by(id=expected_id).one_or_none()
-    assert stored is not None
-    assert stored.token == expected_token
+    stored = sync_rw_session.query(PendingRegistration).all()
+    assert len(stored) == 1
+    stored = stored[0]
 
     def normalize(data):
         data = copy.deepcopy(data)
@@ -377,34 +345,26 @@ async def test_process_invalid_message_underage_no_legal_reps(set_policy, sync_r
 
     sns, sqs, topic_arn, queue_url = set_policy
 
-    invalid_message, expected_id, expected_token = (
-        json.dumps(
-            {
-                "id": 125,
-                "data": {
-                    "full_name": "Lucas Pereira",
-                    "social_name": "Lucas Pereira",
-                    "email": "lucas.pereira@example.com",
-                    "birth_date": "2010-08-12",
-                    "cpf": "321.654.987-00",
-                    "profession": "Estudante",
-                    "gender": "Masculino",
-                    "phone_number": "+55 (21) 912345678",
-                    "address": {
-                        "street": "Rua Nova",
-                        "neighborhood": "Bairro Novo",
-                        "city": "Belo Horizonte",
-                        "state": "MG",
-                        "zip_code": "30123-456",
-                        "country": "Brasil",
-                    },
-                    "legal_representatives": [],
-                },
-                "token": "underage-no-legal-reps",
-            }
-        ),
-        125,
-        "underage-no-legal-reps",
+    invalid_message = json.dumps(
+        {
+            "full_name": "Lucas Pereira",
+            "social_name": "Lucas Pereira",
+            "email": "lucas.pereira@example.com",
+            "birth_date": "2010-08-12",
+            "cpf": "321.654.987-00",
+            "profession": "Estudante",
+            "gender": "Masculino",
+            "phone_number": "+55 (21) 912345678",
+            "address": {
+                "street": "Rua Nova",
+                "neighborhood": "Bairro Novo",
+                "city": "Belo Horizonte",
+                "state": "MG",
+                "zip_code": "30123-456",
+                "country": "Brasil",
+            },
+            "legal_representatives": [],
+        }
     )
 
     # Publish the invalid message
@@ -416,7 +376,7 @@ async def test_process_invalid_message_underage_no_legal_reps(set_policy, sync_r
 
     try:
         await consume_and_store_messages(sqs_client=sqs, queue_url=queue_url, max_polls=1)
-    except ValidationError:
+    except ValueError:
         # Expected error for underage with no legal representatives
         pass
 
@@ -430,13 +390,12 @@ async def test_process_invalid_message_underage_no_legal_reps(set_policy, sync_r
     assert "Messages" in response, "Message should remain in the queue due to validation error"
     bodies = [json.loads(m["Body"]) for m in response["Messages"]]
     messages = [json.loads(b["Message"]) for b in bodies]
-    assert any(m["token"] == expected_token for m in messages), (
-        "Invalid message should still be in the queue"
-    )
+    original_data = json.loads(invalid_message)
+    assert any(m == original_data for m in messages), "Invalid message should still be in the queue"
 
     # Message should NOT be stored in the database
-    stored = sync_rw_session.query(PendingRegistration).filter_by(id=expected_id).one_or_none()
-    assert stored is None, "Invalid message should not be stored in the database"
+    stored_records = sync_rw_session.query(PendingRegistration).all()
+    assert len(stored_records) == 0, "Invalid message should not be stored in the database"
 
 
 @pytest.mark.asyncio
@@ -488,25 +447,21 @@ async def test_invalid_phone_keeps_message(set_policy):
 
     invalid_payload = json.dumps(
         {
-            "id": 999,
-            "data": {
-                "full_name": "Maria da Silva",
-                "social_name": "Maria Silva",
-                "email": "maria.silva@example.com",
-                "birth_date": "1990-05-20",
-                "cpf": "25760480057",
-                "profession": "Engenheira de Software",
-                "phone_number": "12345",
-                "address": {
-                    "street": "Rua das Flores",
-                    "neighborhood": "Jardim Primavera",
-                    "city": "São Paulo",
-                    "state": "SP",
-                    "zip_code": "01234567",
-                },
-                "legal_representatives": [],
+            "full_name": "Maria da Silva",
+            "social_name": "Maria Silva",
+            "email": "maria.silva@example.com",
+            "birth_date": "1990-05-20",
+            "cpf": "25760480057",
+            "profession": "Engenheira de Software",
+            "phone_number": "12345",
+            "address": {
+                "street": "Rua das Flores",
+                "neighborhood": "Jardim Primavera",
+                "city": "São Paulo",
+                "state": "SP",
+                "zip_code": "01234567",
             },
-            "token": "invalid-phone",
+            "legal_representatives": [],
         }
     )
 
@@ -523,7 +478,8 @@ async def test_invalid_phone_keeps_message(set_policy):
     assert "Messages" in response_after
     bodies = [json.loads(m["Body"]) for m in response_after["Messages"]]
     messages = [json.loads(b["Message"]) for b in bodies]
-    assert any(m["token"] == "invalid-phone" for m in messages)
+    original_data = json.loads(invalid_payload)
+    assert any(m == original_data for m in messages)
 
 
 @pytest.mark.asyncio
