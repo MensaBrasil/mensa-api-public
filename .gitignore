@@ -1,0 +1,15 @@
+.idea/
+.vscode/
+*pycache*/
+.env
+.venv
+__pycache__/
+*.pyc
+client_secret.json
+firebase_secret.json
+sample.env
+.env.bak
+.dmypy.json
+.coverage
+firebase_secret.json
+firebase_secret_bak.json

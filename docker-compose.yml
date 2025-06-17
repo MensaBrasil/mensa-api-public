@@ -1,0 +1,52 @@
+services:
+  people_api:
+    build:
+      context: .
+    ports:
+      - 5000:5000
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - .:/home/user/app
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+    networks:
+      - my_network
+
+  test-db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stats
+    ports:
+      - "5432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./tests/data/db-init:/docker-entrypoint-initdb.d
+    networks:
+      - my_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - test-db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json
+    networks:
+      - my_network
+
+volumes:
+  pgadmin_data:
+
+networks:
+  my_network:

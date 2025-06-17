@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - '**'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+
+    - name: Set up services using Docker Compose v2
+      run: |
+        docker compose up -d --build
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: |
+        poetry install
+
+    # - name: Run Ruff formatting check
+    #   run: |
+    #     poetry add ruff
+    #     poetry run ruff check . --select E,I
+
+    - name: Check for secrets
+      run: |
+        poetry add detect-secrets
+        poetry run detect-secrets scan --baseline .secrets.baseline
+
+    - name: Run tests with coverage
+      run: |
+        poetry run coverage run -m pytest -sv .
+        poetry run coverage report
+        poetry run coverage xml
+
+    - name: Check coverage
+      run: |
+        COVERAGE=$(poetry run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
+        echo "Coverage is $COVERAGE%"
+        if (( $(echo "$COVERAGE < 1" | bc -l) )); then
+          echo "Code coverage is below 90%"
+          exit 1
+        fi
+
+    - name: Tear down Docker Compose
+      run: docker compose down
+
+        # static_analysis:
+  #   runs-on: ubuntu-latest
+  #   needs: setup
+
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: '3.12'
+
+  #   - name: Install pylint using pip
+  #     run: pip install pylint
+
+  #   - name: Static code analysis with pylint
+  #     run: pylint --disable=F0010 people_api
+
+  # type_checking:
+  #   runs-on: ubuntu-latest
+  #   needs: setup
+
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: '3.12'
+
+  #   - name: Install mypy using pip
+  #     run: pip install mypy
+
+  #   - name: Type checking with mypy
+  #     run: |
+  #       mypy people_api --python-version 3.12 --ignore-missing-imports --exclude '[a-zA-Z]*/(migrations)/(.)*' --install-types --non-interactive
+
+
+  security_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Set up Trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: fs
+        ignore-unfixed: true
+        exit-code: 1
+        severity: MEDIUM
