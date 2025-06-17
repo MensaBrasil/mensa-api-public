@@ -25,9 +25,10 @@ app.middleware("http")(otel_logging_middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://carteirinhas.mensa.org.br",
         "https://app.flutterflow.io",
-    ],  # List of origins permitted to make requests
+    ],
+    allow_origin_regex=r"https://.*\.mensa\.org\.br",
+    # List of origins permitted to make requests
     allow_credentials=True,  # Allow cookies to be included in requests
     allow_methods=["*"],  # List of allowed HTTP methods
     allow_headers=["*"],  # List of allowed HTTP headers

@@ -6,4 +6,6 @@ class Gender(StrEnum):
 
     MALE = "Masculino"
     FEMALE = "Feminino"
+    NON_BINARY = "Não-binário"
+    RATHER_NOT_SAY = "Prefiro não dizer"
     OTHER = "Outros"
