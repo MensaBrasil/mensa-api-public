@@ -156,7 +156,8 @@ class MemberOnboardingService:
 
             if customer_response.status_code != 200 or "id" not in customer:
                 logging.error(
-                    "Customer creation failed. Response: %s", json.dumps(customer, indent=2)
+                    "Customer creation failed. Response: %s",
+                    json.dumps(customer, indent=2),
                 )
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -167,7 +168,8 @@ class MemberOnboardingService:
                 customer = result_json["data"][0]
             except (KeyError, IndexError):
                 logging.error(
-                    "Customer lookup failed. Result: %s", json.dumps(result_json, indent=2)
+                    "Customer lookup failed. Result: %s",
+                    json.dumps(result_json, indent=2),
                 )
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -201,7 +203,8 @@ class MemberOnboardingService:
         payment_result = payment_response.json()
         if payment_response.status_code != 200 or "invoiceUrl" not in payment_result:
             logging.error(
-                "Payment creation failed. Response: %s", json.dumps(payment_result, indent=2)
+                "Payment creation failed. Response: %s",
+                json.dumps(payment_result, indent=2),
             )
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -280,11 +283,15 @@ class MemberOnboardingService:
             await session.rw.flush()
 
             reg_id = registration.registration_id
-            address_obj.registration_id = reg_id
-            email_obj.registration_id = reg_id
-            phone_obj.registration_id = reg_id
+            (
+                registration,
+                address_obj,
+                email_obj,
+                phone_obj,
+                rep_objs,
+            ) = convert_pending_to_member_models(member_data, registration_id=reg_id)
+
             for rep in rep_objs:
-                rep.registration_id = reg_id
                 session.rw.add(rep)
 
             session.rw.add(address_obj)
