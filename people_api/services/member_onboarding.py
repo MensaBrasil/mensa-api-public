@@ -315,7 +315,7 @@ class MemberOnboardingService:
             await session.rw.delete(pending_member)
 
             mensa_email = await WorkspaceService.create_mensa_email(
-                registration_id=registration.registration_id, sessions=session
+                registration_id=reg_id, sessions=session
             )
 
             email_address = mensa_email["user_data"]["email"]
@@ -327,7 +327,7 @@ class MemberOnboardingService:
 
             emails = template_service.render_welcome_emails_from_pending(
                 pending_data=member_data,
-                registration_id=registration.registration_id,
+                registration_id=reg_id,
                 mensa_email=email_address,
                 temp_email_password=email_password,
             )
@@ -344,7 +344,7 @@ class MemberOnboardingService:
                 "message": "Member onboarding processed successfully.",
                 "details": {
                     "member_name": member_data.full_name,
-                    "registration_id": registration.registration_id,
+                    "registration_id": reg_id,
                     "expiration_date": expiration_date.strftime("%Y-%m-%d"),
                     "email": {
                         "address": email_address,
