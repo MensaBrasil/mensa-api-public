@@ -347,7 +347,7 @@ class MemberOnboardingService:
             }
 
         except Exception as e:
-            logging.error("Error processing member onboarding...")
+            logging.error("Error processing member onboarding...\n%s", str(e))
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to process member onboarding.",
