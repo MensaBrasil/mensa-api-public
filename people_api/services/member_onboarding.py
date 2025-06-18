@@ -300,7 +300,7 @@ class MemberOnboardingService:
 
             payment = payload.get("payment", {})
             payment_obj = MembershipPayments(
-                registration_id=registration.registration_id,
+                registration_id=reg_id,
                 payment_date=datetime.now(),
                 expiration_date=expiration_date,
                 amount_paid=payment.get("value"),
