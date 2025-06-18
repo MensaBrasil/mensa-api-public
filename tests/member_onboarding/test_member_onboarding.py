@@ -65,6 +65,7 @@ def pending_registration_data():
         "social_name": None,
         "birth_date": "1990-05-15",
         "cpf": "12345678909",
+        "gender": "Feminino",
         "email": "maria.silva@asaas.com.br",
         "phone_number": "5531940028922",
         "profession": "Engineer",
@@ -76,6 +77,7 @@ def pending_registration_data():
             "city": "São Paulo",
             "state": "SP",
             "zip_code": "04567890",
+            "country": "Brazil",
         },
         "legal_representatives": [
             {
@@ -288,6 +290,7 @@ class TestMemberOnboardingEndpoints:
             "social_name": None,
             "birth_date": "1990-05-15",
             "cpf": "12345678909",
+            "gender": "Feminino",
             "email": "maria.silva@asaas.com.br",
             "phone_number": "5531940028922",
             "profession": "Engineer",
@@ -297,6 +300,7 @@ class TestMemberOnboardingEndpoints:
                 "city": "São Paulo",
                 "state": "SP",
                 "zip_code": "04567890",
+                "country": "Brazil",
             },
             "legal_representatives": [],
         }
@@ -406,6 +410,7 @@ class TestMemberOnboardingEndpoints:
             "cpf": "12345678909",
             "email": "joao.souza@example.com",
             "phone_number": "5511999999999",
+            "gender": "Masculino",
             "profession": "Engineer",
             "address": {
                 "street": "Some street",
@@ -413,6 +418,7 @@ class TestMemberOnboardingEndpoints:
                 "city": "City",
                 "state": "ST",
                 "zip_code": "12345678",
+                "country": "Brazil",
             },
         }
         run_db_query(
@@ -516,6 +522,7 @@ class TestMemberOnboardingEmails:
             "birth_date": "2000-01-01",
             "cpf": "12345678909",
             "email": "test.user@example.com",
+            "gender": "Masculino",
             "phone_number": "5511999998888",
             "profession": "Developer",
             "address": {
@@ -524,6 +531,7 @@ class TestMemberOnboardingEmails:
                 "city": "Test City",
                 "state": "TS",
                 "zip_code": "12345678",
+                "country": "Brazil",
             },
             "legal_representatives": [],
         }

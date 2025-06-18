@@ -8,6 +8,7 @@ from sqlmodel import JSON, Column, Date, Field, select
 
 from people_api.database.models.models import BaseSQLModel
 from people_api.database.models.types import CPFNumber, PhoneNumber, ZipNumber
+from people_api.enums import Gender
 
 
 class PendingRegistration(BaseSQLModel, table=True):
@@ -50,8 +51,8 @@ class Address(BaseModel):
     neighborhood: str
     city: str
     state: str
-    zip_code: ZipNumber | None = Field(None, max_length=12)
-    country: str | None = Field(None)
+    zip_code: ZipNumber
+    country: str
 
 
 class PendingRegistrationData(BaseModel):
@@ -61,9 +62,9 @@ class PendingRegistrationData(BaseModel):
     social_name: str | None = None
     email: EmailStr = Field(max_length=255, min_length=5, index=True)
     birth_date: date
-    cpf: CPFNumber | None
+    cpf: CPFNumber
     profession: str | None = None
-    gender: str | None = None
+    gender: Gender
     phone_number: PhoneNumber = Field(max_length=60, min_length=9)
     address: Address
     legal_representatives: list[LegalRepresentative] | None = None
