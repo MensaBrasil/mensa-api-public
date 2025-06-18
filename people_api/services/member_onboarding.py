@@ -15,7 +15,6 @@ from people_api.database.models.pending_registration import (
     PendingRegistration,
     PendingRegistrationData,
 )
-from people_api.dbs import AsyncSessionsTuple
 from people_api.models.asaas import AnuityType, PaymentChoice
 from people_api.services.email_sending_service import EmailSendingService
 from people_api.services.email_service import EmailTemplates
@@ -214,9 +213,7 @@ class MemberOnboardingService:
         return {"payment_link": payment_result["invoiceUrl"]}
 
     @classmethod
-    async def process_member_onboarding(
-        cls, asaas_auth_token: str, payload, session: AsyncSessionsTuple
-    ):
+    async def process_member_onboarding(cls, asaas_auth_token: str, payload, session: AsyncSession):
         """Process member onboarding by validating the payment for pending members."""
         await cls._check_asaas_auth_token(asaas_auth_token)
 
@@ -255,7 +252,7 @@ class MemberOnboardingService:
             ) from e
 
         pending_member = (
-            await session.rw.exec(PendingRegistration.get_select_stmt_by_token(external_reference))
+            await session.exec(PendingRegistration.get_select_stmt_by_token(external_reference))
         ).first()
         if not pending_member:
             logging.error(
@@ -280,8 +277,8 @@ class MemberOnboardingService:
             ) = convert_pending_to_member_models(member_data)
 
             logging.info("Converting pending registration to member models")
-            session.rw.add(registration)
-            await session.rw.flush()
+            session.add(registration)
+            await session.flush()
 
             logging.info("New registration created with ID: %s", registration.registration_id)
             reg_id = registration.registration_id
@@ -293,11 +290,11 @@ class MemberOnboardingService:
 
             for rep in rep_objs:
                 rep.registration_id = reg_id
-                session.rw.add(rep)
+                session.add(rep)
 
-            session.rw.add(address_obj)
-            session.rw.add(email_obj)
-            session.rw.add(phone_obj)
+            session.add(address_obj)
+            session.add(email_obj)
+            session.add(phone_obj)
 
             logging.info(
                 "Address, email, phone, and representatives processed for registration ID: %s",
@@ -316,17 +313,17 @@ class MemberOnboardingService:
                 transaction_id=payment.get("id"),
                 payment_status=payment.get("status"),
             )
-            session.rw.add(payment_obj)
-            await session.rw.flush()
+            session.add(payment_obj)
+            await session.flush()
             logging.info("Membership payment record created for registration ID: %s", reg_id)
 
             logging.info("Deleting pending registration with token: %s", pending_member.token)
-            await session.rw.delete(pending_member)
+            await session.delete(pending_member)
 
             logging.info("Pending registration deleted successfully")
             logging.info("Creating Mensa email for registration ID: %s", reg_id)
             mensa_email = await WorkspaceService.create_mensa_email(
-                registration_id=reg_id, sessions=session
+                registration_id=reg_id, session=session
             )
 
             logging.info(

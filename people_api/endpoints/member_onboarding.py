@@ -28,10 +28,10 @@ async def _request_payment_link(
 async def _validate_payment(
     asaas_auth_token: str = Header(alias="asaas-access-token"),
     payload=Body(...),
-    sessions: AsyncSessionsTuple = Depends(get_async_sessions),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     return await MemberOnboardingService.process_member_onboarding(
-        asaas_auth_token, payload, sessions
+        asaas_auth_token, payload, session.rw
     )
 
 

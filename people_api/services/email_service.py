@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from people_api.database.models.pending_registration import PendingRegistrationData
-from people_api.dbs import AsyncSessionsTuple
 from people_api.schemas import UserToken
 
 from ..database.models.models import EmailInput, Emails, Registration
@@ -88,11 +87,11 @@ class EmailService:
         return {"message": "Email deleted successfully"}
 
     @staticmethod
-    async def request_email_creation(registration_id: int, sessions: AsyncSessionsTuple):
+    async def request_email_creation(registration_id: int, session: AsyncSession):
         """Request email creation for a member."""
 
         return await WorkspaceService.create_mensa_email(
-            registration_id=registration_id, sessions=sessions
+            registration_id=registration_id, session=session
         )
 
     @staticmethod

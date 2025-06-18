@@ -57,7 +57,7 @@ async def request_email_creation(
     token_data=Depends(verify_firebase_token),
 ):
     return await EmailService.request_email_creation(
-        registration_id=token_data.registration_id, sessions=session
+        registration_id=token_data.registration_id, session=session.rw
     )
 
 

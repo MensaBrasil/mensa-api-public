@@ -11,7 +11,6 @@ from googleapiclient.discovery import build
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.status import HTTP_403_FORBIDDEN
 
-from people_api.dbs import AsyncSessionsTuple
 from people_api.services.iam_service import IamService
 
 from ..database.models.models import Emails
@@ -105,10 +104,10 @@ class WorkspaceService:
             ) from e
 
     @staticmethod
-    async def create_mensa_email(registration_id: int, sessions: AsyncSessionsTuple):
+    async def create_mensa_email(registration_id: int, session: AsyncSession):
         """Create a Mensa email for a member based on their registration ID."""
         try:
-            member = await IamService.get_member_by_id(registration_id, sessions.ro)
+            member = await IamService.get_member_by_id(registration_id, session)
             if not member:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -129,7 +128,7 @@ class WorkspaceService:
 
         try:
             member_emails = (
-                await sessions.ro.exec(Emails.get_emails_for_member(member.registration_id))
+                await session.exec(Emails.get_emails_for_member(member.registration_id))
             ).all()
 
             if member_emails:
@@ -195,7 +194,7 @@ class WorkspaceService:
                 email_type="mensa",
                 email_address=user_data["primaryEmail"],
             )
-            sessions.rw.add(new_email)
+            session.add(new_email)
 
             return {
                 "message": "Mensa email created successfully",
