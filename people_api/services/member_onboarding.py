@@ -279,25 +279,32 @@ class MemberOnboardingService:
                 rep_objs,
             ) = convert_pending_to_member_models(member_data)
 
+            logging.info("Converting pending registration to member models")
             session.rw.add(registration)
             await session.rw.flush()
 
+            logging.info("New registration created with ID: %s", registration.registration_id)
             reg_id = registration.registration_id
-            (
-                registration,
-                address_obj,
-                email_obj,
-                phone_obj,
-                rep_objs,
-            ) = convert_pending_to_member_models(member_data, registration_id=reg_id)
+
+            logging.info("Processing address, email, phone, and representatives")
+            address_obj.registration_id = reg_id
+            email_obj.registration_id = reg_id
+            phone_obj.registration_id = reg_id
 
             for rep in rep_objs:
+                rep.registration_id = reg_id
                 session.rw.add(rep)
 
             session.rw.add(address_obj)
             session.rw.add(email_obj)
             session.rw.add(phone_obj)
 
+            logging.info(
+                "Address, email, phone, and representatives processed for registration ID: %s",
+                reg_id,
+            )
+
+            logging.info("Creating membership payment record")
             payment = payload.get("payment", {})
             payment_obj = MembershipPayments(
                 registration_id=reg_id,
@@ -311,13 +318,22 @@ class MemberOnboardingService:
             )
             session.rw.add(payment_obj)
             await session.rw.flush()
+            logging.info("Membership payment record created for registration ID: %s", reg_id)
 
+            logging.info("Deleting pending registration with token: %s", pending_member.token)
             await session.rw.delete(pending_member)
 
+            logging.info("Pending registration deleted successfully")
+            logging.info("Creating Mensa email for registration ID: %s", reg_id)
             mensa_email = await WorkspaceService.create_mensa_email(
                 registration_id=reg_id, sessions=session
             )
 
+            logging.info(
+                "Mensa email created successfully for registration ID: %s\nEmail Address: %s",
+                reg_id,
+                mensa_email["user_data"]["email"],
+            )
             email_address = mensa_email["user_data"]["email"]
             email_password = mensa_email["user_data"]["password"]
 
@@ -325,6 +341,7 @@ class MemberOnboardingService:
             email_service = EmailSendingService()
             template_service = EmailTemplates()
 
+            logging.info("Rendering welcome emails for registration ID: %s", reg_id)
             emails = template_service.render_welcome_emails_from_pending(
                 pending_data=member_data,
                 registration_id=reg_id,
@@ -332,6 +349,7 @@ class MemberOnboardingService:
                 temp_email_password=email_password,
             )
 
+            logging.info("Sending welcome emails for registration ID: %s", reg_id)
             for email in emails:
                 email_service.send_email(
                     to_email=email["recipient_email"],
