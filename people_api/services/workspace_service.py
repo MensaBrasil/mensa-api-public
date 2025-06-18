@@ -186,8 +186,8 @@ class WorkspaceService:
         try:
             user_data, password = create_google_workspace_user(
                 primary_email=primary_email,
-                given_name=member.name.capitalize(),
-                family_name=last_name.capitalize(),
+                given_name=member.name.title(),
+                family_name=last_name.title(),
             )
             new_email = Emails(
                 registration_id=member.registration_id,
