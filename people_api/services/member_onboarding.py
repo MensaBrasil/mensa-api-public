@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 
 import httpx
 from fastapi import HTTPException, status
+from sqlmodel import text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from people_api.database.models.models import (
@@ -15,6 +16,7 @@ from people_api.database.models.pending_registration import (
     PendingRegistration,
     PendingRegistrationData,
 )
+from people_api.dbs import get_async_sessions
 from people_api.models.asaas import AnuityType, PaymentChoice
 from people_api.services.email_sending_service import EmailSendingService
 from people_api.services.email_service import EmailTemplates
@@ -370,6 +372,15 @@ class MemberOnboardingService:
 
         except Exception as e:
             logging.error("Error processing member onboarding...\n%s", str(e))
+            async for sessions in get_async_sessions():
+                logging.info("Resetting registration ID sequence after error.")
+                await sessions.rw.execute(
+                    text("""
+                    SELECT setval('registration_registration_id_seq',
+                                (SELECT MAX(registration_id) FROM registration));
+                """)
+                )
+                logging.info("Registration ID sequence reset successfully.")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to process member onboarding.",
