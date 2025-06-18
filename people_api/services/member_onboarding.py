@@ -182,7 +182,12 @@ class MemberOnboardingService:
             "value": payment_information.get("payment_value"),
             "dueDate": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
             "daysAfterDueDateToRegistrationCancellation": 0,
-            "externalReference": payment.externalReference,
+            "externalReference": json.dumps(
+                {
+                    "pending_token": payment.externalReference,
+                    "expiration_date": payment_information.get("expiration_date"),
+                }
+            ),
             "description": (
                 f"Pagamento de associação para {member_data.full_name}, com validade até "
                 f"{payment_information.get('expiration_date_br_format')}!"
