@@ -132,6 +132,7 @@ def test_sqs_sns_message_delivery(set_policy):
                     "cpf": "257.604.800-57",
                     "profession": "Engenheira de Software",
                     "gender": "Feminino",
+                    "admission_type": "test",
                     "phone_number": "+55 (11) 987654321",
                     "address": {
                         "street": "Rua das Flores",
@@ -162,6 +163,7 @@ def test_sqs_sns_message_delivery(set_policy):
                 "birth_date": "1990-05-20",
                 "cpf": "257.604.800-57",
                 "profession": "Engenheira de Software",
+                "admission_type": "test",
                 "gender": "Feminino",
                 "phone_number": "+55 (11) 987654321",
                 "address": {
@@ -185,6 +187,7 @@ def test_sqs_sns_message_delivery(set_policy):
                     "cpf": "257.604.800-57",
                     "profession": "Engenheira de Software",
                     "gender": "Feminino",
+                    "admission_type": "report",
                     "phone_number": "+55 (11) 987654321",
                     "address": {
                         "street": "Rua das Flores",
@@ -211,6 +214,7 @@ def test_sqs_sns_message_delivery(set_policy):
                 "cpf": "257.604.800-57",
                 "profession": "Engenheira de Software",
                 "gender": "Feminino",
+                "admission_type": "report",
                 "phone_number": "+55 (11) 987654321",
                 "address": {
                     "street": "Rua das Flores",
@@ -233,6 +237,7 @@ def test_sqs_sns_message_delivery(set_policy):
                     "cpf": "123.456.789-01",
                     "profession": "Analista de Sistemas",
                     "gender": "Masculino",
+                    "admission_type": "test",
                     "phone_number": "+55 (11) 976543210",
                     "address": {
                         "street": "Avenida Central",
@@ -263,6 +268,7 @@ def test_sqs_sns_message_delivery(set_policy):
                 "birth_date": "2016-10-15",
                 "cpf": "123.456.789-01",
                 "profession": "Analista de Sistemas",
+                "admission_type": "test",
                 "gender": "Masculino",
                 "phone_number": "+55 (11) 976543210",
                 "address": {

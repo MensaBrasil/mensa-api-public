@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr
 from sqlmodel import JSON, Column, Date, Field, select
@@ -65,6 +66,7 @@ class PendingRegistrationData(BaseModel):
     cpf: CPFNumber
     profession: str | None = None
     gender: Gender
+    admission_type: Literal["test", "report"]
     phone_number: PhoneNumber = Field(max_length=60, min_length=9)
     address: Address
     legal_representatives: list[LegalRepresentative] | None = None

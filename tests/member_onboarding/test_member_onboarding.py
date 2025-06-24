@@ -66,6 +66,7 @@ def pending_registration_data():
         "birth_date": "1990-05-15",
         "cpf": "12345678909",
         "gender": "Feminino",
+        "admission_type": "test",
         "email": "maria.silva@asaas.com.br",
         "phone_number": "5531940028922",
         "profession": "Engineer",
@@ -292,6 +293,7 @@ class TestMemberOnboardingEndpoints:
             "cpf": "12345678909",
             "gender": "Feminino",
             "email": "maria.silva@asaas.com.br",
+            "admission_type": "test",
             "phone_number": "5531940028922",
             "profession": "Engineer",
             "address": {
@@ -409,6 +411,7 @@ class TestMemberOnboardingEndpoints:
             "birth_date": "1990-05-15",
             "cpf": "12345678909",
             "email": "joao.souza@example.com",
+            "admission_type": "test",
             "phone_number": "5511999999999",
             "gender": "Masculino",
             "profession": "Engineer",
@@ -500,6 +503,7 @@ class TestMemberOnboardingEmails:
 
             expected_html = EmailTemplates.render_pending_payment_email(
                 full_name=pending_registration_model.data["full_name"],
+                admission_type=pending_registration_model.data["admission_type"],
                 complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
             )
             assert html_content == expected_html
@@ -519,12 +523,13 @@ class TestMemberOnboardingEmails:
         data = {
             "full_name": "Test User",
             "social_name": "Tester",
+            "email": "test.user@example.com",
             "birth_date": "2000-01-01",
             "cpf": "12345678909",
-            "email": "test.user@example.com",
+            "profession": "Developer",
             "gender": "Masculino",
             "phone_number": "5511999998888",
-            "profession": "Developer",
+            "admission_type": "test",
             "address": {
                 "street": "Test Street",
                 "neighborhood": "Test Neighborhood",
@@ -558,6 +563,7 @@ class TestMemberOnboardingEmails:
         assert sender == mock_smtp_settings.smtp_username
         expected_html = EmailTemplates.render_pending_payment_email(
             full_name=data["full_name"],  # type: ignore
+            admission_type=data["admission_type"],  # type: ignore
             complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
         )
         assert html_content == expected_html

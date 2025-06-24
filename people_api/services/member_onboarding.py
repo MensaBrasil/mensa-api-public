@@ -403,6 +403,7 @@ async def send_initial_payment_email(
         subject = "Parabéns! Você foi aprovado na Mensa Brasil"
         html_content = EmailTemplates.render_pending_payment_email(
             full_name=member_data.full_name,
+            admission_type=member_data.admission_type,
             complete_payment_url=complete_payment_url,
         )
 
