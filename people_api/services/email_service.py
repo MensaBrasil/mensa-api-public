@@ -178,8 +178,8 @@ def get_regional_group_string_by_region(
         link_template = """Fique atento também ao nosso grupo de <strong>COMUNICADOS</strong> aos responsáveis pelos jovens brilhantes, nele compartilhamos eventos da associação e informações importantes: <a href={0}>{0}</a>"""
     else:
         link_template = """
-    <li>Para saber notícias e convites oficiais da associação, você também pode entrar no grupo de avisos do WhatsApp através deste link:<br>
-        <a href={0}>{0}</a></li>
+    <p>Para saber notícias e convites oficiais da associação, você também pode entrar no grupo de avisos do WhatsApp através deste link:<br>
+        <a href={0}>{0}</a></p>
     """
 
     if city and "SAO PAULO" in city.upper().replace("Ã", "A").replace("Á", "A").replace(
@@ -362,8 +362,7 @@ class EmailTemplates:
       <ul style="color:#333333; line-height:1.5;">
         <li>Para acessar grupos de interesse da Mensa, acesse o link:<br>
         <a href="{MB_GROUP_LINK}" style="color:#3498db;">{MB_GROUP_LINK}</a></li>
-        <li>Para participar do grupo de WhatsApp da sua região, utilize:<br>
-        {GRUPO_REGIONAL}</li>
+        <li>{GRUPO_REGIONAL}</li><br>
       </ul>
     </div>
     <div style="border-left:4px solid #e74c3c; background-color:#fdecea; padding:15px; margin:20px 0; border-radius:4px;">
@@ -439,8 +438,6 @@ class EmailTemplates:
             ),
             "MJB_GROUP_LINK": get_whatsapp_groups_settings().wpp_mjb_group_link,
             "JB_GROUP_LINK": get_whatsapp_groups_settings().wpp_jb_group_link,
-            "RJB_GROUP_LINK": get_whatsapp_groups_settings().wpp_rjb_group_link,
-            "RJB_FIRST_CONTACT": get_whatsapp_groups_settings().wpp_rjb_first_contact,
             "MB_GROUP_LINK": get_whatsapp_groups_settings().wpp_mb_group_link,
             "MB_FIRST_CONTACT": get_whatsapp_groups_settings().wpp_mb_first_contact,
         }
@@ -470,6 +467,8 @@ class EmailTemplates:
                         state=pending_data.address.state,
                         is_legal_rep=True,
                     ),
+                    "RJB_GROUP_LINK": get_whatsapp_groups_settings().wpp_rjb_group_link,
+                    "RJB_FIRST_CONTACT": get_whatsapp_groups_settings().wpp_rjb_first_contact,
                 }
                 guardian_body = cls.TEMPLATES[guardian_template_key].format(**guardian_vars)
                 emails.append(
