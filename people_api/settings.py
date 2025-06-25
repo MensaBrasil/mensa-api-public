@@ -70,8 +70,8 @@ class AsaasSettings(BaseSettings):
     asaas_auth_token: str
     asaas_api_key: str
     initial_payment_url: str
-    asaas_payments_url: str = "https://api.asaas.com/v3/payments"
-    asaas_customers_url: str = "https://api.asaas.com/v3/customers"
+    asaas_payments_url: str
+    asaas_customers_url: str
 
 
 class SMTPSettings(BaseSettings):
@@ -83,6 +83,35 @@ class SMTPSettings(BaseSettings):
     smtp_port: int
     smtp_username: str
     smtp_password: str
+
+
+class WhatsAppGroupsSettings(BaseSettings):
+    """WhatsApp groups settings."""
+
+    model_config = SettingsConfigDict(
+        env_file="wppgroups.env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    wpp_mjb_group_link: str
+    wpp_jb_group_link: str
+    wpp_rjb_first_contact: str
+    wpp_rjb_group_link: str
+    wpp_mb_group_link: str
+    wpp_mb_first_contact: str
+
+    sao_paulo_city_adult_members_group: str
+    sao_paulo_state_adult_members_group: str
+    southeast_adult_members_group: str
+    south_adult_members_group: str
+    center_west_north_adult_members_group: str
+    northeast_adult_members_group: str
+
+    sao_paulo_city_legal_reps_group: str
+    sao_paulo_state_legal_reps_group: str
+    southeast_legal_reps_group: str
+    south_legal_reps_group: str
+    center_west_north_legal_reps_group: str
+    northeast_legal_reps_group: str
 
 
 @lru_cache
@@ -101,3 +130,9 @@ def get_asaas_settings() -> AsaasSettings:
 def get_smtp_settings() -> SMTPSettings:
     """Returns a cached instance of SMTPSettings."""
     return SMTPSettings()  # type: ignore[call-arg]
+
+
+@lru_cache
+def get_whatsapp_groups_settings() -> WhatsAppGroupsSettings:
+    """Returns a cached instance of WhatsAppGroupsSettings."""
+    return WhatsAppGroupsSettings()  # type: ignore[call-arg]

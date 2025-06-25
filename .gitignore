@@ -25,3 +25,4 @@ hte_temp/*
 docs/conversations.txt
 *.pem
 settings.json
+wppgroups.env

@@ -11,8 +11,15 @@ from people_api.settings import get_smtp_settings
 class EmailSendingService:
     """Service to send e-mails to members using smtplib."""
 
-    def send_email(self, to_email: str, subject: str, html_content: str, sender_email: str):
-        """Sends an email with the provided HTML content and sender."""
+    def send_email(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+        sender_email: str,
+        reply_to: str | None = None,
+    ):
+        """Sends an email with the provided HTML content, sender, and optional reply-to address."""
 
         settings = get_smtp_settings()
 
@@ -20,6 +27,8 @@ class EmailSendingService:
         msg["Subject"] = subject
         msg["From"] = sender_email
         msg["To"] = to_email
+        if reply_to:
+            msg["Reply-To"] = reply_to
 
         msg.attach(MIMEText(html_content, "html"))
 

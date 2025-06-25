@@ -495,7 +495,11 @@ class TestMemberOnboardingEmails:
             mock_email_svc_cls.assert_called_once()
             email_svc = mock_email_svc_cls.return_value
             email_svc.send_email.assert_called_once()
-            to_email, subject, html_content, sender = email_svc.send_email.call_args[0]
+            kwargs = email_svc.send_email.call_args.kwargs
+            to_email = kwargs["to_email"]
+            subject = kwargs["subject"]
+            html_content = kwargs["html_content"]
+            sender = kwargs["sender_email"]
 
             assert to_email == pending_registration_model.data["email"]
             assert subject == "Parabéns! Você foi aprovado na Mensa Brasil"
@@ -545,6 +549,7 @@ class TestMemberOnboardingEmails:
             f"INSERT INTO pending_registration (data, token) VALUES ('{json.dumps(data)}'::json, '{token}')"
         )
         dummy_email_svc = SimpleNamespace(send_email=Mock())
+
         monkeypatch.setattr(
             "people_api.services.member_onboarding.EmailSendingService",
             lambda: dummy_email_svc,
@@ -556,17 +561,18 @@ class TestMemberOnboardingEmails:
             )
             for pending in result.all():
                 await send_initial_payment_email(sessions.rw, pending)
+
         dummy_email_svc.send_email.assert_called_once()
-        to_email, subject, html_content, sender = dummy_email_svc.send_email.call_args[0]
-        assert to_email == data["email"]
-        assert subject == "Parabéns! Você foi aprovado na Mensa Brasil"
-        assert sender == mock_smtp_settings.smtp_username
+        kwargs = dummy_email_svc.send_email.call_args.kwargs
+        assert kwargs["to_email"] == data["email"]
+        assert kwargs["subject"] == "Parabéns! Você foi aprovado na Mensa Brasil"
+        assert kwargs["sender_email"] == mock_smtp_settings.smtp_username
         expected_html = EmailTemplates.render_pending_payment_email(
             full_name=data["full_name"],  # type: ignore
             admission_type=data["admission_type"],  # type: ignore
             complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
         )
-        assert html_content == expected_html
+        assert kwargs["html_content"] == expected_html
         rows = run_db_query(
             f"SELECT email_sent_at FROM pending_registration WHERE token = '{token}'"
         )

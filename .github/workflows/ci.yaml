@@ -113,12 +113,34 @@ jobs:
         asaas_auth_token: very_secret_token
         asaas_api_key: secret_key
         initial_payment_url: https://pagina_pagamento?=token
+        asaas_payments_url: "https://linkasaas.com/v3/payments"
+        asaas_customers_url: "https://linkasaas.com/v3/customers"
 
         SMTP_SERVER: smtp.example.com
         SMTP_PORT: 587
         SMTP_USERNAME: your-username
         SMTP_PASSWORD: your-password
 
+        wpp_mjb_group_link: https://chat.whatsapp.com/group_link
+        wpp_jb_group_link: https://chat.whatsapp.com/group_link
+        wpp_rjb_first_contact: https://chat.whatsapp.com/group_link
+        wpp_rjb_group_link: https://chat.whatsapp.com/group_link
+        wpp_mb_group_link: https://chat.whatsapp.com/group_link
+        wpp_mb_first_contact: https://chat.whatsapp.com/group_link
+
+        sao_paulo_city_adult_members_group: https://chat.whatsapp.com/group_link
+        sao_paulo_state_adult_members_group: https://chat.whatsapp.com/group_link
+        southeast_adult_members_group: https://chat.whatsapp.com/group_link
+        south_adult_members_group: https://chat.whatsapp.com/group_link
+        center_west_north_adult_members_group: https://chat.whatsapp.com/group_link
+        northeast_adult_members_group: https://chat.whatsapp.com/group_link
+
+        sao_paulo_city_legal_reps_group: https://chat.whatsapp.com/group_link
+        sao_paulo_state_legal_reps_group: https://chat.whatsapp.com/group_link
+        southeast_legal_reps_group: https://chat.whatsapp.com/group_link
+        south_legal_reps_group: https://chat.whatsapp.com/group_link
+        center_west_north_legal_reps_group: https://chat.whatsapp.com/group_link
+        northeast_legal_reps_group: https://chat.whatsapp.com/group_link
       run: |
         uv run coverage run -m pytest -sv .
         uv run coverage report

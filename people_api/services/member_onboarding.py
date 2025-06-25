@@ -355,6 +355,7 @@ class MemberOnboardingService:
                     subject=email["subject"],
                     html_content=email["body"],
                     sender_email=sender,
+                    reply_to="secretaria@mensa.org.br",
                 )
 
             return {
@@ -407,7 +408,13 @@ async def send_initial_payment_email(
             complete_payment_url=complete_payment_url,
         )
 
-        email_service.send_email(member_data.email, subject, html_content, sender_email)
+        email_service.send_email(
+            to_email=member_data.email,
+            subject=subject,
+            html_content=html_content,
+            sender_email=sender_email,
+            reply_to="secretaria@mensa.org.br",
+        )
 
         pending_registration.email_sent_at = date.today()
         session.add(pending_registration)
