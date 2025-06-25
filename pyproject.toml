@@ -53,6 +53,8 @@ dependencies = [
     "moto[s3,sns,sqs]>=5.1.4",
     "flask>=3.1.0",
     "requests>=2.32.4",
+    "pydantic-br-validator>=0.2.0",
+    "pydantic-br>=1.1.0",
 ]
 
 [dependency-groups]

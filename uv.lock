@@ -1134,6 +1134,8 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pycpfcnpj" },
     { name = "pydantic", extra = ["email"] },
+    { name = "pydantic-br" },
+    { name = "pydantic-br-validator" },
     { name = "pydantic-settings" },
     { name = "pymongo" },
     { name = "pytest" },
@@ -1200,6 +1202,8 @@ requires-dist = [
     { name = "pycpfcnpj", specifier = "~=1.8" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.8.2,<3" },
+    { name = "pydantic-br", specifier = ">=1.1.0" },
+    { name = "pydantic-br-validator", specifier = ">=0.2.0" },
     { name = "pydantic-settings", specifier = ">=2.8.1,<3" },
     { name = "pymongo", specifier = ">=4.11.2,<5" },
     { name = "pytest", specifier = ">=8.3.5,<9" },
@@ -1790,6 +1794,27 @@ wheels = [
 [package.optional-dependencies]
 email = [
     { name = "email-validator" },
+]
+
+[[package]]
+name = "pydantic-br"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/79/16/c16d614d208ce7d60f5a0cfac14ae1e30bb6bf584b59f26cb639e1e5a1e2/pydantic_br-1.1.0.tar.gz", hash = "sha256:a6d45241d55e766084141be5f654a9b0cc6c1c73de896d292d8b8a882987c48e", size = 11785, upload-time = "2024-08-02T21:54:49.032Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/d5/d0d99c2e83f9f91b703ad53ab1779636c9bd3b4f0abe97f6d75243c19594/pydantic_br-1.1.0-py3-none-any.whl", hash = "sha256:7f1891eb3bd02e247232a6cb88c38e6418e8cabe959e69ccf2edb483abc08f17", size = 19181, upload-time = "2024-08-02T21:54:47.046Z" },
+]
+
+[[package]]
+name = "pydantic-br-validator"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6c/5f/5bf8e34e3e94a3fdb650c8b4fc7d6d655c368939a71186bbf02070fc3731/pydantic_br_validator-0.2.0.tar.gz", hash = "sha256:7c9a0399746ef707fff8d01a4ef6c3f35c903cbd2a35d27be66a7f8ed740c861", size = 4508, upload-time = "2024-02-26T05:28:02.792Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/72/3eeab22b06b99bed8352c463b3171000c0dfce1a57e90e51c8508196cd29/pydantic_br_validator-0.2.0-py3-none-any.whl", hash = "sha256:f7e82629f38b1acbd7ae0edaaae984838313bbf35d903ac9e87958511565867d", size = 7330, upload-time = "2024-02-26T05:28:01.074Z" },
 ]
 
 [[package]]
