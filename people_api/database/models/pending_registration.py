@@ -9,7 +9,7 @@ from pydantic_br import CPF
 from sqlmodel import JSON, Column, Date, Field, select
 
 from people_api.database.models.models import BaseSQLModel
-from people_api.database.models.types import PhoneNumber, ZipNumber
+from people_api.database.models.types import FullName, PhoneNumber, ZipNumber
 from people_api.enums import Gender
 
 
@@ -60,7 +60,7 @@ class Address(BaseModel):
 class PendingRegistrationData(BaseModel):
     """Data model for pending registration, including personal and address details."""
 
-    full_name: str
+    full_name: FullName = Field(max_length=255, min_length=5, index=True)
     social_name: str | None = None
     email: EmailStr = Field(max_length=255, min_length=5, index=True)
     birth_date: date

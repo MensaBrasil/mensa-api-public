@@ -63,3 +63,20 @@ class ZipNumber(str):
         if len(cleaned) > 12:
             raise ValueError("Zip code must be at most 12 characters long.")
         return cleaned
+
+
+class FullName(str):
+    """A custom type for full name requiring at least two words."""
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_full_name
+
+    @classmethod
+    def validate_full_name(cls, value, info):
+        if not isinstance(value, str):
+            raise TypeError("Full name must be a string.")
+        parts = value.strip().split()
+        if len(parts) < 2:
+            raise ValueError("Full name must contain at least two words.")
+        return value
