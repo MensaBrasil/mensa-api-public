@@ -211,154 +211,177 @@ class EmailTemplates:
     TEMPLATES = {
         "BOAS VINDAS JB (DE 2 À 9 ANOS)": """
 <html>
-<body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h1 style="color: #2c3e50; text-align: center;">Seja bem-vindo(a) à Mensa Brasil!</h1>
-    <h2 style="color: #3498db;">{FULL_NAME}</h2>
-    <p>É uma honra recebê-lo(a) como associado(a) da Mensa. Pessoas com QI no top 2% são raras e foi um desafio encontrá-lo(a). Agora, podemos nos orgulhar de fazer parte da mesma família.</p>
-    <p>Seu número de cadastro é <strong>{REGISTRATION_ID}</strong> e você faz parte de um seleto grupo de mais de 4.000 mensans no Brasil e de mais de 100.000 mensans em todo o mundo. Ao compartilhar sua inteligência com os demais membros, você traz sua individualidade e paixão à nossa organização. Entre nossos membros, há uma diversidade de pessoas geniais. A partir de agora, você conhecerá um amplo grupo de pessoas interessadas em diversos temas, desde paleontologia até futurologia, de hieróglifos a literatura, de triathlon a genealogia. Esperamos que você contribua com seu valor único e reconheça o valor igualmente singular dos demais membros.</p>
-    <p>Quanto mais você se envolver, maior será o aproveitamento de sua condição de membro. Algo genuinamente especial ocorre quando temos a oportunidade de criar vínculos de afeto e amizade. Nesses momentos, percebemos o valor de sermos diferentes e, ainda assim, tão próximos. Sentimos que esses vínculos nos tornam mais que amigos: somos uma família.</p>
-    <p>Por ter <strong>{AGE} anos</strong>, você integrou o nosso programa Jovens Brilhantes e já pode efetuar seu cadastro no site da Mensa Internacional: <a href="https://www.mensa.org">www.mensa.org</a> &gt; Member &gt; Create New Account. A aprovação de sua conta pode levar até uma semana.</p>
-    <div style="background-color: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
-        <p>Seu e-mail institucional é <strong>{EMAIL_INSTITUCIONAL}</strong> e sua senha temporária é <strong>{TEMP_PASSWORD}</strong>. Você pode acessar sua caixa de entrada pelo Gmail.</p>
+<head>
+  <meta charset="UTF-8">
+  <title>Seja bem-vindo(a) à Mensa Brasil!</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+    <h1 style="color: #2c3e50; text-align: center; margin-top:0;">Seja bem-vindo(a) à Mensa Brasil!</h1>
+    <h2 style="color: #3498db; margin-bottom:20px;">{FULL_NAME}</h2>
+    <p style="color:#333333; line-height:1.5;">É uma honra recebê-lo(a) como associado(a) da Mensa. Pessoas com QI no top 2% são raras e foi um desafio encontrá-lo(a). Agora, podemos nos orgulhar de fazer parte da mesma família.</p>
+    <p style="color:#333333; line-height:1.5;">Seu número de cadastro é <strong>{REGISTRATION_ID}</strong> e você faz parte de um seleto grupo de mais de 4.000 mensans no Brasil e de mais de 100.000 mensans em todo o mundo. Ao compartilhar sua inteligência com os demais membros, você traz sua individualidade e paixão à nossa organização. Entre nossos membros, há uma diversidade de pessoas geniais. A partir de agora, você conhecerá um amplo grupo de pessoas interessadas em diversos temas, desde paleontologia até futurologia, de hieróglifos a literatura, de triathlon a genealogia. Esperamos que você contribua com seu valor único e reconheça o valor igualmente singular dos demais membros.</p>
+    <p style="color:#333333; line-height:1.5;">Quanto mais você se envolver, maior será o aproveitamento de sua condição de membro. Algo genuinamente especial ocorre quando temos a oportunidade de criar vínculos de afeto e amizade. Nesses momentos, percebemos o valor de sermos diferentes e, ainda assim, tão próximos. Sentimos que esses vínculos nos tornam mais que amigos: somos uma família.</p>
+    <p style="color:#333333; line-height:1.5;">Por ter <strong>{AGE} anos</strong>, você integrou o nosso programa Jovens Brilhantes e já pode efetuar seu cadastro no site da Mensa Internacional: <a href="https://www.mensa.org" style="color:#3498db;">www.mensa.org</a> &gt; Member &gt; Create New Account. A aprovação de sua conta pode levar até uma semana.</p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Seu e-mail institucional é <strong>{EMAIL_INSTITUCIONAL}</strong> e sua senha temporária é <strong>{TEMP_PASSWORD}</strong>. Você pode acessar sua caixa de entrada pelo Gmail.</p>
     </div>
-    <p>Sua carteirinha digital pode ser acessada pelo aplicativo Mensa Brasil, mediante login com seu e-mail institucional.</p>
-    <p style="background-color: #ffe6e6; padding: 10px; border-left: 4px solid #e74c3c;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
-
-    <p style="background-color: #e8f4fd; padding: 10px; border-left: 4px solid #3498db;"><strong>Também dispomos de uma comunidade no WhatsApp exclusiva para interação entre jovens brilhantes, com diversos grupos de interesses específicos. Caso o jovem brilhante não possua celular próprio, poderá utilizar o aparelho de seu responsável. Entretanto, solicitamos que os responsáveis não participem da comunidade, pois a atividade é destinada exclusivamente às crianças. Agradecemos a colaboração. Link para a comunidade Jovens Brilhantes: <a href="{MJB_GROUP_LINK}">{MJB_GROUP_LINK}</a></strong></p>
-
-    <p>Atenciosamente,</p>
-    <p style="color: #2c3e50;">
-        <strong>Secretaria - Associação Mensa Brasil</strong><br>
-        <p>Para eventuais dúvidas, entre em contato: <a href="https://mensa.org.br/contato">https://mensa.org.br/contato</a></p>
-        <a href="https://www.mensa.org.br">www.mensa.org.br</a>
-    </p>
+    <p style="color:#333333; line-height:1.5;">Sua carteirinha digital pode ser acessada pelo aplicativo Mensa Brasil, mediante login com seu e-mail institucional.</p>
+    <div style="border-left:4px solid #e74c3c; background-color:#fdecea; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
+    </div>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Também dispomos de uma comunidade no WhatsApp exclusiva para interação entre jovens brilhantes, com diversos grupos de interesses específicos. Caso o jovem brilhante não possua celular próprio, poderá utilizar o aparelho de seu responsável. Entretanto, solicitamos que os responsáveis não participem da comunidade, pois a atividade é destinada exclusivamente às crianças. Agradecemos a colaboração. Link para a comunidade Jovens Brilhantes: <a href="{MJB_GROUP_LINK}" style="color:#3498db;">{MJB_GROUP_LINK}</a></strong></p>
+    </div>
+    <p style="color:#333333; margin-bottom:0;">Atenciosamente,</p>
+    <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+    <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+  </div>
 </body>
 </html>
 """,
         "BOAS VINDAS RESPJB (DE 2 À 9 ANOS)": """
 <html>
-<body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h2 style="color: #2c3e50;">Prezado(a) responsável, <span style="color: #3498db;">{GUARDIAN_NAME}</span></h2>
-    <p>A Associação Mensa Brasil tem o grande prazer de dar as boas-vindas aos nossos Jovens Brilhantes. É com orgulho que recebemos seu(sua) filho(a) em nossa comunidade.</p>
-    <p>Saiba que, quanto mais você se envolver com seu(sua) filho(a), mais ele(a) aproveitará as oportunidades oferecidas pela Mensa.</p>
-    <p style="text-align: center; font-weight: bold; background-color: #f8f9fa; padding: 15px; margin: 20px 0;">Contamos com o apoio de todos vocês, pais e responsáveis, nesta nova jornada ao lado daqueles que mais amam!</p>
-    <div style="background-color: #e8f4fd; padding: 15px; margin: 20px 0; border-radius: 5px;">
-        <p><strong>Convite para a comunidade Jovens Brilhantes:</strong><br>
-        <a href="{RJB_GROUP_LINK}">{RJB_GROUP_LINK}</a></p>
+<head>
+  <meta charset="UTF-8">
+  <title>Bem-vindo(a) à Mensa Brasil!</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+    <h2 style="color:#2c3e50; margin-top:0;">Prezado(a) responsável, <span style="color:#3498db;">{GUARDIAN_NAME}</span></h2>
+    <p style="color:#333333; line-height:1.5;">A Associação Mensa Brasil tem o grande prazer de dar as boas-vindas aos nossos Jovens Brilhantes. É com orgulho que recebemos seu(sua) filho(a) em nossa comunidade.</p>
+    <p style="color:#333333; line-height:1.5;">Saiba que, quanto mais você se envolver com seu(sua) filho(a), mais ele(a) aproveitará as oportunidades oferecidas pela Mensa.</p>
+    <p style="text-align:center; font-weight:bold; color:#333333; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">Contamos com o apoio de todos vocês, pais e responsáveis, nesta nova jornada ao lado daqueles que mais amam!</p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Convite para a comunidade Jovens Brilhantes:</strong><br>
+      <a href="{RJB_GROUP_LINK}" style="color:#3498db;">{RJB_GROUP_LINK}</a></p>
     </div>
     {GRUPO_REGIONAL}
-    <p style="background-color: #ffe6e6; padding: 10px; border-left: 4px solid #e74c3c;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
-    <div style="background-color: #f1f8e9; padding: 15px; border-left: 4px solid #7cb342; margin: 20px 0;">
-        <p>Além das comunidades mencionadas, convidamos você a participar do nosso <strong>Grupo de Primeiros Contatos</strong>. Nele, você poderá se apresentar e conhecer voluntários dispostos a ajudar e esclarecer dúvidas. É um espaço ideal para iniciar a jornada na Mensa e conectar-se com outras famílias.</p>
-        <p>Link para o grupo: <a href="{RJB_FIRST_CONTACT}">{RJB_FIRST_CONTACT}</a></p>
+    <div style="border-left:4px solid #e74c3c; background-color:#fdecea; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
     </div>
-    <p>Ficamos à disposição para eventuais dúvidas.</p>
-    <p>Atenciosamente,</p>
-    <p style="color: #2c3e50;">
-        <strong>Secretaria - Associação Mensa Brasil</strong><br>
-        <p>Para eventuais dúvidas, entre em contato: <a href="https://mensa.org.br/contato">https://mensa.org.br/contato</a></p>
-        <a href="https://www.mensa.org.br">www.mensa.org.br</a>
-    </p>
+    <div style="border-left:4px solid #27ae60; background-color:#eafaf1; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Além das comunidades mencionadas, convidamos você a participar do nosso <strong>Grupo de Primeiros Contatos</strong>. Nele, você poderá se apresentar e conhecer voluntários dispostos a ajudar e esclarecer dúvidas. É um espaço ideal para iniciar a jornada na Mensa e conectar-se com outras famílias.<br>
+      Link para o grupo: <a href="{RJB_FIRST_CONTACT}" style="color:#3498db;">{RJB_FIRST_CONTACT}</a></p>
+    </div>
+    <p style="color:#333333; line-height:1.5;">Ficamos à disposição para eventuais dúvidas.</p>
+    <p style="color:#333333; margin-bottom:0;">Atenciosamente,</p>
+    <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+    <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+  </div>
 </body>
 </html>
 """,
         "BOAS VINDAS JB (DE 10 À 17 ANOS)": """
 <html>
-<body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h1 style="color: #2c3e50; text-align: center;">Seja bem-vindo(a) à Mensa Brasil!</h1>
-    <h2 style="color: #3498db;">{FULL_NAME}</h2>
-    <p>É uma honra recebê-lo(a) como associado(a) da Mensa. Pessoas com QI no top 2% são raras e foi um desafio encontrá-lo(a). Agora, podemos nos orgulhar de fazer parte da mesma família.</p>
-    <p>Seu número de cadastro é <strong>{REGISTRATION_ID}</strong> e você faz parte de um seleto grupo de mais de 4.000 mensans no Brasil e de mais de 100.000 mensans em todo o mundo. Ao compartilhar sua inteligência com os demais membros, você traz sua individualidade e paixão à nossa organização. Entre nossos membros, há uma diversidade de pessoas geniais. A partir de agora, você conhecerá um amplo grupo de pessoas interessadas em diversos temas, desde paleontologia até futurologia, de hieróglifos a literatura, de triathlon a genealogia. Esperamos que você contribua com seu valor único e reconheça o valor igualmente singular dos demais membros.</p>
-    <p>Quanto mais você se envolver, maior será o aproveitamento de sua condição de membro. Algo genuinamente especial ocorre quando temos a oportunidade de criar vínculos de afeto e amizade. Nesses momentos, percebemos o valor de sermos diferentes e, ainda assim, tão próximos. Sentimos que esses vínculos nos tornam mais que amigos: somos uma família.</p>
-    <p>Por ter <strong>{AGE} anos</strong>, você integrou o nosso programa Jovens Brilhantes e já pode efetuar seu cadastro no site da Mensa Internacional: <a href="https://www.mensa.org">www.mensa.org</a> &gt; Member &gt; Create New Account. A aprovação de sua conta pode levar até uma semana.</p>
-    <div style="background-color: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
-        <p>Seu e-mail institucional é <strong>{EMAIL_INSTITUCIONAL}</strong> e sua senha temporária é <strong>{TEMP_PASSWORD}</strong>. Você pode acessar sua caixa de entrada pelo Gmail.</p>
+<head>
+  <meta charset="UTF-8">
+  <title>Seja bem-vindo(a) à Mensa Brasil!</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+    <h1 style="color: #2c3e50; text-align: center; margin-top:0;">Seja bem-vindo(a) à Mensa Brasil!</h1>
+    <h2 style="color: #3498db; margin-bottom:20px;">{FULL_NAME}</h2>
+    <p style="color:#333333; line-height:1.5;">É uma honra recebê-lo(a) como associado(a) da Mensa. Pessoas com QI no top 2% são raras e foi um desafio encontrá-lo(a). Agora, podemos nos orgulhar de fazer parte da mesma família.</p>
+    <p style="color:#333333; line-height:1.5;">Seu número de cadastro é <strong>{REGISTRATION_ID}</strong> e você faz parte de um seleto grupo de mais de 4.000 mensans no Brasil e de mais de 100.000 mensans em todo o mundo. Ao compartilhar sua inteligência com os demais membros, você traz sua individualidade e paixão à nossa organização. Entre nossos membros, há uma diversidade de pessoas geniais. A partir de agora, você conhecerá um amplo grupo de pessoas interessadas em diversos temas, desde paleontologia até futurologia, de hieróglifos a literatura, de triathlon a genealogia. Esperamos que você contribua com seu valor único e reconheça o valor igualmente singular dos demais membros.</p>
+    <p style="color:#333333; line-height:1.5;">Quanto mais você se envolver, maior será o aproveitamento de sua condição de membro. Algo genuinamente especial ocorre quando temos a oportunidade de criar vínculos de afeto e amizade. Nesses momentos, percebemos o valor de sermos diferentes e, ainda assim, tão próximos. Sentimos que esses vínculos nos tornam mais que amigos: somos uma família.</p>
+    <p style="color:#333333; line-height:1.5;">Por ter <strong>{AGE} anos</strong>, você integrou o nosso programa Jovens Brilhantes e já pode efetuar seu cadastro no site da Mensa Internacional: <a href="https://www.mensa.org" style="color:#3498db;">www.mensa.org</a> &gt; Member &gt; Create New Account. A aprovação de sua conta pode levar até uma semana.</p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Seu e-mail institucional é <strong>{EMAIL_INSTITUCIONAL}</strong> e sua senha temporária é <strong>{TEMP_PASSWORD}</strong>. Você pode acessar sua caixa de entrada pelo Gmail.</p>
     </div>
-    <p>Sua carteirinha digital pode ser acessada pelo aplicativo Mensa Brasil, mediante login com seu e-mail institucional.</p>
-    <p style="background-color: #ffe6e6; padding: 10px; border-left: 4px solid #e74c3c;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
-
-    <p style="background-color: #e8f4fd; padding: 10px; border-left: 4px solid #3498db;"><strong>Também dispomos de uma comunidade no WhatsApp exclusiva para interação entre jovens brilhantes, com diversos grupos de interesses específicos. Caso o jovem brilhante não possua celular próprio, poderá utilizar o aparelho de seu responsável. Entretanto, solicitamos que os responsáveis não participem da comunidade, pois a atividade é destinada exclusivamente às crianças. Agradecemos a colaboração. Link para a comunidade Jovens Brilhantes: <a href="{JB_GROUP_LINK}">{JB_GROUP_LINK}</a></strong></p>
-
-    <p>Ficamos à disposição para eventuais dúvidas.</p>
-    <p>Atenciosamente,</p>
-    <p style="color: #2c3e50;">
-        <strong>Secretaria - Associação Mensa Brasil</strong><br>
-        <p>Para eventuais dúvidas, entre em contato: <a href="https://mensa.org.br/contato">https://mensa.org.br/contato</a></p>
-        <a href="https://www.mensa.org.br">www.mensa.org.br</a>
-    </p>
+    <p style="color:#333333; line-height:1.5;">Sua carteirinha digital pode ser acessada pelo aplicativo Mensa Brasil, mediante login com seu e-mail institucional.</p>
+    <div style="border-left:4px solid #e74c3c; background-color:#fdecea; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
+    </div>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Também dispomos de uma comunidade no WhatsApp exclusiva para interação entre jovens brilhantes, com diversos grupos de interesses específicos. Caso o jovem brilhante não possua celular próprio, poderá utilizar o aparelho de seu responsável. Entretanto, solicitamos que os responsáveis não participem da comunidade, pois a atividade é destinada exclusivamente às crianças. Agradecemos a colaboração. Link para a comunidade Jovens Brilhantes: <a href="{JB_GROUP_LINK}" style="color:#3498db;">{JB_GROUP_LINK}</a></strong></p>
+    </div>
+    <p style="color:#333333; margin-bottom:0;">Ficamos à disposição para eventuais dúvidas.</p>
+    <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+    <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+  </div>
 </body>
 </html>
 """,
         "BOAS VINDAS RESPJB (DE 10 À 17 ANOS)": """
 <html>
-<body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h2 style="color: #2c3e50;">Prezado(a) responsável, <span style="color: #3498db;">{GUARDIAN_NAME}</span></h2>
-    <p>A Associação Mensa Brasil tem o grande prazer de dar as boas-vindas aos nossos Jovens Brilhantes. É com orgulho que recebemos seu(sua) filho(a) em nossa comunidade.</p>
-    <p>Saiba que, quanto mais você se envolver com seu(sua) filho(a), mais ele(a) aproveitará as oportunidades oferecidas pela Mensa.</p>
-    <p style="text-align: center; font-weight: bold; background-color: #f8f9fa; padding: 15px; margin: 20px 0;">Contamos com o apoio de todos vocês, pais e responsáveis, nesta nova jornada ao lado daqueles que mais amam!</p>
-    <div style="background-color: #e8f4fd; padding: 15px; margin: 20px 0; border-radius: 5px;">
-        <p><strong>Convite para a comunidade Jovens Brilhantes:</strong><br>
-        <a href="{RJB_GROUP_LINK}">{RJB_GROUP_LINK}</a></p>
+<head>
+  <meta charset="UTF-8">
+  <title>Bem-vindo(a) à Mensa Brasil!</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+    <h2 style="color:#2c3e50; margin-top:0;">Prezado(a) responsável, <span style="color:#3498db;">{GUARDIAN_NAME}</span></h2>
+    <p style="color:#333333; line-height:1.5;">A Associação Mensa Brasil tem o grande prazer de dar as boas-vindas aos nossos Jovens Brilhantes. É com orgulho que recebemos seu(sua) filho(a) em nossa comunidade.</p>
+    <p style="color:#333333; line-height:1.5;">Saiba que, quanto mais você se envolver com seu(sua) filho(a), mais ele(a) aproveitará as oportunidades oferecidas pela Mensa.</p>
+    <p style="text-align:center; font-weight:bold; color:#333333; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">Contamos com o apoio de todos vocês, pais e responsáveis, nesta nova jornada ao lado daqueles que mais amam!</p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Convite para a comunidade Jovens Brilhantes:</strong><br>
+      <a href="{RJB_GROUP_LINK}" style="color:#3498db;">{RJB_GROUP_LINK}</a></p>
     </div>
     {GRUPO_REGIONAL}
-    <p style="background-color: #ffe6e6; padding: 10px; border-left: 4px solid #e74c3c;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
-    <div style="background-color: #f1f8e9; padding: 15px; border-left: 4px solid #7cb342; margin: 20px 0;">
-        <p>Além das comunidades mencionadas, convidamos você a participar do nosso <strong>Grupo de Primeiros Contatos</strong>. Nele, você poderá se apresentar e conhecer voluntários dispostos a ajudar e esclarecer dúvidas. É um espaço ideal para iniciar a jornada na Mensa e conectar-se com outras famílias.</p>
-        <p>Link para o grupo: <a href="{RJB_FIRST_CONTACT}">{RJB_FIRST_CONTACT}</a></p>
+    <div style="border-left:4px solid #e74c3c; background-color:#fdecea; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
     </div>
-    <p>Ficamos à disposição para eventuais dúvidas.</p>
-    <p>Atenciosamente,</p>
-    <p style="color: #2c3e50;">
-        <strong>Secretaria - Associação Mensa Brasil</strong><br>
-        <p>Para eventuais dúvidas, entre em contato: <a href="https://mensa.org.br/contato">https://mensa.org.br/contato</a></p>
-        <a href="https://www.mensa.org.br">www.mensa.org.br</a>
-    </p>
+    <div style="border-left:4px solid #27ae60; background-color:#eafaf1; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Além das comunidades mencionadas, convidamos você a participar do nosso <strong>Grupo de Primeiros Contatos</strong>. Nele, você poderá se apresentar e conhecer voluntários dispostos a ajudar e esclarecer dúvidas. É um espaço ideal para iniciar a jornada na Mensa e conectar-se com outras famílias.<br>
+      Link para o grupo: <a href="{RJB_FIRST_CONTACT}" style="color:#3498db;">{RJB_FIRST_CONTACT}</a></p>
+    </div>
+    <p style="color:#333333; line-height:1.5;">Ficamos à disposição para eventuais dúvidas.</p>
+    <p style="color:#333333; margin-bottom:0;">Atenciosamente,</p>
+    <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+    <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+  </div>
 </body>
 </html>
 """,
         "BOAS VINDAS MB": """
 <html>
-<body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h1 style="color: #2c3e50; text-align: center;">Seja bem-vindo(a) à Mensa Brasil!</h1>
-    <h2 style="color: #3498db;">{FULL_NAME}</h2>
-    <p>É com grande satisfação que recebemos você como membro da Mensa Brasil.</p>
-    <p>Seu comprovante de registro foi confirmado e seu número de associado é <strong>{REGISTRATION_ID}</strong>.</p>
-    <div style="background-color: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
-        <p>Seu e-mail institucional é <strong>{EMAIL_INSTITUCIONAL}</strong> e sua senha temporária é <strong>{TEMP_PASSWORD}</strong>. Você pode acessar sua caixa de entrada pelo Gmail.</p>
+<head>
+  <meta charset="UTF-8">
+  <title>Seja bem-vindo(a) à Mensa Brasil!</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+    <h1 style="color: #2c3e50; text-align: center; margin-top:0;">Seja bem-vindo(a) à Mensa Brasil!</h1>
+    <h2 style="color: #3498db; margin-bottom:20px;">{FULL_NAME}</h2>
+    <p style="color:#333333; line-height:1.5;">É com grande satisfação que recebemos você como membro da Mensa Brasil.</p>
+    <p style="color:#333333; line-height:1.5;">Seu comprovante de registro foi confirmado e seu número de associado é <strong>{REGISTRATION_ID}</strong>.</p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Seu e-mail institucional é <strong>{EMAIL_INSTITUCIONAL}</strong> e sua senha temporária é <strong>{TEMP_PASSWORD}</strong>. Você pode acessar sua caixa de entrada pelo Gmail.</p>
     </div>
-    <p>Sua carteirinha digital está disponível em nosso aplicativo Mensa Brasil. O manual de uso e os links para download podem ser acessados em:<br>
-    <a href="https://mensa.org.br/manual-carteirinhas/">https://mensa.org.br/manual-carteirinhas/</a></p>
-    <div style="background-color: #e8f4fd; padding: 15px; margin: 20px 0; border-radius: 5px;">
-        <p>Caso tenha interesse em participar dos fóruns de discussão com outros associados, junte-se ao nosso grupo oficial no Facebook:<br>
-        <a href="https://www.facebook.com/groups/associacaomensabrasil/">https://www.facebook.com/groups/associacaomensabrasil/</a></p>
+    <p style="color:#333333; line-height:1.5;">Sua carteirinha digital está disponível em nosso aplicativo Mensa Brasil. O manual de uso e os links para download podem ser acessados em:<br>
+    <a href="https://mensa.org.br/manual-carteirinhas/" style="color:#3498db;">https://mensa.org.br/manual-carteirinhas/</a></p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Caso tenha interesse em participar dos fóruns de discussão com outros associados, junte-se ao nosso grupo oficial no Facebook:<br>
+      <a href="https://www.facebook.com/groups/associacaomensabrasil/" style="color:#3498db;">https://www.facebook.com/groups/associacaomensabrasil/</a></p>
     </div>
-    <p>Recomendamos também que você crie seu cadastro no site da Mensa Internacional (<a href="https://www.mensa.org">www.mensa.org</a> &gt; Members &gt; Create New Account) para aproveitar todos os benefícios de membro em todo o mundo. A aprovação do seu cadastro internacional é feita pela nossa equipe e pode levar até uma semana.</p>
-    <div style="background-color: #f1f8e9; padding: 15px; border-left: 4px solid #7cb342; margin: 20px 0;">
-        <h3 style="margin-top: 0;">Comunidades e Grupos</h3>
-        <ul>
-            <li>Para acessar grupos de interesse da Mensa, acesse o link:<br>
-            <a href="{MB_GROUP_LINK}">{MB_GROUP_LINK}</a></li>
-            <li>Para participar do grupo de WhatsApp da sua região, utilize:<br>
-            {GRUPO_REGIONAL}</li>
-        </ul>
+    <p style="color:#333333; line-height:1.5;">Recomendamos também que você crie seu cadastro no site da Mensa Internacional (<a href="https://www.mensa.org" style="color:#3498db;">www.mensa.org</a> &gt; Members &gt; Create New Account) para aproveitar todos os benefícios de membro em todo o mundo. A aprovação do seu cadastro internacional é feita pela nossa equipe e pode levar até uma semana.</p>
+    <div style="border-left:4px solid #27ae60; background-color:#eafaf1; padding:15px; margin:20px 0; border-radius:4px;">
+      <h3 style="margin-top:0; color:#2c3e50;">Comunidades e Grupos</h3>
+      <ul style="color:#333333; line-height:1.5;">
+        <li>Para acessar grupos de interesse da Mensa, acesse o link:<br>
+        <a href="{MB_GROUP_LINK}" style="color:#3498db;">{MB_GROUP_LINK}</a></li>
+        <li>Para participar do grupo de WhatsApp da sua região, utilize:<br>
+        {GRUPO_REGIONAL}</li>
+      </ul>
     </div>
-    <p style="background-color: #ffe6e6; padding: 10px; border-left: 4px solid #e74c3c;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
-    <div style="background-color: #e8f4fd; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
-        <p>Além das comunidades mencionadas, convidamos você a participar do nosso <strong>Grupo de Primeiros Contatos</strong>. Nele, você poderá se apresentar e conhecer voluntários dispostos a ajudar e esclarecer dúvidas. É um espaço ideal para conectar-se com outros associados.</p>
-        <p>Link para o grupo: <a href="{MB_FIRST_CONTACT}">{MB_FIRST_CONTACT}</a></p>
+    <div style="border-left:4px solid #e74c3c; background-color:#fdecea; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;"><strong>Observe que, caso você entre em algum grupo com um número de telefone não cadastrado, será removido automaticamente. Utilize o telefone informado no cadastro.</strong></p>
     </div>
-    <p>Encorajamos você a ler nosso manual do associado:<br>
-    <a href="https://drive.google.com/drive/folders/1b-hwQScTLyTXKF44bU0_7MQ1FbIQ69SY">https://drive.google.com/drive/folders/1b-hwQScTLyTXKF44bU0_7MQ1FbIQ69SY</a></p>
-    <p>Junte-se à nossa nova rede social em:<br>
-    <a href="https://lab.mensa.org.br">https://lab.mensa.org.br</a> (utilize seu e-mail institucional).</p>
-    <p>Qualquer dúvida, estamos à disposição.</p>
-    <p>Atenciosamente,</p>
-
-    <p style="color: #2c3e50;">
-        <strong>Secretaria - Associação Mensa Brasil</strong><br>
-        <p>Para eventuais dúvidas, entre em contato: <a href="https://mensa.org.br/contato">https://mensa.org.br/contato</a></p>
-        <a href="https://www.mensa.org.br">www.mensa.org.br</a>
-    </p>
+    <div style="border-left:4px solid #3498db; background-color:#ecf6fc; padding:15px; margin:20px 0; border-radius:4px;">
+      <p style="margin:0; color:#333333;">Além das comunidades mencionadas, convidamos você a participar do nosso <strong>Grupo de Primeiros Contatos</strong>. Nele, você poderá se apresentar e conhecer voluntários dispostos a ajudar e esclarecer dúvidas. É um espaço ideal para conectar-se com outros associados.<br>
+      Link para o grupo: <a href="{MB_FIRST_CONTACT}" style="color:#3498db;">{MB_FIRST_CONTACT}</a></p>
+    </div>
+    <p style="color:#333333; line-height:1.5;">Encorajamos você a ler nosso manual do associado:<br>
+    <a href="https://drive.google.com/drive/folders/1b-hwQScTLyTXKF44bU0_7MQ1FbIQ69SY" style="color:#3498db;">https://drive.google.com/drive/folders/1b-hwQScTLyTXKF44bU0_7MQ1FbIQ69SY</a></p>
+    <p style="color:#333333; line-height:1.5;">Junte-se à nossa nova rede social em:<br>
+    <a href="https://lab.mensa.org.br" style="color:#3498db;">https://lab.mensa.org.br</a> (utilize seu e-mail institucional).</p>
+    <p style="color:#333333; line-height:1.5;">Qualquer dúvida, estamos à disposição.</p>
+    <p style="color:#333333; margin-bottom:0;">Atenciosamente,</p>
+    <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+    <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+  </div>
 </body>
 </html>
 """,
@@ -487,30 +510,26 @@ class EmailTemplates:
             raise ValueError("admission_type must be either 'test' or 'report'")
 
         return f"""
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; text-align: justify;">
-                {greeting}
-
-                {admission_message}
-
-                <p>Para concluir seu processo de admissão, efetue o pagamento da anuidade por meio do botão abaixo:</p>
-
-                <p style="text-align: center;">
-                    <a href="{complete_payment_url}" style="background-color: #0066cc; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                        Realizar Pagamento
-                    </a>
-                </p>
-
-                <p>Se o botão acima não funcionar, copie e cole o seguinte link em seu navegador:</p>
-                <p style="word-break: break-word;"><a href="{complete_payment_url}">{complete_payment_url}</a></p>
-
-                <p>Estamos ansiosos para recebê-lo(a) oficialmente em nossa comunidade de pessoas com alto potencial intelectual.</p>
-
-                <p>Atenciosamente,</p>
-
-                <p style="color: #2c3e50;">
-                    <strong>Secretaria - Associação Mensa Brasil</strong><br>
-                    <p>Para eventuais dúvidas, entre em contato: <a href="https://mensa.org.br/contato">https://mensa.org.br/contato</a></p>
-                    <a href="https://www.mensa.org.br">www.mensa.org.br</a>
-                </p>
-            </div>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Pagamento Pendente</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+                    <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+                        {greeting}
+                        {admission_message}
+                        <p style="color:#333333; line-height:1.5; margin-top:20px;">Para concluir seu processo de admissão, efetue o pagamento da anuidade por meio do botão abaixo:</p>
+                        <p style="text-align:center; margin:20px 0;">
+                        <a href="{complete_payment_url}" style="background-color: #3498db; color: #ffffff; padding:12px 20px; text-decoration:none; border-radius:4px; display:inline-block;">Realizar Pagamento</a>
+                        </p>
+                        <p style="color:#333333; line-height:1.5;">Se o botão acima não funcionar, copie e cole o seguinte link em seu navegador:</p>
+                        <p style="word-break:break-word; margin:0;"><a href="{complete_payment_url}" style="color:#3498db;">{complete_payment_url}</a></p>
+                        <p style="color:#333333; line-height:1.5; margin-top:20px;">Estamos ansiosos para recebê-lo(a) oficialmente em nossa comunidade de pessoas com alto potencial intelectual.</p>
+                        <p style="color:#333333; margin-bottom:0; margin-top:20px;">Atenciosamente,</p>
+                        <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+                        <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+                    </div>
+                </body>
+            </html>
         """
