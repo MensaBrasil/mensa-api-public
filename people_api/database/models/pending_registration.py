@@ -5,7 +5,7 @@ from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr
-from pydantic_br import CPF
+from pydantic_br import CPFDigits
 from sqlmodel import JSON, Column, Date, Field, select
 
 from people_api.database.models.models import BaseSQLModel
@@ -64,7 +64,7 @@ class PendingRegistrationData(BaseModel):
     social_name: str | None = None
     email: EmailStr = Field(max_length=255, min_length=5, index=True)
     birth_date: date
-    cpf: CPF
+    cpf: CPFDigits = Field(max_length=11, min_length=11)
     profession: str | None = None
     gender: Gender
     admission_type: Literal["test", "report"]
