@@ -1,10 +1,11 @@
 """Pending registration model for storing user data and token for verification."""
 
+import re
 import uuid
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_br import CPFDigits
 from sqlmodel import JSON, Column, Date, Field, select
 
@@ -71,6 +72,12 @@ class PendingRegistrationData(BaseModel):
     phone_number: PhoneNumber = Field(max_length=60, min_length=9)
     address: Address
     legal_representatives: list[LegalRepresentative] | None = None
+
+    @classmethod
+    @field_validator("cpf", mode="before")
+    def clean_cpf(cls, cpf: str):
+        """Clean CPF by removing non-digit characters."""
+        return re.sub(r"\D", "", cpf)
 
 
 class PendingRegistrationMessage(BaseModel):

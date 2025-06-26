@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import re
 import time
 import uuid
 from datetime import date
@@ -179,6 +180,12 @@ async def process_message(raw_message: str) -> PendingRegistration:
         data_dict = json.loads(raw_message)
 
         process_legal_representatives(data_dict)
+
+        if "cpf" in data_dict and isinstance(data_dict["cpf"], str):
+            data_dict["cpf"] = re.sub(r"\D", "", data_dict["cpf"])
+
+        if "phone_number" in data_dict and isinstance(data_dict["phone_number"], str):
+            data_dict["phone_number"] = re.sub(r"\D", "", data_dict["phone_number"])
 
         message = PendingRegistrationMessage(
             data=PendingRegistrationData(**data_dict),
