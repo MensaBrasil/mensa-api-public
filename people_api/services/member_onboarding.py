@@ -416,6 +416,22 @@ async def send_initial_payment_email(
             reply_to="secretaria@mensa.org.br",
         )
 
+        if member_data.legal_representatives:
+            for rep in member_data.legal_representatives:
+                rep_subject = "Parabéns! Seu filho(a) foi aprovado(a) na Mensa Brasil"
+                rep_html_content = EmailTemplates.render_pending_payment_email_legal_rep(
+                    full_name=rep.name.title(),  # type: ignore
+                    admission_type=member_data.admission_type,
+                    complete_payment_url=complete_payment_url,
+                )
+                email_service.send_email(
+                    to_email=rep.email,  # type: ignore
+                    subject=rep_subject,
+                    html_content=rep_html_content,
+                    sender_email=sender_email,
+                    reply_to="secretaria@mensa.org.br",
+                )
+
         pending_registration.email_sent_at = date.today()
         session.add(pending_registration)
 

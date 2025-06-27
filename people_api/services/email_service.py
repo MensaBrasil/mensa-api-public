@@ -532,3 +532,55 @@ class EmailTemplates:
                 </body>
             </html>
         """
+
+    @classmethod
+    def render_pending_payment_email_legal_rep(
+        cls,
+        full_name: str,
+        complete_payment_url: str,
+        admission_type: str,
+    ) -> str:
+        """Render the email content for pending payments, addressed to the legal representative."""
+
+        greeting = f"<p style='text-align: center; font-size: 1.2em;'>Prezado(a) responsável {full_name.title()},</p>"
+
+        if admission_type == "test":
+            admission_message = (
+                "<p>É com satisfação que informamos que o teste de admissão do(a) jovem sob sua responsabilidade foi avaliado e que o desempenho atingiu o percentil mínimo exigido para integrar a Mensa, de acordo com nossos critérios de avaliação.</p>"
+                "<p>Esperamos que decidam juntar-se a nós e que contribuam para construirmos, juntos, uma sociedade ainda mais interessante e forte.</p>"
+                "<p>Você poderá consultar o percentil atingido ao acessar o cadastro de candidato em nosso site.</p>"
+            )
+
+        elif admission_type == "report":
+            admission_message = (
+                "<p>É com satisfação que informamos que o laudo do(a) jovem sob sua responsabilidade foi analisado por nossa NSP (Psicóloga Supervisora Nacional) e que o desempenho atingiu o percentil mínimo exigido para integrar a Mensa, de acordo com nossos critérios de avaliação.</p>"
+                "<p>Esperamos que decidam juntar-se a nós e que contribuam para construirmos, juntos, uma sociedade ainda mais interessante e forte.</p>"
+            )
+
+        else:
+            raise ValueError("admission_type must be either 'test' or 'report'")
+
+        return f"""
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Pagamento Pendente</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; background-color: #ecf0f1; margin:0; padding:20px;">
+                    <div style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:20px; border-radius:8px;">
+                        {greeting}
+                        {admission_message}
+                        <p style="color:#333333; line-height:1.5; margin-top:20px;">Para concluir o processo de admissão do(a) jovem, efetue o pagamento da anuidade por meio do botão abaixo:</p>
+                        <p style="text-align:center; margin:20px 0;">
+                        <a href="{complete_payment_url}" style="background-color: #3498db; color: #ffffff; padding:12px 20px; text-decoration:none; border-radius:4px; display:inline-block;">Realizar Pagamento</a>
+                        </p>
+                        <p style="color:#333333; line-height:1.5;">Se o botão acima não funcionar, copie e cole o seguinte link em seu navegador:</p>
+                        <p style="word-break:break-word; margin:0;"><a href="{complete_payment_url}" style="color:#3498db;">{complete_payment_url}</a></p>
+                        <p style="color:#333333; line-height:1.5; margin-top:20px;">Estamos ansiosos para receber oficialmente o(a) jovem em nossa comunidade de pessoas com alto potencial intelectual.</p>
+                        <p style="color:#333333; margin-bottom:0; margin-top:20px;">Atenciosamente,</p>
+                        <p style="color:#2c3e50; margin-top:5px;"><strong>Secretaria - Associação Mensa Brasil</strong><br>
+                        <a href="https://www.mensa.org.br" style="color:#3498db;">www.mensa.org.br</a></p>
+                    </div>
+                </body>
+            </html>
+        """

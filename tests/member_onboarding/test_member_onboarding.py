@@ -483,35 +483,69 @@ class TestMemberOnboardingEmails:
         mock_smtp_settings,
         pending_registration_model,
     ):
-        """Should send initial payment email and update pending registration."""
+        """Should send initial payment email to both member and legal rep and update pending registration."""
         mock_settings.initial_payment_url = "http://test-url"
         token = pending_registration_model.token
 
         with patch(
             "people_api.services.member_onboarding.EmailSendingService"
         ) as mock_email_svc_cls:
-            await send_initial_payment_email(mock_session, pending_registration_model)
+            email_svc_mock = Mock()
+            mock_email_svc_cls.return_value = email_svc_mock
 
-            mock_email_svc_cls.assert_called_once()
-            email_svc = mock_email_svc_cls.return_value
-            email_svc.send_email.assert_called_once()
-            kwargs = email_svc.send_email.call_args.kwargs
-            to_email = kwargs["to_email"]
-            subject = kwargs["subject"]
-            html_content = kwargs["html_content"]
-            sender = kwargs["sender_email"]
+            with patch(
+                "people_api.services.member_onboarding.EmailTemplates"
+            ) as mock_email_templates:
+                mock_email_templates.render_pending_payment_email.return_value = (
+                    "member email content"
+                )
+                mock_email_templates.render_pending_payment_email_legal_rep.return_value = (
+                    "legal rep email content"
+                )
 
-            assert to_email == pending_registration_model.data["email"]
-            assert subject == "Parabéns! Você foi aprovado na Mensa Brasil"
-            assert sender == mock_smtp_settings.smtp_username
+                await send_initial_payment_email(mock_session, pending_registration_model)
 
-            expected_html = EmailTemplates.render_pending_payment_email(
-                full_name=pending_registration_model.data["full_name"],
-                admission_type=pending_registration_model.data["admission_type"],
-                complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
-            )
-            assert html_content == expected_html
+                # Verify emails were sent to both member and legal rep
+                assert email_svc_mock.send_email.call_count == 2
 
+                # Check the calls to send_email
+                calls = email_svc_mock.send_email.call_args_list
+
+                # First call should be to the member
+                member_call = calls[0].kwargs
+                assert member_call["to_email"] == pending_registration_model.data["email"]
+                assert member_call["subject"] == "Parabéns! Você foi aprovado na Mensa Brasil"
+                assert member_call["sender_email"] == mock_smtp_settings.smtp_username
+                assert member_call["html_content"] == "member email content"
+                assert member_call["reply_to"] == "secretaria@mensa.org.br"
+
+                # Second call should be to the legal representative
+                legal_rep_call = calls[1].kwargs
+                legal_rep = pending_registration_model.data["legal_representatives"][0]
+                assert legal_rep_call["to_email"] == legal_rep["email"]
+                assert (
+                    legal_rep_call["subject"]
+                    == "Parabéns! Seu filho(a) foi aprovado(a) na Mensa Brasil"
+                )
+                assert legal_rep_call["sender_email"] == mock_smtp_settings.smtp_username
+                assert legal_rep_call["html_content"] == "legal rep email content"
+                assert legal_rep_call["reply_to"] == "secretaria@mensa.org.br"
+
+                # Verify template rendering
+                mock_email_templates.render_pending_payment_email.assert_called_once_with(
+                    full_name=pending_registration_model.data["full_name"],
+                    admission_type=pending_registration_model.data["admission_type"],
+                    complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
+                )
+
+                # Verify template rendering for legal representative
+                mock_email_templates.render_pending_payment_email_legal_rep.assert_called_once_with(
+                    full_name=legal_rep["name"].title(),
+                    admission_type=pending_registration_model.data["admission_type"],
+                    complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
+                )
+
+        # Verify pending registration was updated
         assert pending_registration_model.email_sent_at == date.today()
         mock_session.add.assert_called_once_with(pending_registration_model)
 
@@ -579,3 +613,124 @@ class TestMemberOnboardingEmails:
         assert len(rows) == 1
         (email_sent_at,) = rows[0]
         assert email_sent_at == date.today()
+
+    @pytest.mark.asyncio
+    async def test_send_initial_payment_email_to_legal_representative(
+        mock_session,
+        mock_settings,
+        mock_smtp_settings,
+        pending_registration_model,
+    ):
+        """Test that emails are sent to legal representatives when present in member data."""
+        mock_settings.initial_payment_url = "http://test-url"
+        token = pending_registration_model.token
+
+        with patch(
+            "people_api.services.member_onboarding.EmailSendingService"
+        ) as mock_email_svc_cls:
+            email_svc_mock = Mock()
+            mock_email_svc_cls.return_value = email_svc_mock
+
+            with patch(
+                "people_api.services.member_onboarding.EmailTemplates"
+            ) as mock_email_templates:
+                mock_email_templates.render_pending_payment_email.return_value = (
+                    "member email content"
+                )
+                mock_email_templates.render_pending_payment_email_legal_rep.return_value = (
+                    "legal rep email content"
+                )
+
+                await send_initial_payment_email(mock_session, pending_registration_model)  # type: ignore
+
+                # Verify email sent to member
+                assert (
+                    email_svc_mock.send_email.call_count == 2
+                )  # One for member, one for legal rep
+
+                # Check the calls to send_email
+                calls = email_svc_mock.send_email.call_args_list
+
+                # First call should be to the member
+                member_call = calls[0].kwargs
+                assert member_call["to_email"] == pending_registration_model.data["email"]
+                assert member_call["subject"] == "Parabéns! Você foi aprovado na Mensa Brasil"
+                assert member_call["sender_email"] == mock_smtp_settings.smtp_username
+
+                # Second call should be to the legal representative
+                legal_rep_call = calls[1].kwargs
+                legal_rep = pending_registration_model.data["legal_representatives"][0]
+                assert legal_rep_call["to_email"] == legal_rep["email"]
+                assert (
+                    legal_rep_call["subject"]
+                    == "Parabéns! Seu filho(a) foi aprovado(a) na Mensa Brasil"
+                )
+                assert legal_rep_call["sender_email"] == mock_smtp_settings.smtp_username
+
+                # Verify template rendering for legal representative
+                mock_email_templates.render_pending_payment_email_legal_rep.assert_called_once_with(
+                    full_name=legal_rep["name"].title(),
+                    admission_type=pending_registration_model.data["admission_type"],
+                    complete_payment_url=f"{mock_settings.initial_payment_url}?t={token}",
+                )
+
+    @pytest.mark.asyncio
+    async def test_send_initial_payment_email_no_legal_representative(
+        mock_session,
+        mock_settings,
+        mock_smtp_settings,
+    ):
+        """Test that no emails are sent to legal representatives when not present in member data."""
+        mock_settings.initial_payment_url = "http://test-url"
+
+        # Create a pending registration without legal representatives
+        pending_data: dict = {
+            "full_name": "Test Child",
+            "social_name": None,
+            "birth_date": "2010-05-15",
+            "cpf": "12466302063",
+            "gender": "Masculino",
+            "admission_type": "test",
+            "email": "child@example.com",
+            "phone_number": "5531940028922",
+            "profession": "Student",
+            "address": {
+                "street": "Rua das Flores",
+                "number": "123",
+                "complement": "Apto 45",
+                "neighborhood": "Jardim Primavera",
+                "city": "São Paulo",
+                "state": "SP",
+                "zip_code": "04567890",
+                "country": "Brazil",
+            },
+            "legal_representatives": [],  # Empty list, no legal representatives
+        }
+
+        pending_reg = PendingRegistration(token="test-token-123", data=pending_data)
+
+        with patch(
+            "people_api.services.member_onboarding.EmailSendingService"
+        ) as mock_email_svc_cls:
+            email_svc_mock = Mock()
+            mock_email_svc_cls.return_value = email_svc_mock
+
+            with patch(
+                "people_api.services.member_onboarding.EmailTemplates"
+            ) as mock_email_templates:
+                mock_email_templates.render_pending_payment_email.return_value = (
+                    "member email content"
+                )
+
+                await send_initial_payment_email(mock_session, pending_reg)  # type: ignore
+
+                # Verify only one email is sent (to the member, not to any legal representative)
+                assert email_svc_mock.send_email.call_count == 1
+
+                # Check the call to send_email
+                call_args = email_svc_mock.send_email.call_args.kwargs
+                assert call_args["to_email"] == pending_data["email"]
+                assert call_args["subject"] == "Parabéns! Você foi aprovado na Mensa Brasil"
+
+                # Verify render_pending_payment_email_legal_rep was not called
+                mock_email_templates.render_pending_payment_email_legal_rep.assert_not_called()
