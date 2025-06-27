@@ -112,6 +112,10 @@ jobs:
         wpp_mb_group_link: https://chat.whatsapp.com/group_link
         wpp_mb_first_contact: https://chat.whatsapp.com/group_link
 
+        monitor_initial_payment_failed_url: test
+        monitor_payment_validation_failed_url: test
+        monitor_onboarding_failed_dlq_url: test
+
         sao_paulo_city_adult_members_group: https://chat.whatsapp.com/group_link
         sao_paulo_state_adult_members_group: https://chat.whatsapp.com/group_link
         southeast_adult_members_group: https://chat.whatsapp.com/group_link

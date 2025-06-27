@@ -121,6 +121,10 @@ jobs:
         SMTP_USERNAME: your-username
         SMTP_PASSWORD: your-password
 
+        monitor_initial_payment_failed_url: test
+        monitor_payment_validation_failed_url: test
+        monitor_onboarding_failed_dlq_url: test
+
         wpp_mjb_group_link: https://chat.whatsapp.com/group_link
         wpp_jb_group_link: https://chat.whatsapp.com/group_link
         wpp_rjb_first_contact: https://chat.whatsapp.com/group_link

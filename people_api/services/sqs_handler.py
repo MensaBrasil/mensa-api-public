@@ -10,6 +10,7 @@ from datetime import date
 from functools import lru_cache
 from json import JSONDecodeError
 
+import aiohttp
 from botocore.exceptions import ClientError
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,7 +22,7 @@ from people_api.database.models.pending_registration import (
 )
 from people_api.dbs import get_async_sessions
 from people_api.services.member_onboarding import send_initial_payment_email
-from people_api.utils import get_aws_client
+from people_api.utils import get_aws_client, get_settings
 
 from .member_utils import convert_pending_to_member_models
 
@@ -216,6 +217,7 @@ async def consume_and_store_messages(sqs_client, queue_url, *, max_polls: int | 
         queue_url: URL of the SQS queue to consume from.
         max_polls: Optional maximum number of polling iterations; if set, exit after polling this many times.
     """
+
     logging.info("Starting to consume messages from SQS queue...")
     poll_count = 0
 
@@ -265,6 +267,18 @@ async def consume_and_store_messages(sqs_client, queue_url, *, max_polls: int | 
                 except (ValidationError, JSONDecodeError, ClientError, ValueError) as e:
                     logging.error("Error processing message: %s", e)
                     logging.warning("Skipping message due to error: %s", e)
+
+                    try:
+                        async with aiohttp.ClientSession() as websession:
+                            await websession.get(
+                                url=get_settings().monitor_onboarding_failed_dlq_url
+                                + f"?status=down&msg={str(e)}&ping={time.time()}",
+                                headers={"Content-Type": "application/json"},
+                            )
+                        logging.info("Sent error notification to monitoring endpoint")
+                    except Exception as notify_error:
+                        logging.error("Failed to notify monitoring endpoint: %s", notify_error)
+
                     try:
                         sqs_client.change_message_visibility(
                             QueueUrl=queue_url,

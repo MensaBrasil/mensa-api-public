@@ -2,8 +2,10 @@
 
 import json
 import logging
+import time
 from datetime import date, datetime, timedelta
 
+import aiohttp
 import httpx
 from fastapi import HTTPException, status
 from sqlmodel import text
@@ -21,7 +23,7 @@ from people_api.models.asaas import AnuityType, PaymentChoice
 from people_api.services.email_sending_service import EmailSendingService
 from people_api.services.email_service import EmailTemplates
 from people_api.services.workspace_service import WorkspaceService
-from people_api.settings import get_asaas_settings, get_smtp_settings
+from people_api.settings import get_asaas_settings, get_settings, get_smtp_settings
 
 from .member_utils import convert_pending_to_member_models
 
@@ -167,7 +169,7 @@ class MemberOnboardingService:
         else:
             try:
                 customer = result_json["data"][0]
-            except (KeyError, IndexError):
+            except (KeyError, IndexError) as e:
                 logging.error(
                     "Customer lookup failed. Result: %s",
                     json.dumps(result_json, indent=2),
@@ -175,7 +177,7 @@ class MemberOnboardingService:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Customer not found and could not be created.",
-                )
+                ) from e
 
         payment_information = calculate_payment_value(payment).to_dict()
 
@@ -319,9 +321,6 @@ class MemberOnboardingService:
             await session.flush()
             logging.info("Membership payment record created for registration ID: %s", reg_id)
 
-            logging.info("Deleting pending registration with token: %s", pending_member.token)
-            await session.delete(pending_member)
-
             logging.info("Pending registration deleted successfully")
             logging.info("Creating Mensa email for registration ID: %s", reg_id)
             mensa_email = await WorkspaceService.create_mensa_email(
@@ -358,6 +357,9 @@ class MemberOnboardingService:
                     reply_to="secretaria@mensa.org.br",
                 )
 
+            pending_member.member_effectivation_date = datetime.now()
+            session.add(pending_member)
+
             return {
                 "message": "Member onboarding processed successfully.",
                 "details": {
@@ -373,6 +375,18 @@ class MemberOnboardingService:
 
         except Exception as e:
             logging.error("Error processing member onboarding...\n%s", str(e))
+
+            try:
+                async with aiohttp.ClientSession() as websession:
+                    await websession.get(
+                        url=get_settings().monitor_payment_validation_failed_url
+                        + f"?status=down&msg={str(e)}\ntoken:{pending_member.token}&ping={time.time()}",
+                        headers={"Content-Type": "application/json"},
+                    )
+                logging.info("Sent error notification to monitoring endpoint")
+            except Exception as notify_error:
+                logging.error("Failed to notify monitoring endpoint: %s", notify_error)
+
             async for sessions in get_async_sessions():
                 logging.info("Resetting registration ID sequence after error.")
                 await sessions.rw.execute(
@@ -447,3 +461,14 @@ async def send_initial_payment_email(
             pending_registration.token,
             e,
         )
+
+        try:
+            async with aiohttp.ClientSession() as websession:
+                await websession.get(
+                    url=get_settings().monitor_initial_payment_failed_url
+                    + f"?status=down&msg={str(e)}\ntoken:{pending_registration.token}&ping={time.time()}",
+                    headers={"Content-Type": "application/json"},
+                )
+            logging.info("Sent error notification to monitoring endpoint")
+        except Exception as notify_error:
+            logging.error("Failed to notify monitoring endpoint: %s", notify_error)

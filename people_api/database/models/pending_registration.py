@@ -2,12 +2,12 @@
 
 import re
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_br import CPFDigits
-from sqlmodel import JSON, Column, Date, Field, select
+from sqlmodel import JSON, Column, Date, DateTime, Field, select
 
 from people_api.database.models.models import BaseSQLModel
 from people_api.database.models.types import FullName, PhoneNumber, ZipNumber
@@ -24,6 +24,9 @@ class PendingRegistration(BaseSQLModel, table=True):
     token: str = Field(default_factory=lambda: str(uuid.uuid4()), unique=True)
     email_sent_at: date | None = Field(
         sa_column=Column(Date, default=None, nullable=True, server_default=None)
+    )
+    member_effectivation_date: datetime | None = Field(
+        sa_column=Column(DateTime, default=None, nullable=True, server_default=None)
     )
 
     @classmethod

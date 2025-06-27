@@ -468,8 +468,15 @@ class TestMemberOnboardingEndpoints:
         assert str(exp_date_val) == ext_ref["expiration_date"]
         assert amount_paid_val == payload["payment"]["value"]
         assert status_val == payload["payment"]["status"]
-        pending_rows = run_db_query(f"SELECT * FROM pending_registration WHERE token = '{token}'")
-        assert pending_rows == []
+
+        # Check that the pending registration was marked as effectivated
+        pending_reg_rows = run_db_query(
+            f"SELECT member_effectivation_date FROM pending_registration WHERE token = '{token}'"
+        )
+        assert len(pending_reg_rows) == 1
+        (effectivation_date,) = pending_reg_rows[0]
+        assert effectivation_date is not None  # Should be set to current datetime
+        assert isinstance(effectivation_date, datetime)  # Should be a datetime object
 
 
 class TestMemberOnboardingEmails:

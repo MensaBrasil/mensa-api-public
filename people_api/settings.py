@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     private_internal_token_key: str
     public_internal_token_key: str
 
+    monitor_initial_payment_failed_url: str
+    monitor_payment_validation_failed_url: str
+    monitor_onboarding_failed_dlq_url: str
+
 
 class AsaasSettings(BaseSettings):
     """Settings for the Asaas API integration."""
