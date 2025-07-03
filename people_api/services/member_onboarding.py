@@ -194,7 +194,7 @@ class MemberOnboardingService:
                 }
             ),
             "description": (
-                f"Pagamento de associação para {member_data.full_name}, com validade até "
+                f"Pagamento de primeira anuidade para {member_data.full_name}, com validade até "
                 f"{payment_information.get('expiration_date_br_format')}!"
             ),
         }
