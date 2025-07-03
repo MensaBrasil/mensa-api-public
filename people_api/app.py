@@ -6,7 +6,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .otel_middleware import otel_logging_middleware
 from .routers import all_routers
 from .settings import get_settings
 
@@ -18,8 +17,6 @@ app = FastAPI(
     redoc_url=None,
     openapi_url="/api/vtW6qodxYLQ/openapi.json",
 )
-
-app.middleware("http")(otel_logging_middleware)
 
 # Add CORS middleware
 app.add_middleware(
