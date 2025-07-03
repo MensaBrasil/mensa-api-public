@@ -234,13 +234,13 @@ class TestMemberOnboardingService:
         self, mock_settings, mock_session
     ):
         with patch.object(MemberOnboardingService, "settings", mock_settings):
-            with pytest.raises(HTTPException) as excinfo:
-                await MemberOnboardingService.process_member_onboarding(
-                    "test_auth_token", {"payment": {}}, mock_session
-                )
+            result = await MemberOnboardingService.process_member_onboarding(
+                "test_auth_token", {"payment": {}}, mock_session
+            )
 
-            assert excinfo.value.status_code == 400
-            assert "Missing externalReference" in excinfo.value.detail
+            assert "message" in result
+            assert "error" in result
+            assert "No externalReference found in payment payload" in result["error"]
 
     @pytest.mark.asyncio
     async def test_process_member_onboarding_invalid_external_reference_format(

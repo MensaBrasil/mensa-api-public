@@ -223,25 +223,20 @@ class MemberOnboardingService:
 
         external_reference_raw = payload.get("payment", {}).get("externalReference")
         if not external_reference_raw:
-            logging.error(
-                "Missing externalReference in payment payload. Content: \n\n %s",
-                json.dumps(payload, indent=2),
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing externalReference in payment payload.",
-            )
+            return {
+                "message": "Request successfull. But no externalReference found in payment payload.",
+                "error": "No externalReference found in payment payload.",
+            }
 
         try:
             external_reference_data = json.loads(external_reference_raw)
             external_reference = external_reference_data.get("pending_token")
             expiration_date_str = external_reference_data.get("expiration_date")
             if not external_reference or not expiration_date_str:
-                logging.error(
-                    "Invalid externalReference format in payment payload. Content: \n\n %s",
-                    json.dumps(payload, indent=2),
-                )
-                raise ValueError("Invalid externalReference format in payment payload.")
+                return {
+                    "message": "Request successfull. But invalid externalReference format in payment payload.",
+                    "error": "Invalid externalReference format in payment payload.",
+                }
             expiration_date = datetime.strptime(expiration_date_str, "%Y-%m-%d").date()
 
         except Exception as e:
