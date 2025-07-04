@@ -802,6 +802,10 @@ class IAMUserRolesMap(SQLModel, table=True):
         """
         return select(cls).where(cls.role_id == role_id, cls.registration_id == member_id)
 
+    @classmethod
+    def select_role_ids_by_registration(cls, registration_id: int):
+        return select(cls.role_id).where(cls.registration_id == registration_id)
+
 
 class IAMUserGroupsMap(SQLModel, table=True):
     """Model for the iam_user_groups_map table."""

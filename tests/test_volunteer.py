@@ -839,3 +839,55 @@ def test_get_my_ranking_returns_correct_user_entry(
     assert me["total_points"] == 7
     assert me["rank"] == 1
     assert me["volunteer_name"] == "Fernando Filho"
+
+
+@pytest.mark.asyncio
+async def test_get_unevaluated_activities_by_authorized_role_api(
+    test_client, get_valid_internal_token
+):
+    """
+    Evaluator with role permission to category should only see authorized unevaluated logs.
+    All permissions/roles are seeded in the test DB.
+    """
+
+    token = get_valid_internal_token(1805)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    get_resp = test_client.get("/volunteer/admin/evaluate-with-category/", headers=headers)
+    assert get_resp.status_code == 200
+
+    data = get_resp.json()
+    assert isinstance(data, list)
+    assert any(item["activity"]["title"] == "Visible Activity" for item in data)
+
+
+@pytest.mark.asyncio
+async def test_get_unevaluated_activities_with_no_roles_api(test_client, mock_valid_token_auth):
+    """
+    Test that evaluator with no roles sees no activities — using only API calls.
+    """
+    headers = {"Authorization": f"Bearer {mock_valid_token_auth}"}
+
+    category_payload = {
+        "name": "NO.ROLE.CATEGORY",
+        "description": "Not linked to any role",
+        "points": 5,
+    }
+    response = test_client.post(
+        "/volunteer/admin/categories/", json=category_payload, headers=headers
+    )
+    assert response.status_code == 201
+    category_id = response.json()["id"]
+
+    log_payload = {
+        "registration_id": 6,
+        "title": "Hidden Activity",
+        "description": "Should not be visible",
+        "category_id": category_id,
+    }
+    resp = test_client.post("/volunteer/activity/logs/", json=log_payload, headers=headers)
+    assert resp.status_code == 201
+
+    get_resp = test_client.get("/volunteer/admin/evaluate-with-category/", headers=headers)
+    assert get_resp.status_code == 200
+    assert get_resp.json() == []

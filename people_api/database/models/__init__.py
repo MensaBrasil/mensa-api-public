@@ -36,6 +36,7 @@ from .volunteer import (
     VolunteerActivityCategory,
     VolunteerActivityEvaluation,
     VolunteerActivityLog,
+    VolunteerCategoryRolePermission,
     VolunteerPointTransaction,
 )
 from .whatsapp import UpdateInput
@@ -77,4 +78,5 @@ __all__ = [
     "PendingRegistration",
     "WhatsappAuthorization",
     "Feedback",
+    "VolunteerCategoryRolePermission",
 ]

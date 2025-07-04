@@ -375,3 +375,17 @@ class UserActivityFullResponse(BaseModel):
     points: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class VolunteerCategoryRolePermission(SQLModel, table=True):
+    """Model for permissions associated with volunteer activity categories and roles."""
+
+    __tablename__ = "volunteer_category_role_permissions"
+
+    id: int | None = Field(default=None, primary_key=True)
+    category_id: int = Field(foreign_key="volunteer_activity_category.id")
+    role_id: int = Field(foreign_key="iam_roles.id")
+
+    @classmethod
+    def select_category_ids_for_roles(cls, role_ids: list[int]):
+        return select(cls.category_id).where(col(cls.role_id).in_(role_ids))

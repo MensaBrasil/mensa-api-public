@@ -7,14 +7,18 @@ import logging
 from datetime import datetime, time, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import select
+from sqlmodel import col, select
 
 from people_api.auth import (
     get_registration_id,
     permission_required,
     verify_firebase_token,
 )
-from people_api.database.models.models import LegalRepresentatives, Registration
+from people_api.database.models.models import (
+    IAMUserRolesMap,
+    LegalRepresentatives,
+    Registration,
+)
 from people_api.database.models.volunteer import (
     ActivityWithCategoryPublic,
     CombinedNamesResponse,
@@ -30,6 +34,7 @@ from people_api.database.models.volunteer import (
     VolunteerActivityLog,
     VolunteerActivityLogCreate,
     VolunteerActivityLogPublic,
+    VolunteerCategoryRolePermission,
     VolunteerPointTransaction,
 )
 from people_api.permissions import VolunteerAdmin as A
@@ -304,25 +309,40 @@ async def get_combined_names(
     dependencies=[Depends(permission_required(A.evaluation_create))],
 )
 async def get_unevaluated_activities_for_evaluation(
+    token_data: UserToken = Depends(verify_firebase_token),
     sessions: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     """
-    Retrieve all volunteer activity logs that have not yet been evaluated.
+    Retrieve all volunteer activity logs that have not yet been evaluated,
+    filtered by the categories the current evaluator is authorized to assess.
     """
-    query = VolunteerActivityLog.select_unevaluated()
-    result = await sessions.ro.exec(query)
-    logs = result.all()
+
+    role_query = IAMUserRolesMap.select_role_ids_by_registration(token_data.registration_id)
+    role_ids = await sessions.ro.exec(role_query)
+    role_ids = role_ids.all()
+    if not role_ids:
+        return []
+
+    category_query = VolunteerCategoryRolePermission.select_category_ids_for_roles(role_ids)
+    allowed_category_ids_result = await sessions.ro.exec(category_query)
+    allowed_category_ids = allowed_category_ids_result.all()
+    if not allowed_category_ids:
+        return []
+
+    query = VolunteerActivityLog.select_unevaluated().where(
+        col(VolunteerActivityLog.category_id).in_(allowed_category_ids)
+    )
+    logs = (await sessions.ro.exec(query)).all()
 
     activities_with_category = []
     for log in logs:
         category_query = select(VolunteerActivityCategory).where(
             VolunteerActivityCategory.id == log.category_id
         )
-        category_result = await sessions.ro.exec(category_query)
-        category_obj = category_result.one_or_none()
+        category_obj = (await sessions.ro.exec(category_query)).one_or_none()
         if not category_obj:
             logging.warning(
-                f"Category id {log.category_id} not found for activity id {log.id}. Skipping activity."
+                f"Category id {log.category_id} not found for activity id {log.id}. Skipping."
             )
             continue
 

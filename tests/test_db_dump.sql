@@ -191,13 +191,21 @@ VALUES
 ----- Volunteer activity data
 INSERT INTO volunteer_activity_category (name, description, points, id)
 VALUES
-  ('TEST.CATEGORY', 'A test category for volunteer activities', 1, 10);
+  ('TEST.CATEGORY', 'A test category for volunteer activities', 1, 10),
+  ('ROLE.VISIBLE', 'Visible to evaluator with TEST.ROLE', 5, 11);
 
 INSERT INTO volunteer_activity_log
     (id, registration_id, category_id, title, description, activity_date)
 VALUES
     (10, 6, 10, 'Pre-Populated Test Activity', 'This activity log is used for evaluation tests', '2024-10-10'),
-    (11, 6, 10, 'Activity 1' , 'This activity log is used for evaluation tests', '2024-10-10');
+    (11, 6, 11, 'Visible Activity' , 'This activity log is used for evaluation tests', '2024-10-10');
+
+INSERT INTO volunteer_category_role_permissions (category_id, role_id)
+SELECT vac.id, ir.id
+FROM volunteer_activity_category AS vac,
+     iam_roles AS ir
+WHERE vac.name = 'ROLE.VISIBLE'
+  AND ir.role_name = 'TEST.ROLE';
 
 INSERT INTO iam_permissions (permission_name, permission_description) VALUES
   ('VOLUNTEER.CATEGORY.CREATE',  'Permission to create volunteer categories'),
@@ -255,6 +263,17 @@ SELECT g.id, p.id
     'VOLUNTEER.EVALUATION.VIEW'
   )
  WHERE g.group_name = 'VOLUNTEER.MEMBER';
+
+INSERT INTO iam_user_roles_map (role_id, registration_id)
+SELECT r.id, 1805
+FROM iam_roles r
+WHERE r.role_name = 'VOLUNTEER.ADMIN';
+
+INSERT INTO volunteer_category_role_permissions (category_id, role_id)
+SELECT c.id, r.id
+FROM volunteer_activity_category c, iam_roles r
+WHERE c.name = 'ROLE.VISIBLE' AND r.role_name = 'VOLUNTEER.ADMIN';
+
 
 -- Create read-only user mensa_ro and grant SELECT on all tables
 
