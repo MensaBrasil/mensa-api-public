@@ -264,6 +264,19 @@ class MemberOnboardingService:
                 detail="Pending registration not found for provided externalReference.",
             )
 
+        if pending_member.member_effectivation_date:
+            logging.info(
+                "Member already activated for token: %s. Skipping onboarding process.",
+                pending_member.token,
+            )
+            return {
+                "message": "Member already activated. Skipping onboarding process.",
+                "details": {
+                    "member_name": pending_member.data.full_name,
+                    "registration_id": pending_member.registration_id,
+                },
+            }
+
         try:
             member_data = PendingRegistrationData.model_validate(pending_member.data)
 
