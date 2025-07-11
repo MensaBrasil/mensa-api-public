@@ -64,7 +64,6 @@ class Address(BaseModel):
     country: str | None = AddressFields.country
     state: str | None = AddressFields.state
     city: str | None = AddressFields.city
-    country: str | None = AddressFields.country
     address: str | None = AddressFields.address
     neighborhood: str | None = AddressFields.neighborhood
     zip: str | None = AddressFields.zip
