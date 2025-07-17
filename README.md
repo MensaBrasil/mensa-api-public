@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/MensaBrasil/mensa-api/graph/badge.svg?token=OQMRVG99CM)](https://codecov.io/gh/MensaBrasil/mensa-api)
+
 Geração das imagens dos Certificados: Credito Marcos Rebello (MB 135)
 
 ## Features
