@@ -148,6 +148,13 @@ jobs:
       run: |
         uv run coverage run -m pytest -sv .
         uv run coverage report
+        uv run coverage xml
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: MensaBrasil/mensa-api
+        files: coverage.xml
     - name: Check coverage
       run: |
         COVERAGE=$(uv run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
