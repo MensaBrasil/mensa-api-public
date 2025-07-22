@@ -185,9 +185,6 @@ async def process_message(raw_message: str) -> PendingRegistration:
         if "cpf" in data_dict and isinstance(data_dict["cpf"], str):
             data_dict["cpf"] = re.sub(r"\D", "", data_dict["cpf"])
 
-        if "phone_number" in data_dict and isinstance(data_dict["phone_number"], str):
-            data_dict["phone_number"] = re.sub(r"\D", "", data_dict["phone_number"])
-
         message = PendingRegistrationMessage(
             data=PendingRegistrationData(**data_dict),
             token=str(uuid.uuid4()),

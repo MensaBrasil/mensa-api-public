@@ -238,7 +238,7 @@ def test_sqs_sns_message_delivery(set_policy):
                     "profession": "Analista de Sistemas",
                     "gender": "Masculino",
                     "admission_type": "test",
-                    "phone_number": "+55 (11) 976543210",
+                    "phone_number": "+15619296499",
                     "address": {
                         "street": "Avenida Central",
                         "neighborhood": "Centro",
@@ -270,7 +270,7 @@ def test_sqs_sns_message_delivery(set_policy):
                 "profession": "Analista de Sistemas",
                 "admission_type": "test",
                 "gender": "Masculino",
-                "phone_number": "+55 (11) 976543210",
+                "phone_number": "+15619296499",
                 "address": {
                     "street": "Avenida Central",
                     "neighborhood": "Centro",
