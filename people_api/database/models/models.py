@@ -861,20 +861,8 @@ class WhatsappAuthorization(BaseSQLModel, table=True):
     __tablename__ = "whatsapp_authorization"
 
     auth_id: int = Field(primary_key=True)
-    phone_number: str = Field(max_length=20, min_length=10)
-    registration_id: int | None = Field(
-        foreign_key="registration.registration_id", ondelete="CASCADE"
-    )
-    authorized: bool = Field(default=False)
-    is_legal_representative: bool = Field(default=False)
-    legal_representative_id: int | None = Field(
-        sa_column=Column(
-            Integer, ForeignKey("legal_representatives.representative_id", ondelete="CASCADE")
-        )
-    )
-    represented_registration_id: int | None = Field(
-        foreign_key="registration.registration_id", ondelete="CASCADE"
-    )
+    phone_number: str = Field(max_length=20, min_length=10, index=True)
+    worker_id: int = Field(foreign_key="whatsapp_workers.id", ondelete="CASCADE")
 
     @classmethod
     def select_stmt_by_last_8_digits(cls, phone_number: str):
@@ -889,6 +877,15 @@ class WhatsappAuthorization(BaseSQLModel, table=True):
                 func.cast(func.regexp_replace(cls.phone_number, r"\D", "", "g"), String)
             ).like(phone_pattern)
         )
+
+
+class WhatsappWorkers(BaseSQLModel, table=True):
+    """Model for the whatsapp_workers table."""
+
+    __tablename__ = "whatsapp_workers"
+
+    id: int | None = Field(default=None, primary_key=True)
+    worker_phone: str = Field(max_length=20, min_length=10)
 
 
 class Feedback(BaseSQLModel, table=True):

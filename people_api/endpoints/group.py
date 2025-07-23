@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends
 
 from people_api.schemas import InternalToken, UserToken
 
-from ..auth import verify_firebase_token
+from ..auth import permission_required, verify_firebase_token
 from ..dbs import AsyncSessionsTuple, get_async_sessions
 from ..models.member import GroupJoinRequest
+from ..permissions import AdminPermissions
 from ..services import GroupService
 
 group_router = APIRouter()
@@ -84,3 +85,47 @@ async def _get_authorization_status(
     session: AsyncSessionsTuple = Depends(get_async_sessions),
 ):
     return await GroupService.get_authorization_status(token_data, session.ro)
+
+
+@group_router.get(
+    "/get_workers",
+    tags=["group", "whatsapp", "zelador"],
+    description="Get workers in a group",
+)
+async def _get_workers(
+    _token_data: UserToken | InternalToken = Depends(
+        permission_required(AdminPermissions.manage_workers)
+    ),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
+):
+    return await GroupService.get_workers(session.ro)
+
+
+@group_router.post(
+    "/add_worker",
+    tags=["group", "whatsapp", "zelador"],
+    description="Add a worker to the database",
+)
+async def _add_worker(
+    worker_phone: str,
+    _token_data: UserToken | InternalToken = Depends(
+        permission_required(AdminPermissions.manage_workers)
+    ),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
+):
+    return await GroupService.add_worker(worker_phone, session.rw)
+
+
+@group_router.delete(
+    "/remove_worker",
+    tags=["group", "whatsapp", "zelador"],
+    description="Remove a worker from the database",
+)
+async def _remove_worker(
+    worker_phone: str,
+    _token_data: UserToken | InternalToken = Depends(
+        permission_required(AdminPermissions.manage_workers)
+    ),
+    session: AsyncSessionsTuple = Depends(get_async_sessions),
+):
+    return await GroupService.remove_worker(worker_phone, session.rw)

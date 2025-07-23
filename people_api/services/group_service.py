@@ -5,17 +5,18 @@
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlmodel import func, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from people_api.database.models.models import WhatsappAuthorization
-from people_api.schemas import InternalToken, UserToken
-
-from ..database.models import (
+from people_api.database.models.models import (
     LegalRepresentatives,
     Phones,
     Registration,
+    WhatsappAuthorization,
+    WhatsappWorkers,
 )
+from people_api.schemas import InternalToken, UserToken
+
 from ..enums import Gender
 from ..models.member import GroupJoinRequest
 from ..repositories import MemberRepository
@@ -148,55 +149,126 @@ class GroupService:
             - ((today.month, today.day) < (birth_date.month, birth_date.day))
         )
 
-        member_phone = (
+        member_phone_records = (
             await session.exec(
                 select(Phones.phone_number).where(
                     Phones.registration_id == registration.registration_id
                 )
             )
-        ).first()
+        ).all()
+        member_phones = list(member_phone_records)
+        member_phones_map = {phone[-8:]: phone for phone in member_phones}
 
-        member_auth = None
-        if member_phone:
-            member_auth = (
-                await session.exec(WhatsappAuthorization.select_stmt_by_last_8_digits(member_phone))
-            ).first()
-
-        member = {
-            "type": "member",
-            "name": f"{' '.join(registration.name.split()[0:1] + registration.name.split()[-1:]).title()}",
-            "phone_number": member_phone if member_phone else None,
-            "authorization_status": member_auth.authorized if member_auth else False,
-        }
-
-        legal_representatives = []
+        legal_rep_phones = []
+        legal_rep_phones_map = {}
         if age < 18:
-            reps = (
+            legal_rep_phone_records = (
                 await session.exec(
-                    select(
-                        LegalRepresentatives.phone,
-                        LegalRepresentatives.full_name,
-                        WhatsappAuthorization.authorized,
+                    select(LegalRepresentatives.phone).where(
+                        LegalRepresentatives.registration_id == registration.registration_id
                     )
-                    .join(
-                        WhatsappAuthorization,
-                        func.right(WhatsappAuthorization.phone_number, 8)
-                        == func.right(LegalRepresentatives.phone, 8),
-                        isouter=True,
-                    )
-                    .where(LegalRepresentatives.registration_id == registration.registration_id)
                 )
             ).all()
-            for phone, name, authorized in reps:
-                legal_representatives.append(
-                    {
-                        "type": "legal_representative",
-                        "name": f"{' '.join(name.split()[0:1] + name.split()[-1:]).title()}",
-                        "phone_number": phone,
-                        "authorization_status": authorized if authorized is not None else False,
-                    }
-                )
+            legal_rep_phones = list(legal_rep_phone_records)
+            legal_rep_phones_map = {phone[-8:]: phone for phone in legal_rep_phones}
 
-        authorization_status = [member] + legal_representatives
+        workers = (await session.exec(select(WhatsappWorkers))).all()
+
+        authorization_status = {"authorizations": {}}
+
+        for worker in workers:
+            worker_phone = worker.worker_phone
+
+            authorization_status["authorizations"][worker_phone] = {
+                "authorized_numbers": {},
+                "pending_authorization": {},
+            }
+
+            authorizations = (
+                await session.exec(
+                    select(WhatsappAuthorization).where(
+                        WhatsappAuthorization.worker_id == worker.id
+                    )
+                )
+            ).all()
+
+            authorized_phone_last_8_digits = {auth.phone_number[-8:] for auth in authorizations}
+
+            for phone_last_8 in member_phones_map:
+                full_phone = member_phones_map[phone_last_8]
+                if phone_last_8 in authorized_phone_last_8_digits:
+                    authorization_status["authorizations"][worker_phone]["authorized_numbers"][
+                        full_phone
+                    ] = "member"
+                else:
+                    authorization_status["authorizations"][worker_phone]["pending_authorization"][
+                        full_phone
+                    ] = "member"
+
+            if age < 18:
+                for phone_last_8 in legal_rep_phones_map:
+                    full_phone = legal_rep_phones_map[phone_last_8]
+                    if phone_last_8 in authorized_phone_last_8_digits:
+                        authorization_status["authorizations"][worker_phone]["authorized_numbers"][
+                            full_phone
+                        ] = "legal_rep"
+                    else:
+                        authorization_status["authorizations"][worker_phone][
+                            "pending_authorization"
+                        ][full_phone] = "legal_rep"
 
         return authorization_status
+
+    @staticmethod
+    async def get_workers(session: AsyncSession) -> list:
+        """Retrieves the workers in the database."""
+
+        workers = (await session.exec(select(WhatsappWorkers))).all()
+        return workers
+
+    @staticmethod
+    async def add_worker(
+        worker_phone: str,
+        session: AsyncSession,
+    ) -> dict:
+        """Adds a worker to the database."""
+
+        if not worker_phone:
+            raise HTTPException(status_code=400, detail="Worker phone number is required.")
+
+        existing_worker = (
+            await session.exec(
+                select(WhatsappWorkers).where(WhatsappWorkers.worker_phone == worker_phone)
+            )
+        ).first()
+
+        if existing_worker:
+            raise HTTPException(status_code=409, detail="Worker already exists in the database.")
+
+        new_worker = WhatsappWorkers(worker_phone=worker_phone)
+        session.add(new_worker)
+
+        return {"message": "Worker added successfully"}
+
+    @staticmethod
+    async def remove_worker(
+        worker_phone: str,
+        session: AsyncSession,
+    ) -> dict:
+        """Removes a worker from the database."""
+
+        if not worker_phone:
+            raise HTTPException(status_code=400, detail="Worker phone number is required.")
+
+        existing_worker = (
+            await session.exec(
+                select(WhatsappWorkers).where(WhatsappWorkers.worker_phone == worker_phone)
+            )
+        ).first()
+
+        if not existing_worker:
+            raise HTTPException(status_code=404, detail="Worker not found in the database.")
+
+        await session.delete(existing_worker)
+
+        return {"message": "Worker removed successfully"}

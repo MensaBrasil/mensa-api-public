@@ -30,6 +30,7 @@ from .models import (
     WhatsappAuthorization,
     WhatsappComms,
     WhatsappMessages,
+    WhatsappWorkers,
 )
 from .pending_registration import PendingRegistration
 from .volunteer import (
@@ -79,4 +80,5 @@ __all__ = [
     "WhatsappAuthorization",
     "Feedback",
     "VolunteerCategoryRolePermission",
+    "WhatsappWorkers",
 ]

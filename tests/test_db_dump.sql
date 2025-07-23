@@ -110,22 +110,29 @@ VALUES
     (5, 10, '34567890100', 'Marcos Costa', 'marcos.costa@example.com', '+5521955555556', NULL, 'Father of Lucas Costa (registration 10)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
     (6, 10, '34567890101', 'Mariana Costa', 'mariana.costa@example.com', '+5521955555557', NULL, 'Mother of Lucas Costa (registration 10)', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
 
--- WhatsApp Authorization table
-INSERT INTO whatsapp_authorization (auth_id, phone_number, registration_id, authorized, is_legal_representative, legal_representative_id, represented_registration_id, created_at, updated_at)
+-- WhatsApp Workers table
+INSERT INTO whatsapp_workers (id, worker_phone, created_at, updated_at)
 VALUES
-    (1, '+552197654321', 5, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (2, '+552198765432', 6, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (3, '+552199876543', 7, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (4, '+552191234567', 8, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (5, '+552192345678', 9, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (6, '+552193456789', 10, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (7, '+552194567890', 11, true, false, NULL, NULL, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (8, '+5521955555551', NULL, true, true, 1, 7, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (9, '+5521955555552', NULL, true, true, 2, 7, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (10, '+5521955555554', NULL, true, true, 3, 8, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (11, '+5521955555555', NULL, true, true, 4, 8, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (12, '+5521955555556', NULL, true, true, 5, 10, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
-    (13, '+5521955555557', NULL, true, true, 6, 10, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+    (1, '5521334456879', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (2, '5521879455648', '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+
+-- WhatsApp Authorization table
+INSERT INTO whatsapp_authorization (auth_id, phone_number, worker_id, created_at, updated_at)
+VALUES
+    (1, '+552197654321', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (2, '+552198765432', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (3, '+552199876543', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (4, '+552191234567', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (5, '+552192345678', 2, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (6, '+552193456789', 2, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (7, '+552194567890', 2, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (8, '+5521955555551', 2, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (9, '+5521955555552', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (10, '+5521955555554', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (11, '+5521955555555', 2, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (12, '+5521955555556', 2, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332'),
+    (13, '+5521955555557', 1, '2023-08-24 00:03:53.332', '2023-08-24 00:03:53.332');
+
 -- Feedbacks table
 INSERT INTO feedbacks (registration_id, feedback_text, feedback_target, feedback_type, created_at, updated_at)
 VALUES
@@ -144,7 +151,8 @@ VALUES
     ('DIRETOR.REGIONAL', 'Diretor regional da Mensa Brasil. Responsável pela gestão regional da Mensa Brasil. Representa a Mensa Brasil em eventos nacionais e internacionais.'),
     ('TESOUREIRO', 'Tesoureiro da Mensa Brasil. Responsável pela gestão financeira da Mensa Brasil. Controla as finanças da Mensa Brasil e presta contas à diretoria.'),
     ('DIRETOR.MARKETING', 'Diretor de marketing da Mensa Brasil. Responsável pela divulgação da Mensa Brasil. Cuida da imagem da Mensa Brasil e promove eventos e ações de marketing.'),
-    ('SECRETARIO', 'Secretário da Mensa Brasil. Responsável pela documentação da Mensa Brasil. Registra as reuniões e eventos da Mensa Brasil e mantém a documentação atualizada.');
+    ('SECRETARIO', 'Secretário da Mensa Brasil. Responsável pela documentação da Mensa Brasil. Registra as reuniões e eventos da Mensa Brasil e mantém a documentação atualizada.'),
+    ('SUPER.ADMIN', 'Super administrador da Mensa Brasil. Tem acesso total a todas as funcionalidades do sistema. Pode gerenciar usuários, grupos, permissões e configurações do sistema.');
 
 -- Groups table
 INSERT INTO iam_groups (group_name, group_description)
@@ -158,7 +166,8 @@ VALUES
     ('CREATE.EVENT', 'Can create events.'),
     ('EDIT.EVENT', 'Can edit events.'),
     ('DELETE.EVENT', 'Can delete events.'),
-    ('WHATSAPP.BOT', 'Can interact with the WhatsApp bot.');
+    ('WHATSAPP.BOT', 'Can interact with the WhatsApp bot.'),
+    ('ADMIN.MANAGE.WORKERS', 'Can manage whatsapp workers table.');
 
 -- Role assignments table
 INSERT INTO iam_user_roles_map (role_id, registration_id)
@@ -182,6 +191,9 @@ VALUES
 INSERT INTO iam_role_permissions_map (role_id, permission_id)
 VALUES
     ((SELECT id FROM iam_roles WHERE role_name = 'DIRETOR.MARKETING'), (SELECT id FROM iam_permissions WHERE permission_name = 'DELETE.EVENT'));
+INSERT INTO iam_role_permissions_map (role_id, permission_id)
+VALUES
+    ((SELECT id FROM iam_roles WHERE role_name = 'SUPER.ADMIN'), (SELECT id FROM iam_permissions WHERE permission_name = 'ADMIN.MANAGE.WORKERS'));
 
 -- Group permissions table
 INSERT INTO iam_group_permissions_map (group_id, permission_id)
@@ -301,3 +313,32 @@ BEGIN
     END LOOP;
 END
 $$;
+
+-- Reset all sequences to ensure valid index sequences
+SELECT setval('pending_registration_id_seq', (SELECT COALESCE(MAX(id), 1) FROM pending_registration));
+SELECT setval('group_requests_id_seq', (SELECT COALESCE(MAX(id), 1) FROM group_requests));
+SELECT setval('addresses_address_id_seq', (SELECT COALESCE(MAX(address_id), 1) FROM addresses));
+SELECT setval('emails_email_id_seq', (SELECT COALESCE(MAX(email_id), 1) FROM emails));
+SELECT setval('phones_phone_id_seq', (SELECT COALESCE(MAX(phone_id), 1) FROM phones));
+SELECT setval('legal_representatives_representative_id_seq', (SELECT COALESCE(MAX(representative_id), 1) FROM legal_representatives));
+SELECT setval('member_groups_id_seq', (SELECT COALESCE(MAX(id), 1) FROM member_groups));
+SELECT setval('whatsapp_comms_id_seq', (SELECT COALESCE(MAX(id), 1) FROM whatsapp_comms));
+SELECT setval('whatsapp_workers_id_seq', (SELECT COALESCE(MAX(id), 1) FROM whatsapp_workers));
+SELECT setval('whatsapp_messages_id_seq', (SELECT COALESCE(MAX(id), 1) FROM whatsapp_messages));
+SELECT setval('iam_roles_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_roles));
+SELECT setval('iam_groups_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_groups));
+SELECT setval('iam_permissions_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_permissions));
+SELECT setval('iam_user_roles_map_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_user_roles_map));
+SELECT setval('iam_group_permissions_map_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_group_permissions_map));
+SELECT setval('iam_role_permissions_map_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_role_permissions_map));
+SELECT setval('iam_user_groups_map_id_seq', (SELECT COALESCE(MAX(id), 1) FROM iam_user_groups_map));
+SELECT setval('whatsapp_authorization_auth_id_seq', (SELECT COALESCE(MAX(auth_id), 1) FROM whatsapp_authorization));
+SELECT setval('feedbacks_id_seq', (SELECT COALESCE(MAX(id), 1) FROM feedbacks));
+SELECT setval('certs_antec_criminais_id_seq', (SELECT COALESCE(MAX(id), 1) FROM certs_antec_criminais));
+
+-- Reset audit table sequences
+SELECT setval('addresses_audit_audit_id_seq', (SELECT COALESCE(MAX(audit_id), 1) FROM addresses_audit));
+SELECT setval('emails_audit_audit_id_seq', (SELECT COALESCE(MAX(audit_id), 1) FROM emails_audit));
+SELECT setval('membership_payments_audit_audit_id_seq', (SELECT COALESCE(MAX(audit_id), 1) FROM membership_payments_audit));
+SELECT setval('phones_audit_audit_id_seq', (SELECT COALESCE(MAX(audit_id), 1) FROM phones_audit));
+SELECT setval('registration_audit_audit_id_seq', (SELECT COALESCE(MAX(audit_id), 1) FROM registration_audit));
