@@ -864,6 +864,10 @@ class WhatsappAuthorization(BaseSQLModel, table=True):
     phone_number: str = Field(max_length=20, min_length=10, index=True)
     worker_id: int = Field(foreign_key="whatsapp_workers.id", ondelete="CASCADE")
 
+    __table_args__ = (
+        UniqueConstraint("phone_number", "worker_id", name="worker_phone_unique_constraint"),
+    )
+
     @classmethod
     def select_stmt_by_last_8_digits(cls, phone_number: str):
         """
