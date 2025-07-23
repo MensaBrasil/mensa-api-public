@@ -8,6 +8,7 @@ from collections.abc import Callable
 
 from people_api.app import start_api
 from people_api.cronjobs.workspace_groups.update_workspace_groups import run_update
+from people_api.scripts.redrive_dlq import redrive_dlq_to_sqs
 from people_api.services.sqs_handler import (
     consume_and_store_messages,
     setup_sqs_and_sns,
@@ -30,6 +31,11 @@ def sqs_handler(_: argparse.Namespace) -> None:
     asyncio.run(consume_and_store_messages(sqs_client=sqs, queue_url=queue_url))
 
 
+def redrive_dlq(_: argparse.Namespace) -> None:
+    """Redrive messages from DLQ to main SQS queue."""
+    asyncio.run(redrive_dlq_to_sqs())
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Create and return the argument parser for the CLI."""
     parser = argparse.ArgumentParser(description="Start a service.")
@@ -43,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser_sqs = subparsers.add_parser("sqs_handler", help="Start the SQS handler")
     parser_sqs.set_defaults(func=sqs_handler)
+
+    parser_redrive = subparsers.add_parser(
+        "redrive_dlq", help="Redrive messages from DLQ to main SQS queue"
+    )
+    parser_redrive.set_defaults(func=redrive_dlq)
 
     return parser
 
