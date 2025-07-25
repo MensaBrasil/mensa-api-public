@@ -272,8 +272,9 @@ class MemberOnboardingService:
             return {
                 "message": "Member already activated. Skipping onboarding process.",
                 "details": {
-                    "member_name": pending_member.data.full_name,
-                    "registration_id": pending_member.registration_id,
+                    "member_effectivation_date": pending_member.member_effectivation_date.strftime(
+                        "%d/%m/%Y"
+                    )
                 },
             }
 
